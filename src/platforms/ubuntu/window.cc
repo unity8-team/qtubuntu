@@ -116,10 +116,10 @@ void QUbuntuWindow::moveResize(const QRect& rect) {
   QPlatformWindow::setGeometry(rect);
 }
 
-void QUbuntuWindow::setWindowState(Qt::WindowState state) {
+Qt::WindowState QUbuntuWindow::setWindowState(Qt::WindowState state) {
   DLOG("QUbuntuWindow::setWindowState (this=%p, state=%d)", this, state);
   if (state == state_)
-    return;
+    return state;
 
   switch (state) {
     case Qt::WindowNoState: {
@@ -148,6 +148,7 @@ void QUbuntuWindow::setWindowState(Qt::WindowState state) {
       break;
     }
   }
+  return state_;
 }
 
 void QUbuntuWindow::setGeometry(const QRect& rect) {

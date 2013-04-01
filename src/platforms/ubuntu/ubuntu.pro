@@ -16,7 +16,8 @@ SOURCES = main.cc \
           window.cc \
           screen.cc \
           input.cc \
-          clipboard.cc
+          clipboard.cc \
+          qeglconvenience.cpp
 
 HEADERS = integration.h \
           window.h \
@@ -29,7 +30,7 @@ CONFIG += plugin link_prl
 PRE_TARGETDEPS = ../base/libubuntubase.a
 
 INCLUDEPATH += ..
-LIBS += -L../base -lubuntubase -lubuntu_application_api
+LIBS += -L../base -lubuntubase -lubuntu_application_api_mirclient
 
 OTHER_FILES += ubuntu.json
 
