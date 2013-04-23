@@ -18,6 +18,9 @@
 
 #include <qpa/qwindowsysteminterface.h>
 
+
+#include <xkbcommon/xkbcommon.h>
+
 class QUbuntuBaseIntegration;
 
 class QUbuntuBaseInput : public QObject {
@@ -48,6 +51,10 @@ class QUbuntuBaseInput : public QObject {
   QList<QWindowSystemInterface::TouchPoint> touchPoints_;
   const QByteArray eventFilterType_;
   const QEvent::Type eventType_;
+  
+  xkb_context *xkbcontext;
+  xkb_keymap *xkbmap;
+  xkb_state *xkbstate;
 };
 
 #endif  // QUBUNTUBASEINPUT_H

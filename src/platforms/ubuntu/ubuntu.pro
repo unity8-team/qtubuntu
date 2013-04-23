@@ -5,7 +5,7 @@ QT += core-private gui-private platformsupport-private sensors-private
 
 DEFINES += MESA_EGL_NO_X11_HEADERS
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
-QMAKE_LFLAGS += -Wl,-no-undefined
+QMAKE_LFLAGS += -Wl,-no-undefined -lxkbcommon
 
 CONFIG(debug) {
   QMAKE_CXXFLAGS_DEBUG += -Werror
@@ -30,7 +30,7 @@ CONFIG += plugin link_prl
 PRE_TARGETDEPS = ../base/libubuntubase.a
 
 INCLUDEPATH += ..
-LIBS += -L../base -lubuntubase -lubuntu_application_api_mirclient
+LIBS += -L../base -lubuntubase -lubuntu_application_api_mirclient -lxkbcommon
 
 OTHER_FILES += ubuntu.json
 

@@ -27,6 +27,9 @@
 #include <ubuntu/application/ui/ubuntu_application_ui.h>
 #include <input/input_stack_compatibility_layer_flags.h>
 
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
+
 #define LOG_EVENTS 0
 
 // Lookup table for the key types.
@@ -292,6 +295,22 @@ QUbuntuBaseInput::QUbuntuBaseInput(QUbuntuBaseIntegration* integration, int maxP
 
   DLOG("QUbuntuBaseInput::QUbuntuBaseInput (this=%p, integration=%p, maxPointCount=%d)", this,
        integration, maxPointCount);
+
+  xkb_rule_names names;
+  names.rules = strdup("evdev");
+  names.model = strdup("pc105");
+  names.layout = strdup("us");
+  names.variant = strdup("");
+  names.options = strdup("");
+
+  xkbcontext = xkb_context_new(xkb_context_flags(0));
+  if (xkbcontext) {
+      xkbmap = xkb_map_new_from_names(xkbcontext, &names, xkb_map_compile_flags(0));
+      if (xkbmap) {
+          xkbstate = xkb_state_new(xkbmap);
+      }
+  }
+
 }
 
 QUbuntuBaseInput::~QUbuntuBaseInput() {
@@ -467,6 +486,112 @@ void QUbuntuBaseInput::handleTouchEvent(
   QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points);
 }
 
+static Qt::KeyboardModifiers translateModifiers(xkb_state *state)
+{
+    Qt::KeyboardModifiers ret = Qt::NoModifier;
+    xkb_state_component cstate = xkb_state_component(XKB_STATE_DEPRESSED | XKB_STATE_LATCHED);
+
+    if (xkb_state_mod_name_is_active(state, "Shift", cstate))
+        ret |= Qt::ShiftModifier;
+    if (xkb_state_mod_name_is_active(state, "Control", cstate))
+        ret |= Qt::ControlModifier;
+    if (xkb_state_mod_name_is_active(state, "Alt", cstate))
+        ret |= Qt::AltModifier;
+    if (xkb_state_mod_name_is_active(state, "Mod1", cstate))
+        ret |= Qt::AltModifier;
+    if (xkb_state_mod_name_is_active(state, "Mod4", cstate))
+        ret |= Qt::MetaModifier;
+
+    return ret;
+}
+
+static const uint32_t KeyTbl[] = {
+    XKB_KEY_Escape,                  Qt::Key_Escape,
+    XKB_KEY_Tab,                     Qt::Key_Tab,
+    XKB_KEY_ISO_Left_Tab,            Qt::Key_Backtab,
+    XKB_KEY_BackSpace,               Qt::Key_Backspace,
+    XKB_KEY_Return,                  Qt::Key_Return,
+    XKB_KEY_Insert,                  Qt::Key_Insert,
+    XKB_KEY_Delete,                  Qt::Key_Delete,
+    XKB_KEY_Clear,                   Qt::Key_Delete,
+    XKB_KEY_Pause,                   Qt::Key_Pause,
+    XKB_KEY_Print,                   Qt::Key_Print,
+
+    XKB_KEY_Home,                    Qt::Key_Home,
+    XKB_KEY_End,                     Qt::Key_End,
+    XKB_KEY_Left,                    Qt::Key_Left,
+    XKB_KEY_Up,                      Qt::Key_Up,
+    XKB_KEY_Right,                   Qt::Key_Right,
+    XKB_KEY_Down,                    Qt::Key_Down,
+    XKB_KEY_Prior,                   Qt::Key_PageUp,
+    XKB_KEY_Next,                    Qt::Key_PageDown,
+
+    XKB_KEY_Shift_L,                 Qt::Key_Shift,
+    XKB_KEY_Shift_R,                 Qt::Key_Shift,
+    XKB_KEY_Shift_Lock,              Qt::Key_Shift,
+    XKB_KEY_Control_L,               Qt::Key_Control,
+    XKB_KEY_Control_R,               Qt::Key_Control,
+    XKB_KEY_Meta_L,                  Qt::Key_Meta,
+    XKB_KEY_Meta_R,                  Qt::Key_Meta,
+    XKB_KEY_Alt_L,                   Qt::Key_Alt,
+    XKB_KEY_Alt_R,                   Qt::Key_Alt,
+    XKB_KEY_Caps_Lock,               Qt::Key_CapsLock,
+    XKB_KEY_Num_Lock,                Qt::Key_NumLock,
+    XKB_KEY_Scroll_Lock,             Qt::Key_ScrollLock,
+    XKB_KEY_Super_L,                 Qt::Key_Super_L,
+    XKB_KEY_Super_R,                 Qt::Key_Super_R,
+    XKB_KEY_Menu,                    Qt::Key_Menu,
+    XKB_KEY_Hyper_L,                 Qt::Key_Hyper_L,
+    XKB_KEY_Hyper_R,                 Qt::Key_Hyper_R,
+    XKB_KEY_Help,                    Qt::Key_Help,
+
+    XKB_KEY_KP_Space,                Qt::Key_Space,
+    XKB_KEY_KP_Tab,                  Qt::Key_Tab,
+    XKB_KEY_KP_Enter,                Qt::Key_Enter,
+    XKB_KEY_KP_Home,                 Qt::Key_Home,
+    XKB_KEY_KP_Left,                 Qt::Key_Left,
+    XKB_KEY_KP_Up,                   Qt::Key_Up,
+    XKB_KEY_KP_Right,                Qt::Key_Right,
+    XKB_KEY_KP_Down,                 Qt::Key_Down,
+    XKB_KEY_KP_Prior,                Qt::Key_PageUp,
+    XKB_KEY_KP_Next,                 Qt::Key_PageDown,
+    XKB_KEY_KP_End,                  Qt::Key_End,
+    XKB_KEY_KP_Begin,                Qt::Key_Clear,
+    XKB_KEY_KP_Insert,               Qt::Key_Insert,
+    XKB_KEY_KP_Delete,               Qt::Key_Delete,
+    XKB_KEY_KP_Equal,                Qt::Key_Equal,
+    XKB_KEY_KP_Multiply,             Qt::Key_Asterisk,
+    XKB_KEY_KP_Add,                  Qt::Key_Plus,
+    XKB_KEY_KP_Separator,            Qt::Key_Comma,
+    XKB_KEY_KP_Subtract,             Qt::Key_Minus,
+    XKB_KEY_KP_Decimal,              Qt::Key_Period,
+    XKB_KEY_KP_Divide,               Qt::Key_Slash,
+
+    XKB_KEY_ISO_Level3_Shift,        Qt::Key_AltGr,
+    XKB_KEY_Multi_key,               Qt::Key_Multi_key,
+    XKB_KEY_Codeinput,               Qt::Key_Codeinput,
+    XKB_KEY_SingleCandidate,         Qt::Key_SingleCandidate,
+    XKB_KEY_MultipleCandidate,       Qt::Key_MultipleCandidate,
+    XKB_KEY_PreviousCandidate,       Qt::Key_PreviousCandidate,
+
+    XKB_KEY_Mode_switch,             Qt::Key_Mode_switch,
+    XKB_KEY_script_switch,           Qt::Key_Mode_switch,
+
+    0,                          0
+};
+
+static uint32_t translateKey(uint32_t sym)
+{
+    if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35)
+        return Qt::Key_F1 + (int(sym) - XKB_KEY_F1);
+
+    for (int i = 0; KeyTbl[i]; i += 2)
+        if (sym == KeyTbl[i])
+            return KeyTbl[i + 1];
+
+    return sym;
+}
+
 void QUbuntuBaseInput::dispatchKeyEvent(QWindow* window, const void* ev) {
   DLOG("QUbuntuBaseInput::dispatchKeyEvent (this=%p, window=%p, event=%p)", this, window, ev);
   const Event* event = reinterpret_cast<const Event*>(ev);
@@ -481,42 +606,21 @@ void QUbuntuBaseInput::dispatchKeyEvent(QWindow* window, const void* ev) {
       event->details.key.event_time, event->details.key.is_system_key);
 #endif
 
-  // Key modifier and unicode index mapping.
-  const int kMetaState = event->meta_state;
-  Qt::KeyboardModifiers modifiers = Qt::NoModifier;
-  int unicodeIndex = 0;
-  if (kMetaState & ISCL_META_SHIFT_ON) {
-    modifiers |= Qt::ShiftModifier;
-    unicodeIndex = 1;
-  }
-  if (kMetaState & ISCL_META_CTRL_ON) {
-    modifiers |= Qt::ControlModifier;
-    unicodeIndex = 2;
-  }
-  if (kMetaState & ISCL_META_ALT_ON) {
-    modifiers |= Qt::AltModifier;
-    unicodeIndex = 2;
-  }
-  if (kMetaState & ISCL_META_META_ON) {
-    modifiers |= Qt::MetaModifier;
-    unicodeIndex = 2;
-  }
-
   // Key event propagation.
-  QEvent::Type keyType = kEventType[event->action];
-  quint32 keyCode = kKeyCode[event->details.key.key_code].keycode;
-  QString text(kKeyCode[event->details.key.key_code].unicode[unicodeIndex]);
   ulong timestamp = event->details.key.event_time / 1000000;
-  QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
-  if (context) {
-    QKeyEvent qKeyEvent(keyType, keyCode, modifiers, text);
-    qKeyEvent.setTimestamp(timestamp);
-    if (context->filterEvent(&qKeyEvent)) {
-      DLOG("key event filtered out by input context");
-      return;
-    }
-  }
-  handleKeyEvent(window, timestamp, keyType, keyCode, modifiers, text);
+  xkb_keysym_t sym = (xkb_keysym_t)event->details.key.key_code;
+  Qt::KeyboardModifiers modifiers = translateModifiers(xkbstate);
+  QEvent::Type type = event->action == 1 ? QEvent::KeyRelease : QEvent::KeyPress;
+  char s[32];
+  s[0] = '\0';
+  xkb_keysym_to_utf8(sym, s, 32);
+  sym = translateKey(sym);
+      
+  QWindowSystemInterface::handleExtendedKeyEvent(window,
+                                                 timestamp, type, sym,
+                                                 modifiers,
+                                                 event->details.key.scan_code, 0, 0,
+                                                 s);
 }
 
 void QUbuntuBaseInput::handleKeyEvent(
