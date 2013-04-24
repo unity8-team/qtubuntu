@@ -22,32 +22,19 @@
 #include <qpa/qplatformnativeinterface.h>
 #include <qpa/qplatforminputcontextfactory_p.h>
 #include <qpa/qplatforminputcontext.h>
+#include <ubuntu/application/lifecycle_delegate.h>
 
-static void resumedCallback(void* context) {
-  DLOG("resumedCallback (context=%p)", context);
+static void startedCallback(const UApplicationOptions *options, void* context) {
+  DLOG("startedCallback (context=%p)", context);
   DASSERT(context != NULL);
   // FIXME(loicm) Add support for resumed callback.
   // QUbuntuScreen* screen = static_cast<QUbuntuScreen*>(context);
 }
 
-static void suspendedCallback(void* context) {
-  DLOG("suspendedCallback (context=%p)", context);
+static void aboutToStopCallback(UApplicationArchive *archive, void* context) {
+  DLOG("aboutToStopCallback (context=%p)", context);
   DASSERT(context != NULL);
   // FIXME(loicm) Add support for suspended callback.
-  // QUbuntuScreen* screen = static_cast<QUbuntuScreen*>(context);
-}
-
-static void focusedCallback(void* context) {
-  DLOG("focusedCallback (context=%p)", context);
-  DASSERT(context != NULL);
-  // FIXME(loicm) Add support for focused callback.
-  // QUbuntuScreen* screen = static_cast<QUbuntuScreen*>(context);
-}
-
-static void unfocusedCallback(void* context) {
-  DLOG("unfocusedCallback (context=%p)", context);
-  DASSERT(context != NULL);
-  // FIXME(loicm) Add support for unfocused callback.
   // QUbuntuScreen* screen = static_cast<QUbuntuScreen*>(context);
 }
 
@@ -124,10 +111,20 @@ QPlatformWindow* QUbuntuIntegration::createPlatformWindow(QWindow* window) {
         formFactorHintString[ubuntu_application_ui_setup_get_form_factor_hint()]);
 #endif
     SessionCredentials credentials = {
-      static_cast<SessionType>(sessionType), APPLICATION_SUPPORTS_OVERLAYED_MENUBAR, "QtUbuntu",
-      resumedCallback, suspendedCallback, focusedCallback, unfocusedCallback, this
+      static_cast<SessionType>(sessionType), APPLICATION_SUPPORTS_OVERLAYED_MENUBAR, "QtUbuntu", this
     };
     ubuntu_application_ui_start_a_new_session(&credentials);
+
+    UApplicationLifecycleDelegate delegate = u_application_lifecycle_delegate_new();
+    u_application_lifecycle_delegate_set_context(delegate, this);
+    u_application_lifecycle_delegate_set_application_started_cb(delegate, &startedCallback);
+    u_application_lifecycle_delegate_set_application_about_to_stop_cb(delegate, &aboutToStopCallback);
+    u_application_lifecycle_delegate_unref(delegate);
+    
+    DLOG("UApplicationLifecycleDelegate=%p", delegate);
+    DLOG("started_cb=%p", &startedCallback);
+    DLOG("aobut_to_stop_cb=%p", &aboutToStopCallback);
+
     input_->setSessionType(sessionType);
     once = true;
   }
