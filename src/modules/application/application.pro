@@ -31,5 +31,5 @@ CONFIG += plugin
 LIBS += -lubuntu_application_api
 
 target.files += libubuntuapplicationplugin.so qmldir
-target.path += $$[QT_INSTALL_IMPORTS]/Ubuntu/Application
+target.path += $$[QT_INSTALL_QML]/Ubuntu/Application
 INSTALLS += target
