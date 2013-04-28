@@ -5,7 +5,7 @@ QT += core-private gui-private platformsupport-private sensors-private
 
 DEFINES += MESA_EGL_NO_X11_HEADERS
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
-QMAKE_LFLAGS += -Wl,-no-undefined -lxkbcommon
+QMAKE_LFLAGS += -Wl,-no-undefined -lxkbcommon -L/usr/local/lib
 
 CONFIG(debug) {
   QMAKE_CXXFLAGS_DEBUG += -Werror

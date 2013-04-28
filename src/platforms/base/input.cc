@@ -20,6 +20,7 @@
 #if !defined(QT_NO_DEBUG)
 #include <QtCore/QThread>
 #endif
+#include <QTextCodec>
 #include <QtCore/qglobal.h>
 #include <QtCore/QCoreApplication>
 #include <private/qguiapplication_p.h>
@@ -38,224 +39,6 @@ static const QEvent::Type kEventType[] = {
   QEvent::KeyPress,    // ISCL_KEY_EVENT_ACTION_DOWN     = 0
   QEvent::KeyRelease,  // ISCL_KEY_EVENT_ACTION_UP       = 1
   QEvent::KeyPress     // ISCL_KEY_EVENT_ACTION_MULTIPLE = 2
-};
-
-// Lookup table for the key codes and unicode values.
-static const struct {
-  const quint32 keycode;
-  const quint16 unicode[3];  // { no modifier, shift modifier, other modifiers }
-} kKeyCode[] = {
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_UNKNOWN         = 0
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_SOFT_LEFT       = 1
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_SOFT_RIGHT      = 2
-  { Qt::Key_Home, { 0xffff, 0xffff, 0xffff } },            // ISCL_KEYCODE_HOME            = 3
-  { Qt::Key_Back, { 0xffff, 0xffff, 0xffff } },            // ISCL_KEYCODE_BACK            = 4
-  { Qt::Key_Call, { 0xffff, 0xffff, 0xffff } },            // ISCL_KEYCODE_CALL            = 5
-  { Qt::Key_Hangup, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_ENDCALL         = 6
-  { Qt::Key_0, { 0x0030, 0xffff, 0xffff } },               // ISCL_KEYCODE_0               = 7
-  { Qt::Key_1, { 0x0031, 0xffff, 0xffff } },               // ISCL_KEYCODE_1               = 8
-  { Qt::Key_2, { 0x0032, 0xffff, 0xffff } },               // ISCL_KEYCODE_2               = 9
-  { Qt::Key_3, { 0x0033, 0xffff, 0xffff } },               // ISCL_KEYCODE_3               = 10
-  { Qt::Key_4, { 0x0034, 0xffff, 0xffff } },               // ISCL_KEYCODE_4               = 11
-  { Qt::Key_5, { 0x0035, 0xffff, 0xffff } },               // ISCL_KEYCODE_5               = 12
-  { Qt::Key_6, { 0x0036, 0xffff, 0xffff } },               // ISCL_KEYCODE_6               = 13
-  { Qt::Key_7, { 0x0037, 0xffff, 0xffff } },               // ISCL_KEYCODE_7               = 14
-  { Qt::Key_8, { 0x0038, 0xffff, 0xffff } },               // ISCL_KEYCODE_8               = 15
-  { Qt::Key_9, { 0x0039, 0xffff, 0xffff } },               // ISCL_KEYCODE_9               = 16
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_STAR            = 17
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_POUND           = 18
-  { Qt::Key_Up, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_UP         = 19
-  { Qt::Key_Down, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_DOWN       = 20
-  { Qt::Key_Left, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_LEFT       = 21
-  { Qt::Key_Right, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_RIGHT      = 22
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_CENTER     = 23
-  { Qt::Key_VolumeUp, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_VOLUME_UP       = 24
-  { Qt::Key_VolumeDown, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_VOLUME_DOWN     = 25
-  { Qt::Key_PowerOff, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_POWER           = 26
-  { Qt::Key_Camera, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_CAMERA          = 27
-  { Qt::Key_Clear, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_CLEAR           = 28
-  { Qt::Key_A, { 0x0061, 0x0041, 0xffff } },               // ISCL_KEYCODE_A               = 29
-  { Qt::Key_B, { 0x0062, 0x0042, 0xffff } },               // ISCL_KEYCODE_B               = 30
-  { Qt::Key_C, { 0x0063, 0x0043, 0xffff } },               // ISCL_KEYCODE_C               = 31
-  { Qt::Key_D, { 0x0064, 0x0044, 0xffff } },               // ISCL_KEYCODE_D               = 32
-  { Qt::Key_E, { 0x0065, 0x0045, 0xffff } },               // ISCL_KEYCODE_E               = 33
-  { Qt::Key_F, { 0x0066, 0x0046, 0xffff } },               // ISCL_KEYCODE_F               = 34
-  { Qt::Key_G, { 0x0067, 0x0047, 0xffff } },               // ISCL_KEYCODE_G               = 35
-  { Qt::Key_H, { 0x0068, 0x0048, 0xffff } },               // ISCL_KEYCODE_H               = 36
-  { Qt::Key_I, { 0x0069, 0x0049, 0xffff } },               // ISCL_KEYCODE_I               = 37
-  { Qt::Key_J, { 0x006a, 0x004a, 0xffff } },               // ISCL_KEYCODE_J               = 38
-  { Qt::Key_K, { 0x006b, 0x004b, 0xffff } },               // ISCL_KEYCODE_K               = 39
-  { Qt::Key_L, { 0x006c, 0x004c, 0xffff } },               // ISCL_KEYCODE_L               = 40
-  { Qt::Key_M, { 0x006d, 0x004d, 0xffff } },               // ISCL_KEYCODE_M               = 41
-  { Qt::Key_N, { 0x006e, 0x004e, 0xffff } },               // ISCL_KEYCODE_N               = 42
-  { Qt::Key_O, { 0x006f, 0x004f, 0xffff } },               // ISCL_KEYCODE_O               = 43
-  { Qt::Key_P, { 0x0070, 0x0050, 0xffff } },               // ISCL_KEYCODE_P               = 44
-  { Qt::Key_Q, { 0x0071, 0x0051, 0xffff } },               // ISCL_KEYCODE_Q               = 45
-  { Qt::Key_R, { 0x0072, 0x0052, 0xffff } },               // ISCL_KEYCODE_R               = 46
-  { Qt::Key_S, { 0x0073, 0x0053, 0xffff } },               // ISCL_KEYCODE_S               = 47
-  { Qt::Key_T, { 0x0074, 0x0054, 0xffff } },               // ISCL_KEYCODE_T               = 48
-  { Qt::Key_U, { 0x0075, 0x0055, 0xffff } },               // ISCL_KEYCODE_U               = 49
-  { Qt::Key_V, { 0x0076, 0x0056, 0xffff } },               // ISCL_KEYCODE_V               = 50
-  { Qt::Key_W, { 0x0077, 0x0057, 0xffff } },               // ISCL_KEYCODE_W               = 51
-  { Qt::Key_X, { 0x0078, 0x0058, 0xffff } },               // ISCL_KEYCODE_X               = 52
-  { Qt::Key_Y, { 0x0079, 0x0059, 0xffff } },               // ISCL_KEYCODE_Y               = 53
-  { Qt::Key_Z, { 0x007a, 0x005a, 0xffff } },               // ISCL_KEYCODE_Z               = 54
-  { Qt::Key_Comma, { 0x002c, 0xffff, 0xffff } },           // ISCL_KEYCODE_COMMA           = 55
-  { Qt::Key_Period, { 0x002e, 0xffff, 0xffff } },          // ISCL_KEYCODE_PERIOD          = 56
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_ALT_LEFT        = 57
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_ALT_RIGHT       = 58
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_SHIFT_LEFT      = 59
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_SHIFT_RIGHT     = 60
-  { Qt::Key_Tab, { 0xffff, 0xffff, 0xffff } },             // ISCL_KEYCODE_TAB             = 61
-  { Qt::Key_Space, { 0x0020, 0xffff, 0xffff } },           // ISCL_KEYCODE_SPACE           = 62
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_SYM             = 63
-  { Qt::Key_Explorer, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_EXPLORER        = 64
-  { Qt::Key_LaunchMail, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_ENVELOPE        = 65
-  { Qt::Key_Enter, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_ENTER           = 66
-  { Qt::Key_Delete, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_DEL             = 67
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_GRAVE           = 68
-  { Qt::Key_Minus, { 0x002d, 0xffff, 0xffff } },           // ISCL_KEYCODE_MINUS           = 69
-  { Qt::Key_Equal, { 0x003d, 0xffff, 0xffff } },           // ISCL_KEYCODE_EQUALS          = 70
-  { Qt::Key_BracketLeft, { 0x005b, 0xffff, 0xffff } },     // ISCL_KEYCODE_LEFT_BRACKET    = 71
-  { Qt::Key_BracketRight, { 0x005d, 0xffff, 0xffff } },    // ISCL_KEYCODE_RIGHT_BRACKET   = 72
-  { Qt::Key_Backslash, { 0x005c, 0xffff, 0xffff } },       // ISCL_KEYCODE_BACKSLASH       = 73
-  { Qt::Key_Semicolon, { 0x003b, 0xffff, 0xffff } },       // ISCL_KEYCODE_SEMICOLON       = 74
-  { Qt::Key_Apostrophe, { 0x0027, 0xffff, 0xffff } },      // ISCL_KEYCODE_APOSTROPHE      = 75
-  { Qt::Key_Slash, { 0x002f, 0xffff, 0xffff } },           // ISCL_KEYCODE_SLASH           = 76
-  { Qt::Key_At, { 0x0040, 0xffff, 0xffff } },              // ISCL_KEYCODE_AT              = 77
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_NUM             = 78
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_HEADSETHOOK     = 79
-  { Qt::Key_CameraFocus, { 0xffff, 0xffff, 0xffff } },     // ISCL_KEYCODE_FOCUS           = 80  // *Camera* focus
-  { Qt::Key_Plus, { 0x002b, 0xffff, 0xffff } },            // ISCL_KEYCODE_PLUS            = 81
-  { Qt::Key_Menu, { 0xffff, 0xffff, 0xffff } },            // ISCL_KEYCODE_MENU            = 82
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_NOTIFICATION    = 83
-  { Qt::Key_Search, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_SEARCH          = 84
-  { Qt::Key_MediaTogglePlayPause, { 0xffff, 0xffff, 0xffff } },  // ISCL_KEYCODE_MEDIA_PLAY_PAUSE= 85
-  { Qt::Key_MediaStop, { 0xffff, 0xffff, 0xffff } },       // ISCL_KEYCODE_MEDIA_STOP      = 86
-  { Qt::Key_MediaNext, { 0xffff, 0xffff, 0xffff } },       // ISCL_KEYCODE_MEDIA_NEXT      = 87
-  { Qt::Key_MediaPrevious, { 0xffff, 0xffff, 0xffff } },   // ISCL_KEYCODE_MEDIA_PREVIOUS  = 88
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_MEDIA_REWIND    = 89
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_MEDIA_FAST_FORWARD = 90
-  { Qt::Key_VolumeMute, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_MUTE            = 91
-  { Qt::Key_PageUp, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_PAGE_UP         = 92
-  { Qt::Key_PageDown, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_PAGE_DOWN       = 93
-  { Qt::Key_Pictures, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_PICTSYMBOLS     = 94
-  { Qt::Key_Mode_switch, { 0xffff, 0xffff, 0xffff } },     // ISCL_KEYCODE_SWITCH_CHARSET  = 95
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_A        = 96
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_B        = 97
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_C        = 98
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_X        = 99
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_Y        = 100
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_Z        = 101
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_L1       = 102
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_R1       = 103
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_L2       = 104
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_R2       = 105
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_THUMBL   = 106
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_THUMBR   = 107
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_START    = 108
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_SELECT   = 109
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_MODE     = 110
-  { Qt::Key_Escape, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_ESCAPE          = 111
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_FORWARD_DEL     = 112
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CTRL_LEFT       = 113
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CTRL_RIGHT      = 114
-  { Qt::Key_CapsLock, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_CAPS_LOCK       = 115
-  { Qt::Key_ScrollLock, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_SCROLL_LOCK     = 116
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_META_LEFT       = 117
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_META_RIGHT      = 118
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_FUNCTION        = 119
-  { Qt::Key_SysReq, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_SYSRQ           = 120
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BREAK           = 121
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_MOVE_HOME       = 122
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_MOVE_END        = 123
-  { Qt::Key_Insert, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_INSERT          = 124
-  { Qt::Key_Forward, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_FORWARD         = 125
-  { Qt::Key_MediaPlay, { 0xffff, 0xffff, 0xffff } },       // ISCL_KEYCODE_MEDIA_PLAY      = 126
-  { Qt::Key_MediaPause, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_MEDIA_PAUSE     = 127
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_MEDIA_CLOSE     = 128
-  { Qt::Key_Eject, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_MEDIA_EJECT     = 129
-  { Qt::Key_MediaRecord, { 0xffff, 0xffff, 0xffff } },     // ISCL_KEYCODE_MEDIA_RECORD    = 130
-  { Qt::Key_F1, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F1              = 131
-  { Qt::Key_F2, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F2              = 132
-  { Qt::Key_F3, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F3              = 133
-  { Qt::Key_F4, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F4              = 134
-  { Qt::Key_F5, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F5              = 135
-  { Qt::Key_F6, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F6              = 136
-  { Qt::Key_F7, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F7              = 137
-  { Qt::Key_F8, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F8              = 138
-  { Qt::Key_F9, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_F9              = 139
-  { Qt::Key_F10, { 0xffff, 0xffff, 0xffff } },             // ISCL_KEYCODE_F10             = 140
-  { Qt::Key_F11, { 0xffff, 0xffff, 0xffff } },             // ISCL_KEYCODE_F11             = 141
-  { Qt::Key_F12, { 0xffff, 0xffff, 0xffff } },             // ISCL_KEYCODE_F12             = 142
-  { Qt::Key_NumLock, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_NUM_LOCK        = 143
-  { Qt::Key_0, { 0x0030, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_0        = 144
-  { Qt::Key_1, { 0x0031, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_1        = 145
-  { Qt::Key_2, { 0x0032, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_2        = 146
-  { Qt::Key_3, { 0x0033, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_3        = 147
-  { Qt::Key_4, { 0x0034, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_4        = 148
-  { Qt::Key_5, { 0x0035, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_5        = 149
-  { Qt::Key_6, { 0x0036, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_6        = 150
-  { Qt::Key_7, { 0x0037, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_7        = 151
-  { Qt::Key_8, { 0x0038, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_8        = 152
-  { Qt::Key_9, { 0x0039, 0xffff, 0xffff } },               // ISCL_KEYCODE_NUMPAD_9        = 153
-  { Qt::Key_Slash, { 0x002f, 0xffff, 0xffff } },           // ISCL_KEYCODE_NUMPAD_DIVIDE   = 154
-  { Qt::Key_Asterisk, { 0x002a, 0xffff, 0xffff } },        // ISCL_KEYCODE_NUMPAD_MULTIPLY = 155
-  { Qt::Key_Minus, { 0x002d, 0xffff, 0xffff } },           // ISCL_KEYCODE_NUMPAD_SUBTRACT = 156
-  { Qt::Key_Plus, { 0x002b, 0xffff, 0xffff } },            // ISCL_KEYCODE_NUMPAD_ADD      = 157
-  { Qt::Key_Period, { 0x002e, 0xffff, 0xffff } },          // ISCL_KEYCODE_NUMPAD_DOT      = 158
-  { Qt::Key_Comma, { 0x002c, 0xffff, 0xffff } },           // ISCL_KEYCODE_NUMPAD_COMMA    = 159
-  { Qt::Key_Enter, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_NUMPAD_ENTER    = 160
-  { Qt::Key_Equal, { 0x003d, 0xffff, 0xffff } },           // ISCL_KEYCODE_NUMPAD_EQUALS   = 161
-  { Qt::Key_ParenLeft, { 0x0028, 0xffff, 0xffff } },       // ISCL_KEYCODE_NUMPAD_LEFT_PAREN = 162
-  { Qt::Key_ParenRight, { 0x0029, 0xffff, 0xffff } },      // ISCL_KEYCODE_NUMPAD_RIGHT_PAREN = 163
-  { Qt::Key_VolumeMute, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_VOLUME_MUTE     = 164
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_INFO            = 165
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CHANNEL_UP      = 166
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CHANNEL_DOWN    = 167
-  { Qt::Key_ZoomIn, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_ZOOM_IN         = 168
-  { Qt::Key_ZoomOut, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_ZOOM_OUT        = 169
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_TV              = 170
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_WINDOW          = 171
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_GUIDE           = 172
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DVR             = 173
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BOOKMARK        = 174
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CAPTIONS        = 175
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_SETTINGS        = 176
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_TV_POWER        = 177
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_TV_INPUT        = 178
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_STB_POWER       = 179
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_STB_INPUT       = 180
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_AVR_POWER       = 181
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_AVR_INPUT       = 182
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_PROG_RED        = 183
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_PROG_GREEN      = 184
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_PROG_YELLOW     = 185
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_PROG_BLUE       = 186
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_APP_SWITCH      = 187
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_1        = 188
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_2        = 189
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_3        = 190
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_4        = 191
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_5        = 192
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_6        = 193
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_7        = 194
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_8        = 195
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_9        = 196
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_10       = 197
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_11       = 198
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_12       = 199
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_13       = 200
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_14       = 201
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_15       = 202
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_16       = 203
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_LANGUAGE_SWITCH = 204
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_MANNER_MODE     = 205
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_3D_MODE         = 206
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CONTACTS        = 207
-  { Qt::Key_Calendar, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_CALENDAR        = 208
-  { Qt::Key_Music, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_MUSIC           = 209
-  { Qt::Key_Calculator, { 0xffff, 0xffff, 0xffff } }       // ISCL_KEYCODE_CALCULATOR      = 210
 };
 
 class QUbuntuBaseEvent : public QEvent {
@@ -486,24 +269,6 @@ void QUbuntuBaseInput::handleTouchEvent(
   QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points);
 }
 
-static Qt::KeyboardModifiers translateModifiers(xkb_state *state)
-{
-    Qt::KeyboardModifiers ret = Qt::NoModifier;
-    xkb_state_component cstate = xkb_state_component(XKB_STATE_DEPRESSED | XKB_STATE_LATCHED);
-
-    if (xkb_state_mod_name_is_active(state, "Shift", cstate))
-        ret |= Qt::ShiftModifier;
-    if (xkb_state_mod_name_is_active(state, "Control", cstate))
-        ret |= Qt::ControlModifier;
-    if (xkb_state_mod_name_is_active(state, "Alt", cstate))
-        ret |= Qt::AltModifier;
-    if (xkb_state_mod_name_is_active(state, "Mod1", cstate))
-        ret |= Qt::AltModifier;
-    if (xkb_state_mod_name_is_active(state, "Mod4", cstate))
-        ret |= Qt::MetaModifier;
-
-    return ret;
-}
 
 static const uint32_t KeyTbl[] = {
     XKB_KEY_Escape,                  Qt::Key_Escape,
@@ -580,6 +345,165 @@ static const uint32_t KeyTbl[] = {
     0,                          0
 };
 
+static const unsigned short katakanaKeysymsToUnicode[] = {
+    0x0000, 0x3002, 0x300C, 0x300D, 0x3001, 0x30FB, 0x30F2, 0x30A1,
+    0x30A3, 0x30A5, 0x30A7, 0x30A9, 0x30E3, 0x30E5, 0x30E7, 0x30C3,
+    0x30FC, 0x30A2, 0x30A4, 0x30A6, 0x30A8, 0x30AA, 0x30AB, 0x30AD,
+    0x30AF, 0x30B1, 0x30B3, 0x30B5, 0x30B7, 0x30B9, 0x30BB, 0x30BD,
+    0x30BF, 0x30C1, 0x30C4, 0x30C6, 0x30C8, 0x30CA, 0x30CB, 0x30CC,
+    0x30CD, 0x30CE, 0x30CF, 0x30D2, 0x30D5, 0x30D8, 0x30DB, 0x30DE,
+    0x30DF, 0x30E0, 0x30E1, 0x30E2, 0x30E4, 0x30E6, 0x30E8, 0x30E9,
+    0x30EA, 0x30EB, 0x30EC, 0x30ED, 0x30EF, 0x30F3, 0x309B, 0x309C
+};
+
+static const unsigned short cyrillicKeysymsToUnicode[] = {
+    0x0000, 0x0452, 0x0453, 0x0451, 0x0454, 0x0455, 0x0456, 0x0457,
+    0x0458, 0x0459, 0x045a, 0x045b, 0x045c, 0x0000, 0x045e, 0x045f,
+    0x2116, 0x0402, 0x0403, 0x0401, 0x0404, 0x0405, 0x0406, 0x0407,
+    0x0408, 0x0409, 0x040a, 0x040b, 0x040c, 0x0000, 0x040e, 0x040f,
+    0x044e, 0x0430, 0x0431, 0x0446, 0x0434, 0x0435, 0x0444, 0x0433,
+    0x0445, 0x0438, 0x0439, 0x043a, 0x043b, 0x043c, 0x043d, 0x043e,
+    0x043f, 0x044f, 0x0440, 0x0441, 0x0442, 0x0443, 0x0436, 0x0432,
+    0x044c, 0x044b, 0x0437, 0x0448, 0x044d, 0x0449, 0x0447, 0x044a,
+    0x042e, 0x0410, 0x0411, 0x0426, 0x0414, 0x0415, 0x0424, 0x0413,
+    0x0425, 0x0418, 0x0419, 0x041a, 0x041b, 0x041c, 0x041d, 0x041e,
+    0x041f, 0x042f, 0x0420, 0x0421, 0x0422, 0x0423, 0x0416, 0x0412,
+    0x042c, 0x042b, 0x0417, 0x0428, 0x042d, 0x0429, 0x0427, 0x042a
+};
+
+static const unsigned short greekKeysymsToUnicode[] = {
+    0x0000, 0x0386, 0x0388, 0x0389, 0x038a, 0x03aa, 0x0000, 0x038c,
+    0x038e, 0x03ab, 0x0000, 0x038f, 0x0000, 0x0000, 0x0385, 0x2015,
+    0x0000, 0x03ac, 0x03ad, 0x03ae, 0x03af, 0x03ca, 0x0390, 0x03cc,
+    0x03cd, 0x03cb, 0x03b0, 0x03ce, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0391, 0x0392, 0x0393, 0x0394, 0x0395, 0x0396, 0x0397,
+    0x0398, 0x0399, 0x039a, 0x039b, 0x039c, 0x039d, 0x039e, 0x039f,
+    0x03a0, 0x03a1, 0x03a3, 0x0000, 0x03a4, 0x03a5, 0x03a6, 0x03a7,
+    0x03a8, 0x03a9, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x03b1, 0x03b2, 0x03b3, 0x03b4, 0x03b5, 0x03b6, 0x03b7,
+    0x03b8, 0x03b9, 0x03ba, 0x03bb, 0x03bc, 0x03bd, 0x03be, 0x03bf,
+    0x03c0, 0x03c1, 0x03c3, 0x03c2, 0x03c4, 0x03c5, 0x03c6, 0x03c7,
+    0x03c8, 0x03c9, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+};
+
+static const unsigned short technicalKeysymsToUnicode[] = {
+    0x0000, 0x23B7, 0x250C, 0x2500, 0x2320, 0x2321, 0x2502, 0x23A1,
+    0x23A3, 0x23A4, 0x23A6, 0x239B, 0x239D, 0x239E, 0x23A0, 0x23A8,
+    0x23AC, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x2264, 0x2260, 0x2265, 0x222B,
+    0x2234, 0x221D, 0x221E, 0x0000, 0x0000, 0x2207, 0x0000, 0x0000,
+    0x223C, 0x2243, 0x0000, 0x0000, 0x0000, 0x21D4, 0x21D2, 0x2261,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x221A, 0x0000,
+    0x0000, 0x0000, 0x2282, 0x2283, 0x2229, 0x222A, 0x2227, 0x2228,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x2202,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0192, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x2190, 0x2191, 0x2192, 0x2193, 0x0000
+};
+
+static const unsigned short specialKeysymsToUnicode[] = {
+    0x25C6, 0x2592, 0x2409, 0x240C, 0x240D, 0x240A, 0x0000, 0x0000,
+    0x2424, 0x240B, 0x2518, 0x2510, 0x250C, 0x2514, 0x253C, 0x23BA,
+    0x23BB, 0x2500, 0x23BC, 0x23BD, 0x251C, 0x2524, 0x2534, 0x252C,
+    0x2502, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+};
+
+static const unsigned short publishingKeysymsToUnicode[] = {
+    0x0000, 0x2003, 0x2002, 0x2004, 0x2005, 0x2007, 0x2008, 0x2009,
+    0x200a, 0x2014, 0x2013, 0x0000, 0x0000, 0x0000, 0x2026, 0x2025,
+    0x2153, 0x2154, 0x2155, 0x2156, 0x2157, 0x2158, 0x2159, 0x215a,
+    0x2105, 0x0000, 0x0000, 0x2012, 0x2329, 0x0000, 0x232a, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x215b, 0x215c, 0x215d, 0x215e, 0x0000,
+    0x0000, 0x2122, 0x2613, 0x0000, 0x25c1, 0x25b7, 0x25cb, 0x25af,
+    0x2018, 0x2019, 0x201c, 0x201d, 0x211e, 0x0000, 0x2032, 0x2033,
+    0x0000, 0x271d, 0x0000, 0x25ac, 0x25c0, 0x25b6, 0x25cf, 0x25ae,
+    0x25e6, 0x25ab, 0x25ad, 0x25b3, 0x25bd, 0x2606, 0x2022, 0x25aa,
+    0x25b2, 0x25bc, 0x261c, 0x261e, 0x2663, 0x2666, 0x2665, 0x0000,
+    0x2720, 0x2020, 0x2021, 0x2713, 0x2717, 0x266f, 0x266d, 0x2642,
+    0x2640, 0x260e, 0x2315, 0x2117, 0x2038, 0x201a, 0x201e, 0x0000
+};
+
+static const unsigned short aplKeysymsToUnicode[] = {
+    0x0000, 0x0000, 0x0000, 0x003c, 0x0000, 0x0000, 0x003e, 0x0000,
+    0x2228, 0x2227, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x00af, 0x0000, 0x22a5, 0x2229, 0x230a, 0x0000, 0x005f, 0x0000,
+    0x0000, 0x0000, 0x2218, 0x0000, 0x2395, 0x0000, 0x22a4, 0x25cb,
+    0x0000, 0x0000, 0x0000, 0x2308, 0x0000, 0x0000, 0x222a, 0x0000,
+    0x2283, 0x0000, 0x2282, 0x0000, 0x22a2, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x22a3, 0x0000, 0x0000, 0x0000
+};
+
+static const unsigned short koreanKeysymsToUnicode[] = {
+    0x0000, 0x3131, 0x3132, 0x3133, 0x3134, 0x3135, 0x3136, 0x3137,
+    0x3138, 0x3139, 0x313a, 0x313b, 0x313c, 0x313d, 0x313e, 0x313f,
+    0x3140, 0x3141, 0x3142, 0x3143, 0x3144, 0x3145, 0x3146, 0x3147,
+    0x3148, 0x3149, 0x314a, 0x314b, 0x314c, 0x314d, 0x314e, 0x314f,
+    0x3150, 0x3151, 0x3152, 0x3153, 0x3154, 0x3155, 0x3156, 0x3157,
+    0x3158, 0x3159, 0x315a, 0x315b, 0x315c, 0x315d, 0x315e, 0x315f,
+    0x3160, 0x3161, 0x3162, 0x3163, 0x11a8, 0x11a9, 0x11aa, 0x11ab,
+    0x11ac, 0x11ad, 0x11ae, 0x11af, 0x11b0, 0x11b1, 0x11b2, 0x11b3,
+    0x11b4, 0x11b5, 0x11b6, 0x11b7, 0x11b8, 0x11b9, 0x11ba, 0x11bb,
+    0x11bc, 0x11bd, 0x11be, 0x11bf, 0x11c0, 0x11c1, 0x11c2, 0x316d,
+    0x3171, 0x3178, 0x317f, 0x3181, 0x3184, 0x3186, 0x318d, 0x318e,
+    0x11eb, 0x11f0, 0x11f9, 0x0000, 0x0000, 0x0000, 0x0000, 0x20a9
+};
+
+static QChar keysymToUnicode(unsigned char byte3, unsigned char byte4)
+{
+    switch (byte3) {
+    case 0x04:
+        // katakana
+        if (byte4 > 0xa0 && byte4 < 0xe0)
+            return QChar(katakanaKeysymsToUnicode[byte4 - 0xa0]);
+        else if (byte4 == 0x7e)
+            return QChar(0x203e); // Overline
+        break;
+    case 0x06:
+        // russian, use lookup table
+        if (byte4 > 0xa0)
+            return QChar(cyrillicKeysymsToUnicode[byte4 - 0xa0]);
+        break;
+    case 0x07:
+        // greek
+        if (byte4 > 0xa0)
+            return QChar(greekKeysymsToUnicode[byte4 - 0xa0]);
+        break;
+    case 0x08:
+        // technical
+        if (byte4 > 0xa0)
+            return QChar(technicalKeysymsToUnicode[byte4 - 0xa0]);
+        break;
+    case 0x09:
+        // special
+        if (byte4 >= 0xe0)
+            return QChar(specialKeysymsToUnicode[byte4 - 0xe0]);
+        break;
+    case 0x0a:
+        // publishing
+        if (byte4 > 0xa0)
+            return QChar(publishingKeysymsToUnicode[byte4 - 0xa0]);
+        break;
+    case 0x0b:
+        // APL
+        if (byte4 > 0xa0)
+            return QChar(aplKeysymsToUnicode[byte4 - 0xa0]);
+        break;
+    case 0x0e:
+        // Korean
+        if (byte4 > 0xa0)
+            return QChar(koreanKeysymsToUnicode[byte4 - 0xa0]);
+        break;
+    default:
+        break;
+    }
+    return QChar(0x0);
+}
+
 static uint32_t translateKey(uint32_t sym)
 {
     if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35)
@@ -590,6 +514,103 @@ static uint32_t translateKey(uint32_t sym)
             return KeyTbl[i + 1];
 
     return sym;
+}
+
+static QString translateKeysym(xkb_keysym_t keysym,
+                                     int &code, 
+                                     QByteArray &chars, int &count)
+{
+    // all keysyms smaller than 0xff00 are actally keys that can be mapped to unicode chars
+
+    QTextCodec *mapper = QTextCodec::codecForLocale();
+    QChar converted;
+
+    if (/*count == 0 &&*/ keysym < 0xff00) {
+        unsigned char byte3 = (unsigned char)(keysym >> 8);
+        int mib = -1;
+        switch(byte3) {
+        case 0: // Latin 1
+        case 1: // Latin 2
+        case 2: //latin 3
+        case 3: // latin4
+            mib = byte3 + 4; break;
+        case 5: // arabic
+            mib = 82; break;
+        case 12: // Hebrew
+            mib = 85; break;
+        case 13: // Thai
+            mib = 2259; break;
+        case 4: // kana
+        case 6: // cyrillic
+        case 7: // greek
+        case 8: // technical, no mapping here at the moment
+        case 9: // Special
+        case 10: // Publishing
+        case 11: // APL
+        case 14: // Korean, no mapping
+            mib = -1; // manual conversion
+            mapper= 0;
+#if !defined(QT_NO_XIM)
+            converted = keysymToUnicode(byte3, keysym & 0xff);
+#endif
+        case 0x20:
+            // currency symbols
+            if (keysym >= 0x20a0 && keysym <= 0x20ac) {
+                mib = -1; // manual conversion
+                mapper = 0;
+                converted = (uint)keysym;
+            }
+            break;
+        default:
+            break;
+        }
+        if (mib != -1) {
+            mapper = QTextCodec::codecForMib(mib);
+            if (chars.isEmpty())
+                chars.resize(1);
+            chars[0] = (unsigned char) (keysym & 0xff); // get only the fourth bit for conversion later
+            count = 1;
+        }
+    } else if (keysym >= 0x1000000 && keysym <= 0x100ffff) {
+        converted = (ushort) (keysym - 0x1000000);
+        mapper = 0;
+    }
+    if (count < (int)chars.size()-1)
+        chars[count] = '\0';
+
+    QString text;
+    if (!mapper && converted.unicode() != 0x0) {
+        text = converted;
+    } else if (!chars.isEmpty()) {
+        // convert chars (8bit) to text (unicode).
+        if (mapper)
+            text = mapper->toUnicode(chars.data(), count, 0);
+        if (text.isEmpty()) {
+            // no mapper, or codec couldn't convert to unicode (this
+            // can happen when running in the C locale or with no LANG
+            // set). try converting from latin-1
+            text = QString::fromLatin1(chars);
+        }
+    }
+
+    return text;
+}
+
+static uint32_t translateKey(uint32_t sym, char *string, size_t size)
+{
+    Q_UNUSED(size);
+    string[0] = '\0';
+
+    if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35)
+        return Qt::Key_F1 + (int(sym) - XKB_KEY_F1);
+
+    for (int i = 0; KeyTbl[i]; i += 2)
+        if (sym == KeyTbl[i])
+            return KeyTbl[i + 1];
+
+    string[0] = sym;
+    string[1] = '\0';
+    return toupper(sym);
 }
 
 void QUbuntuBaseInput::dispatchKeyEvent(QWindow* window, const void* ev) {
@@ -608,19 +629,36 @@ void QUbuntuBaseInput::dispatchKeyEvent(QWindow* window, const void* ev) {
 
   // Key event propagation.
   ulong timestamp = event->details.key.event_time / 1000000;
-  xkb_keysym_t sym = (xkb_keysym_t)event->details.key.key_code;
-  Qt::KeyboardModifiers modifiers = translateModifiers(xkbstate);
+  xkb_keysym_t xk_sym = (xkb_keysym_t)event->details.key.key_code;
+
+  const int kMetaState = event->meta_state;
+  Qt::KeyboardModifiers modifiers = Qt::NoModifier;
+  if (kMetaState & ISCL_META_SHIFT_ON) {
+    modifiers |= Qt::ShiftModifier;
+  }
+  if (kMetaState & ISCL_META_CTRL_ON) {
+    modifiers |= Qt::ControlModifier;
+  }
+  if (kMetaState & ISCL_META_ALT_ON) {
+    modifiers |= Qt::AltModifier;
+  }
+  if (kMetaState & ISCL_META_META_ON) {
+    modifiers |= Qt::MetaModifier;
+  }
+
   QEvent::Type type = event->action == 1 ? QEvent::KeyRelease : QEvent::KeyPress;
-  char s[32];
-  s[0] = '\0';
-  xkb_keysym_to_utf8(sym, s, 32);
-  sym = translateKey(sym);
-      
+  int sym = translateKey(xk_sym);
+
+  char s[2];
+  translateKey(xk_sym, s, sizeof(s));
+  s[0] = xk_sym;
+  s[1] = '\0';
+  
   QWindowSystemInterface::handleExtendedKeyEvent(window,
                                                  timestamp, type, sym,
                                                  modifiers,
                                                  event->details.key.scan_code, 0, 0,
-                                                 s);
+                                                 QString::fromLatin1(s));
 }
 
 void QUbuntuBaseInput::handleKeyEvent(

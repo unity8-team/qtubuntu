@@ -101,7 +101,9 @@ void QUbuntuWindow::createWindow() {
   if (state_ == Qt::WindowFullScreen) {
     ubuntu_application_ui_request_fullscreen_for_surface(surface_);
   }
-
+  
+  
+  geometry = screen()->geometry();
   // Tell Qt about the geometry.
   QWindowSystemInterface::handleGeometryChange(window(), geometry);
   QPlatformWindow::setGeometry(geometry);
@@ -116,10 +118,10 @@ void QUbuntuWindow::moveResize(const QRect& rect) {
   QPlatformWindow::setGeometry(rect);
 }
 
-Qt::WindowState QUbuntuWindow::setWindowState(Qt::WindowState state) {
+void QUbuntuWindow::setWindowState(Qt::WindowState state) {
   DLOG("QUbuntuWindow::setWindowState (this=%p, state=%d)", this, state);
   if (state == state_)
-    return state;
+      return;
 
   switch (state) {
     case Qt::WindowNoState: {
@@ -148,7 +150,6 @@ Qt::WindowState QUbuntuWindow::setWindowState(Qt::WindowState state) {
       break;
     }
   }
-  return state_;
 }
 
 void QUbuntuWindow::setGeometry(const QRect& rect) {

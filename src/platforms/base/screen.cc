@@ -89,6 +89,7 @@ QUbuntuBaseScreen::QUbuntuBaseScreen()
   surfaceFormat_.setAlphaBufferSize(8);
   surfaceFormat_.setDepthBufferSize(24);
   surfaceFormat_.setStencilBufferSize(8);
+  surfaceFormat_.setRenderableType(QSurfaceFormat::OpenGL);
   if (!qEnvironmentVariableIsEmpty("QTUBUNTU_MULTISAMPLE")) {
     surfaceFormat_.setSamples(4);
     DLOG("setting MSAA to 4 samples");
