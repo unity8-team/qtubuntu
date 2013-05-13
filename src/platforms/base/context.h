@@ -21,7 +21,7 @@
 
 class QUbuntuBaseContext : public QPlatformOpenGLContext {
  public:
-  QUbuntuBaseContext(QUbuntuBaseScreen* screen);
+  QUbuntuBaseContext(QUbuntuBaseScreen* screen, QPlatformOpenGLContext *share);
   ~QUbuntuBaseContext();
 
   // QPlatformOpenGLContext methods.
@@ -29,6 +29,7 @@ class QUbuntuBaseContext : public QPlatformOpenGLContext {
   void swapBuffers(QPlatformSurface* surface);
   bool makeCurrent(QPlatformSurface* surface);
   void doneCurrent();
+  bool isSharing() const { return sharingContext_; }
   bool isValid() const { return eglContext_ != EGL_NO_CONTEXT; }
   void (*getProcAddress(const QByteArray& procName)) ();
   EGLContext eglContext() const { return eglContext_; }
@@ -37,6 +38,7 @@ class QUbuntuBaseContext : public QPlatformOpenGLContext {
   QUbuntuBaseScreen* screen_;
   EGLContext eglContext_;
   EGLDisplay eglDisplay_;
+  bool sharingContext_;
 };
 
 #endif  //QUBUNTUBASECONTEXT_H

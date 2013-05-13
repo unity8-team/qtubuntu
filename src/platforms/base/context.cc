@@ -37,7 +37,10 @@ static void printOpenGLESConfig() {
 }
 #endif
 
-QUbuntuBaseContext::QUbuntuBaseContext(QUbuntuBaseScreen* screen) {
+QUbuntuBaseContext::QUbuntuBaseContext(QUbuntuBaseScreen* screen,
+  QPlatformOpenGLContext *share) :
+  sharingContext_(false) {
+  DLOG("QUbuntuBaseContext::QUbuntuBaseContext (screen=%p, share=%p)", screen, share);
   DASSERT(screen != NULL);
   eglDisplay_ = screen->eglDisplay();
   screen_ = screen;
@@ -48,10 +51,21 @@ QUbuntuBaseContext::QUbuntuBaseContext(QUbuntuBaseScreen* screen) {
   attribs.append(2);
   attribs.append(EGL_NONE);
   ASSERT(eglBindAPI(EGL_OPENGL_ES_API) == EGL_TRUE);
-  ASSERT((eglContext_ = eglCreateContext(
-      eglDisplay_, screen->eglConfig(), EGL_NO_CONTEXT, attribs.constData())) != EGL_NO_CONTEXT);
+  EGLContext shareContext = EGL_NO_CONTEXT;
+  if (share) {
+    shareContext = static_cast<QUbuntuBaseContext*>(share)->eglContext();
+    sharingContext_ = true;
+  }
 
-  DLOG("QUbuntuBaseContext::QUbuntuBaseContext (this=%p, screen=%p)", this, screen);
+  eglContext_ = eglCreateContext(eglDisplay_, screen->eglConfig(), shareContext, attribs.constData());
+  if (eglContext_ == EGL_NO_CONTEXT && sharingContext_) {
+    // re-try without a shared context
+    sharingContext_ = false;
+    DLOG("QUbuntuBaseContext::QUbuntuBaseContext sharing context failed");
+    eglContext_ = eglCreateContext(
+        eglDisplay_, screen->eglConfig(), EGL_NO_CONTEXT, attribs.constData());
+  }
+  ASSERT(eglContext_ != EGL_NO_CONTEXT);
 }
 
 QUbuntuBaseContext::~QUbuntuBaseContext() {
