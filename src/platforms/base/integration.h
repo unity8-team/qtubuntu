@@ -31,7 +31,6 @@ class QUbuntuBaseIntegration : public QPlatformIntegration {
   QPlatformNativeInterface* nativeInterface() const { return nativeInterface_; }
   QPlatformBackingStore* createPlatformBackingStore(QWindow* window) const;
   QPlatformOpenGLContext* createPlatformOpenGLContext(QOpenGLContext* context) const;
-  QPlatformOpenGLContext* createPlatformOpenGLContext(QOpenGLContext* context);
   QPlatformFontDatabase* fontDatabase() const { return fontDb_; }
   QStringList themeNames() const;
   QPlatformTheme* createPlatformTheme(const QString& name) const;

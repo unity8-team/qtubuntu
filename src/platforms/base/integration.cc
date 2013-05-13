@@ -70,12 +70,6 @@ QPlatformOpenGLContext* QUbuntuBaseIntegration::createPlatformOpenGLContext(
     QOpenGLContext* context) const {
   DLOG("QUbuntuBaseIntegration::createPlatformOpenGLContext const (this=%p, context=%p)", this,
        context);
-  return const_cast<QUbuntuBaseIntegration*>(this)->createPlatformOpenGLContext(context);
-}
-
-QPlatformOpenGLContext* QUbuntuBaseIntegration::createPlatformOpenGLContext(
-    QOpenGLContext* context) {
-  DLOG("QUbuntuBaseIntegration::createPlatformOpenGLContext (this=%p, context=%p)", this, context);
   return new QUbuntuBaseContext(static_cast<QUbuntuBaseScreen*>(context->screen()->handle()));
 }
 
