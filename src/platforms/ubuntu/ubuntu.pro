@@ -30,7 +30,7 @@ CONFIG += plugin link_prl
 PRE_TARGETDEPS = ../base/libubuntubase.a
 
 INCLUDEPATH += ..
-LIBS += -L../base -lubuntubase -lubuntu_application_api_mirclient -lxkbcommon
+LIBS += -L../base -lubuntubase -lubuntu_application_api_mirclient -lxkbcommon -lEGL
 
 OTHER_FILES += ubuntu.json
 
