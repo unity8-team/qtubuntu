@@ -1,0 +1,405 @@
+qtubuntu (0.51daily13.06.05.1-0ubuntu1) saucy; urgency=low
+
+  [ Michael Terry ]
+  * Widen qtubuntu's architecture support.
+  * Add missing libxrender-dev Build-Depends needed on i386 and amd64.
+
+  [ Daniel d'Andrada ]
+  * Export Application as ApplicationInfo to avoid clashing with
+    QtQuick.Application.
+
+  [ Kaleo ]
+  * Based native orientation selection on the available stage size. (LP:
+    #1172883)
+
+  [ Ricardo Mendoza ]
+  * * Migrate QtUbuntu to make use of the new platform API definitions.
+  * Hide input panel when application is unfocused. (LP: #1183113)
+  * Fix orientation launching for sidestage apps.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 136
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 05 Jun 2013 17:04:49 +0000
+
+qtubuntu (0.51daily13.06.02ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Fix orientation launching for sidestage apps.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 135 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 02 Jun 2013 02:02:01 +0000
+
+qtubuntu (0.51daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Hide input panel when application is unfocused. (LP: #1183113)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 133 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 31 May 2013 02:01:41 +0000
+
+qtubuntu (0.51daily13.05.30ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Ricardo Mendoza ]
+  * * Migrate QtUbuntu to make use of the new platform API definitions.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 131 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 30 May 2013 03:29:40 +0000
+
+qtubuntu (0.51daily13.04.29ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Kaleo ]
+  * QScreen orientation is reported incorrectly for side stage apps (LP:
+    #1172883)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 129 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 29 Apr 2013 02:01:01 +0000
+
+qtubuntu (0.51daily13.04.26ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 127 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 26 Apr 2013 02:14:16 +0000
+
+qtubuntu (0.51daily13.04.12ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Michael Terry ]
+  * Automatic snapshot from revision 120 (bootstrap)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 125 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 12 Apr 2013 02:01:44 +0000
+
+qtubuntu (0.50) quantal; urgency=low
+
+  [ Michael Terry ]
+  * Use more modern packaging, fix a copyright typo
+
+  [ Ricardo Mendoza ]
+  * Add execution flags to ApplicationManager::startProcess to force
+    starting an app in a desired stage. Can support other flags
+    later on.
+
+ -- Ricardo Mendoza <ricardo.mendoza@canonical.com>  Wed, 03 Apr 2013 20:13:34 -0430
+
+qtubuntu (0.49) quantal; urgency=low
+
+  * Implements live orientation support for client applications using the
+    QtSensors OrientationSensor backend.
+
+ -- Jim Hodapp <jim.hodapp@canonical.com>  Fri, 01 Mar 2013 11:18:21 -0500
+
+qtubuntu (0.48) quantal; urgency=low
+
+  * ApplicationImage: added an internal cache of QImages and a new method to
+    use it instead of taking screenshots: updateFromCache().
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Sun, 24 Feb 2013 23:28:00 +0000
+
+qtubuntu (0.47) quantal; urgency=low
+
+  * ApplicationManager: added 2 properties 'keyboardVisible' and 'keyboardHeight'
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Wed, 20 Feb 2013 07:07:00 +0000
+
+qtubuntu (0.46) quantal; urgency=low
+
+  * Added side stage support.
+  * ApplicationImage: crop buffer to surface's source size and position.
+  * ApplicationImage: added new 'fillMode' property with 2 possible values: Stretch and PreserveAspectCrop.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Tue, 12 Feb 2013 11:47:53 +0100
+
+qtubuntu (0.45) quantal; urgency=low
+
+  * Added new InputFilterArea QML item.
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Thu, 14 Feb 2013 00:40:44 +0000
+
+qtubuntu (0.44) quantal; urgency=low
+
+  * New release
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Tue, 12 Feb 2013 10:09:19 +0000
+
+qtubuntu (0.43) quantal; urgency=low
+
+  * Update applications list in the right order to prevent missed updates
+
+ -- Ricardo Mendoza <ricardo.mendoza@canonical.com>  Fri, 08 Feb 2013 17:47:27 -0430
+
+qtubuntu (0.42) quantal; urgency=low
+
+  * Added start/stop process support to application module with direct
+    insertion/deletion in data models.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Thu, 07 Feb 2013 23:59:03 +0100
+
+qtubuntu (0.41) quantal; urgency=low
+
+  * Implemented native orientation for applications to query through
+    the native platform interface.
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 07 Feb 2013 00:39:39 -0200
+
+qtubuntu (0.40) quantal; urgency=low
+
+  * Updating build-dependency to use the new ubuntu-platform-api package
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 06 Feb 2013 15:40:59 -0200
+
+qtubuntu (0.39) quantal; urgency=low
+
+  * Adding qtubuntu files to the qtubuntu package (since the install was
+    empty)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 31 Jan 2013 20:59:03 -0500
+
+qtubuntu (0.38) quantal; urgency=low
+
+  * remerge from trunk, new release
+
+ -- Bill Filler <bill.filler@canonical.com>  Thu, 31 Jan 2013 09:02:32 -0500
+
+qtubuntu (0.37) quantal; urgency=low
+
+  * Renaming package from qthybris
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 31 Jan 2013 00:10:39 -0500
+
+qthybris (0.36) quantal; urgency=low
+
+  * Make sure to request alpha support for the surfaceFormat
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Tue, 15 Jan 2013 18:44:39 -0200
+
+qthybris (0.35) quantal; urgency=low
+
+  * fix for hardcoded screen size lp:1097798 
+
+ -- Bill Filler <bill.filler@canonical.com>  Thu, 10 Jan 2013 16:23:41 -0500
+
+qthybris (0.34) quantal; urgency=low
+
+  * Bumped version.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Thu, 20 Dec 2012 02:22:29 +0100
+
+qthybris (0.33) quantal; urgency=low
+
+  * Added support for focusRequested callback.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Tue, 18 Dec 2012 02:59:35 +0100
+
+qthybris (0.32) quantal; urgency=low
+
+  * Force the build to generate debug symbols, so we can have -dbgsym packages
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Mon, 17 Dec 2012 18:25:53 -0200
+
+qthybris (0.31) quantal; urgency=low
+
+  * Added support for starting/stopping processes.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Mon, 17 Dec 2012 13:47:51 +0100
+
+qthybris (0.30) quantal; urgency=low
+
+  * Fixed the build.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Fri, 14 Dec 2012 20:20:25 +0100
+
+qthybris (0.29) quantal; urgency=low
+
+  * Added 'desktopFile' property to Application class.
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Thu, 13 Dec 2012 21:39:35 +0000
+
+qthybris (0.28) quantal; urgency=low
+
+  * Added ubuntu_ui_session_unfocus_running_sessions binding.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Wed, 12 Dec 2012 23:15:05 +0100
+
+qthybris (0.27) quantal; urgency=low
+
+  * Added support NULL sources in ApplicationImage.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Wed, 12 Dec 2012 10:36:21 +0000
+
+qthybris (0.26) quantal; urgency=low
+
+  * Fixed touch input dispatching for system sessions.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Wed, 12 Dec 2012 02:56:29 +0200
+
+qthybris (0.25) quantal; urgency=low
+
+  * Adapted to Ubuntu application API API change.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Tue, 11 Dec 2012 19:54:02 +0200
+
+qthybris (0.24) quantal; urgency=low
+
+  * Changed hardcoded top strut from 54 to 59.
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Mon, 10 Dec 2012 19:40:24 +0000
+
+qthybris (0.23) quantal; urgency=low
+
+  * Added ApplicationListModel::get method.
+  * Added ApplicationListModel::count property.
+  * Added ApplicationListModel::move method.
+
+ -- Florian Boucault <florian.boucault@canonical.com>  Mon, 10 Dec 2012 17:58:33 +0000
+
+qthybris (0.22) quantal; urgency=low
+
+  * Added QQuickWindow extension for easy role setting from QML.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Mon, 10 Dec 2012 15:07:11 +0200
+
+qthybris (0.21) quantal; urgency=low
+
+  * Added support for application snapshotting.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Fri, 07 Dec 2012 16:10:40 +0100
+
+qthybris (0.21) quantal; urgency=low
+
+  * Added support for maximization and hard-coded strut for the phone.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Thu, 06 Dec 2012 13:32:27 +0100
+
+qthybris (0.20) UNRELEASED; urgency=low
+
+  * Added support for application management.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Thu, 06 Dec 2012 11:02:49 +0100
+
+qthybris (0.19) quantal; urgency=low
+
+  * Implemented support for a basic theme based on generic unix theme
+
+ -- Renato Araujo Oliveira Filho <renato@renatoLenovo>  Wed, 05 Dec 2012 09:40:45 +0000
+
+qthybris (0.18) quantal; urgency=low
+
+  * Added application module.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Fri, 30 Nov 2012 17:35:08 +0200
+
+qthybris (0.17) quantal; urgency=low
+
+  * Fixed show/hide crash.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Fri, 30 Nov 2012 13:44:39 +0200
+
+qthybris (0.16) quantal; urgency=low
+
+  [ Thomas Voss ]
+  * Added support for hiding/showing native windows.
+
+ -- Michael Frey <michael.frey@canonical.com>  Thu, 29 Nov 2012 11:53:24 -0500
+
+qthybris (0.15) quantal; urgency=low
+
+  * Ensured window states are set at creation.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Thu, 29 Nov 2012 16:41:30 +0200
+
+qthybris (0.14) quantal; urgency=low
+
+  * Added support for window position.
+
+ -- Thomas Moenicke <thomas@pachamama>  Thu, 29 Nov 2012 15:10:38 +0100
+
+qthybris (0.13) quantal; urgency=low
+
+  * Added support for the new credentials system.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Mon, 26 Nov 2012 18:30:12 +0200
+
+qthybris (0.12) quantal; urgency=low
+
+  * Added support to specify surface roles.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Mon, 26 Nov 2012 15:31:07 +0200
+
+qthybris (0.11) quantal; urgency=low
+
+  * Removed not reached asserts for unknown input events, closes: LP: #1075185.
+  * Added support for key event's unicode representation, closes: LP: #1074041.
+  * Added support for input context plugins.
+
+ -- Sergio Schvezov <sergio.schvezov@canonical.com>  Fri, 09 Nov 2012 17:11:34 -0300
+
+qthybris (0.10) quantal; urgency=low
+
+  * Fixed incorrect event time stamps. Makes kinetic scrolling work.
+
+ -- Michael Frey <michael.frey@canonical.com>  Thu, 08 Nov 2012 20:40:33 -0500
+
+qthybris (0.9) quantal; urgency=low
+
+  * Bumping
+  * Adding new dependencies brought in by Qt5 updates
+
+ -- Sergio Schvezov <sergio.schvezov@canonical.com>  Tue, 06 Nov 2012 19:53:18 -0300
+
+qthybris (0.8) quantal; urgency=low
+
+  * Bump version.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Fri, 26 Oct 2012 18:47:39 +0200
+
+qthybris (0.7) UNRELEASED; urgency=low
+
+  * Added Ubuntu application UI support.
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Mon, 22 Oct 2012 17:50:41 +0200
+
+qthybris (0.6) quantal; urgency=low
+
+  * Added native interface support
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Tue, 16 Oct 2012 17:43:23 +0200
+
+qthybris (0.5) quantal; urgency=low
+
+  * Enable building under armhf
+
+ -- Ricardo Mendoza <ricardo.mendoza@canonical.com>  Wed, 10 Oct 2012 09:45:17 -0430
+
+qthybris (0.4) quantal; urgency=low
+
+  * Bumped version
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Tue, 09 Oct 2012 15:26:44 +0200
+
+qthybris (0.3) quantal; urgency=low
+
+  * Added missing build-depends
+
+ -- Loïc Molinari <loic.molinari@canonical.com>  Fri, 05 Oct 2012 12:42:58 +0200
+
+qthybris (0.2) quantal; urgency=low
+
+  * Correctly install artwork and examples
+
+ -- Ricardo Mendoza <ricardo.mendoza@canonical.com>  Wed, 03 Oct 2012 13:39:27 +0000
+
+qthybris (0.1) quantal; urgency=low
+
+  * Initial release
+
+ -- Ricardo Mendoza <ricardo.mendoza@canonical.com>  Fri, 28 Sep 2012 10:28:22 -0430
