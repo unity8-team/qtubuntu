@@ -5,8 +5,8 @@
 1. Description
 --------------
 
-  This repository provides Qt bindings for Mir and Ubuntu Platform API
-  features that are not exposed through the QPA plugins.
+  This repository provides Qt bindings for those Mir APIs that are not exposed 
+  through the QPA plugins but are needed for the functionality of the Unity shell.
 
 
 2. Building
