@@ -1,0 +1,24 @@
+  1. Description
+  2. Building
+
+
+1. Description
+--------------
+
+  This repository provides Qt bindings for Mir and Ubuntu Platform API
+  features that are not exposed through the QPA plugins.
+
+
+2. Building
+-----------
+
+  To compile Unity-Mir, create the makefiles with qmake and build with
+  make:
+
+    $ qmake
+    $ make
+
+  By default, Unity-Mir compiles a release build. To compile a debug
+  build, the following qmake command should be used:
+
+    $ qmake CONFIG+=debug

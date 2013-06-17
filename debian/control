@@ -1,0 +1,17 @@
+Source: unity-mir
+Priority: extra
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: debhelper (>= 9),
+#               libubuntu-platform-api1-dev,
+               qt5-default,
+Standards-Version: 3.9.3
+Section: libs
+
+Package: unity-mir
+Section: libs
+Architecture: i386 amd64 armhf
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Qt plugins for extra Ubuntu Platform and Mir APIs
+ Unity-Mir provides Qt bindings for Ubuntu Platform API and Mir features
+ that are not exposed through the QtUbuntu QPA plugins.
