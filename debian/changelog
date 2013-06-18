@@ -1,3 +1,15 @@
+qtubuntu (0.51daily13.06.11.1-0ubuntu3) saucy; urgency=low
+
+  * Remove dummy transitional package qthybris
+
+ -- Gerry Boland <gerry.boland@canonical.com>  Mon, 17 Jun 2013 16:35:55 +0200
+
+qtubuntu (0.51daily13.06.11.1-0ubuntu2) saucy; urgency=low
+
+  * Test release
+
+ -- Gerry Boland <gerry.boland@canonical.com>  Mon, 17 Jun 2013 10:51:53 +0200
+
 qtubuntu (0.51daily13.06.11.1-0ubuntu1) saucy; urgency=low
 
   [ Ricardo Mendoza ]

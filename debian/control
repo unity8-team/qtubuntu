@@ -37,12 +37,3 @@ Description: Qt plugins for Ubuntu Platform API
  Platform API and a legacy QPA plugin based on the compatibility
  layers. It also provides Qt bindings for Ubuntu Platform API features
  that are not exposed through the QPA plugins.
-
-Package: qthybris
-Depends: ${misc:Depends},
-         qtubuntu,
-Architecture: i386 amd64 armhf
-Section: oldlibs
-Description: transitional dummy package
- This is a transitional dummy package for the qthybris -> qtubuntu
- transition.
