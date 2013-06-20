@@ -335,8 +335,8 @@ Application* ApplicationManager::startProcess(QString desktopFile, ApplicationMa
         return NULL;
     }
 
-    arguments.prepend("application");
     arguments.prepend("APP_ID=" + desktopData->appId());
+    arguments.prepend("application");
 
     // Start process.
     bool result;
