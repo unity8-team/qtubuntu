@@ -13,86 +13,103 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <QHash> //wanted only for qHash
+
 #include "application.h"
 #include "application_manager.h"
 #include "logging.h"
 
-Application::Application(
-    DesktopData* desktopData, qint64 pid, Application::Stage stage, Application::State state,
-    int timerId)
+Application::Application(DesktopData* desktopData, Application::Stage stage,
+                         Application::State state)
     : desktopData_(desktopData)
-    , pid_(pid)
     , stage_(stage)
     , state_(state)
     , fullscreen_(false)
-    , timerId_(timerId) {
-  DASSERT(desktopData != NULL);
-  DLOG("Application::Application (this=%p, desktopData=%p, pid=%lld, stage=%d, state=%d, "
-       "timerId=%d)", this, desktopData, pid, static_cast<int>(stage), static_cast<int>(state),
-       timerId);
+{
+    DASSERT(desktopData != NULL);
+    DLOG("Application::Application (this=%p, desktopData=%p, pid=%lld, stage=%d, state=%d",
+         this, desktopData, pid, static_cast<int>(stage), static_cast<int>(state));
 }
 
-Application::~Application() {
-  DLOG("Application::~Application");
-  delete desktopData_;
+Application::~Application()
+{
+    DLOG("Application::~Application");
+    delete desktopData_;
 }
 
-QString Application::desktopFile() const {
-  return desktopData_->file();
+QString Application::desktopFile() const
+{
+    return desktopData_->file();
 }
 
-QString Application::name() const {
-  return desktopData_->name();
+QString Application::appId() const
+{
+    return desktopData_->appId();
 }
 
-QString Application::comment() const {
-  return desktopData_->comment();
+QString Application::name() const
+{
+    return desktopData_->name();
 }
 
-QString Application::icon() const {
-  return desktopData_->icon();
+QString Application::comment() const
+{
+    return desktopData_->comment();
 }
 
-QString Application::exec() const {
-  return desktopData_->exec();
+QString Application::icon() const
+{
+    return desktopData_->icon();
 }
 
-qint64 Application::handle() const {
-  return pid_;
+QString Application::exec() const
+{
+    return desktopData_->exec();
 }
 
-Application::Stage Application::stage() const {
-  return stage_;
+qint64 Application::handle() const
+{
+    return qHash(desktopData_->appId()); //FIXME(greyback) using hashed appID for handle.
 }
 
-Application::State Application::state() const {
-  return state_;
+Application::Stage Application::stage() const
+{
+    return stage_;
 }
 
-bool Application::fullscreen() const {
-  return fullscreen_;
+Application::State Application::state() const
+{
+    return state_;
 }
 
-void Application::setStage(Application::Stage stage) {
-  DLOG("Application::setStage (this=%p, stage=%d)", this, static_cast<int>(stage));
-  if (stage_ != stage) {
-    stage_ = stage;
-    emit stageChanged();
-  }
+bool Application::fullscreen() const
+{
+    return fullscreen_;
 }
 
-void Application::setState(Application::State state) {
-  DLOG("Application::setState (this=%p, state=%d)", this, static_cast<int>(state));
-  if (state_ != state) {
-    state_ = state;
-    emit stateChanged();
-  }
+void Application::setStage(Application::Stage stage)
+{
+    DLOG("Application::setStage (this=%p, stage=%d)", this, static_cast<int>(stage));
+    if (stage_ != stage) {
+        stage_ = stage;
+        emit stageChanged();
+    }
 }
 
-void Application::setFullscreen(bool fullscreen) {
-  DLOG("Application::setFullscreen (this=%p, fullscreen=%s)", this, fullscreen ? "yes" : "no");
-  if (fullscreen_ != fullscreen) {
-    fullscreen_ = fullscreen;
-    emit fullscreenChanged();
-  }
+void Application::setState(Application::State state)
+{
+    DLOG("Application::setState (this=%p, state=%d)", this, static_cast<int>(state));
+    if (state_ != state) {
+        state_ = state;
+        emit stateChanged();
+    }
+}
+
+void Application::setFullscreen(bool fullscreen)
+{
+    DLOG("Application::setFullscreen (this=%p, fullscreen=%s)", this, fullscreen ? "yes" : "no");
+    if (fullscreen_ != fullscreen) {
+        fullscreen_ = fullscreen;
+        emit fullscreenChanged();
+    }
 }

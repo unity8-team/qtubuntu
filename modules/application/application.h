@@ -25,6 +25,7 @@ class Application : public QObject {
   Q_ENUMS(Stage)
   Q_ENUMS(State)
   Q_PROPERTY(QString desktopFile READ desktopFile NOTIFY desktopFileChanged)
+  Q_PROPERTY(QString appId READ appId NOTIFY appIdChanged)
   Q_PROPERTY(QString name READ name NOTIFY nameChanged)
   Q_PROPERTY(QString comment READ comment NOTIFY commentChanged)
   Q_PROPERTY(QString icon READ icon NOTIFY iconChanged)
@@ -38,10 +39,11 @@ class Application : public QObject {
   enum Stage { MainStage, SideStage };
   enum State { Starting, Running };
 
-  Application(DesktopData* desktopData, qint64 pid, Stage stage, State state, int timerId);
+  Application(DesktopData* desktopData, Stage stage, State state);
   ~Application();
 
   QString desktopFile() const;
+  QString appId() const;
   QString name() const;
   QString comment() const;
   QString icon() const;
@@ -53,6 +55,7 @@ class Application : public QObject {
 
  Q_SIGNALS:
   void desktopFileChanged();
+  void appIdChanged();
   void nameChanged();
   void commentChanged();
   void iconChanged();
@@ -66,17 +69,13 @@ class Application : public QObject {
   void setStage(Stage stage);
   void setState(State state);
   void setFullscreen(bool fullscreen);
-  int timerId() const { return timerId_; }
 
   DesktopData* desktopData_;
-  qint64 pid_;
   Stage stage_;
   State state_;
   bool fullscreen_;
-  int timerId_;
 
   friend class ApplicationManager;
-  friend class ApplicationListModel;
 };
 
 Q_DECLARE_METATYPE(Application*)

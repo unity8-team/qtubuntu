@@ -17,19 +17,6 @@
 #define APPLICATION_MANAGER_H
 
 #include <QtCore/QtCore>
-#include <ubuntu/application/ui/window.h>
-#include <ubuntu/application/ui/options.h>
-#include <ubuntu/application/ui/input/event.h>
-#include <ubuntu/ui/ubuntu_ui_session_service.h>
-
-/* FIXME: undef required so that this class compiles properly.
-   '#define Bool int' is part of <X11/Xlib.h> which is included
-   by the following chain of includes:
-   - <EGL/eglplatform.h> included by
-   - <EGL/egl.h> included by
-   - <ubuntu/application/ui/window.h>
-*/
-#undef Bool
 
 class Application;
 class ApplicationListModel;
@@ -40,6 +27,7 @@ class DesktopData {
   ~DesktopData();
 
   QString file() const { return file_; }
+  QString appId() const { return appId_; }
   QString name() const { return entries_[kNameIndex]; }
   QString comment() const { return entries_[kCommentIndex]; }
   QString icon() const { return entries_[kIconIndex]; }
@@ -58,6 +46,7 @@ class DesktopData {
   bool loadDesktopFile(QString desktopFile);
 
   QString file_;
+  QString appId_;
   QVector<QString> entries_;
   bool loaded_;
 };
@@ -90,23 +79,18 @@ class ApplicationManager : public QObject {
 
   // Mapping enums to Ubuntu Platform API enums.
   enum Role {
-    Dash = U_DASH_ROLE, Default = U_MAIN_ROLE, Indicators = U_INDICATOR_ROLE,
-    Notifications = U_NOTIFICATIONS_ROLE, Greeter = U_GREETER_ROLE,
-    Launcher = U_LAUNCHER_ROLE, OnScreenKeyboard = U_ON_SCREEN_KEYBOARD_ROLE,
-    ShutdownDialog = U_SHUTDOWN_DIALOG_ROLE
+    Dash, Default, Indicators, Notifications, Greeter,
+    Launcher, OnScreenKeyboard, ShutdownDialog
   };
   enum StageHint {
-    MainStage = U_MAIN_STAGE, IntegrationStage = U_INTEGRATION_STAGE,
-    ShareStage = U_SHARE_STAGE, ContentPickingStage = U_CONTENT_PICKING_STAGE,
-    SideStage = U_SIDE_STAGE, ConfigurationStage = U_CONFIGURATION_STAGE
+    MainStage, IntegrationStage, ShareStage, ContentPickingStage,
+    SideStage, ConfigurationStage
   };
   enum FormFactorHint {
-    DesktopFormFactor = U_DESKTOP, PhoneFormFactor = U_PHONE,
-    TabletFormFactor = U_TABLET
+    DesktopFormFactor, PhoneFormFactor, TabletFormFactor
   };
   enum FavoriteApplication {
-    CameraApplication = CAMERA_APP, GalleryApplication = GALLERY_APP,
-    BrowserApplication = BROWSER_APP, ShareApplication = SHARE_APP
+    CameraApplication, GalleryApplication, BrowserApplication, ShareApplication
   };
   enum Flag { 
     NoFlag = 0x0,
@@ -116,7 +100,6 @@ class ApplicationManager : public QObject {
 
   // QObject methods.
   void customEvent(QEvent* event);
-  void timerEvent(QTimerEvent* event);
 
   int keyboardHeight() const;
   bool keyboardVisible() const;
@@ -146,15 +129,12 @@ class ApplicationManager : public QObject {
   void focusRequested(FavoriteApplication favoriteApplication);
 
  private:
-  void killProcess(qint64 pid);
-
   int keyboardHeight_;
   bool keyboardVisible_;
   ApplicationListModel* mainStageApplications_;
   ApplicationListModel* sideStageApplications_;
   Application* mainStageFocusedApplication_;
   Application* sideStageFocusedApplication_;
-  QHash<int,Application*> pidHash_;
   QEvent::Type eventType_;
   QEvent::Type keyboardGeometryEventType_;
 };

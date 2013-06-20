@@ -28,7 +28,8 @@ HEADERS = application_manager.h \
 
 CONFIG += plugin
 
-LIBS += -lubuntu_application_api
+INCLUDEPATH += /usr/include/mirserver /usr/include/mircommon
+LIBS += -lmirserver
 
 target.files += libubuntuapplicationplugin.so qmldir
 target.path += $$[QT_INSTALL_IMPORTS]/Ubuntu/Application
