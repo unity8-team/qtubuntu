@@ -301,7 +301,7 @@ QUbuntuBaseInput::~QUbuntuBaseInput() {
 }
 
 void QUbuntuBaseInput::customEvent(QEvent* event) {
-  DLOG("QUbuntuBaseInput::customEvent (this=%p, event=%p)", this, event);
+  // DLOG("QUbuntuBaseInput::customEvent (this=%p, event=%p)", this, event);
   DASSERT(QThread::currentThread() == thread());
   QUbuntuBaseEvent* ubuntuEvent = static_cast<QUbuntuBaseEvent*>(event);
 
@@ -334,9 +334,9 @@ void QUbuntuBaseInput::customEvent(QEvent* event) {
 }
 
 void QUbuntuBaseInput::postEvent(QWindow* window, const void* event) {
-  DLOG("QUbuntuBaseInput::postEvent (this=%p, window=%p, event=%p)", this, window, event);
+  // DLOG("QUbuntuBaseInput::postEvent (this=%p, window=%p, event=%p)", this, window, event);
   QCoreApplication::postEvent(this, new QUbuntuBaseEvent(
-      window, reinterpret_cast<const Event*>(event), eventType_));
+      window, reinterpret_cast<const Event*>(event), eventType_), Qt::HighEventPriority);
 }
 
 void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
@@ -468,8 +468,9 @@ void QUbuntuBaseInput::handleTouchEvent(
 }
 
 void QUbuntuBaseInput::dispatchKeyEvent(QWindow* window, const void* ev) {
-  DLOG("QUbuntuBaseInput::dispatchKeyEvent (this=%p, window=%p, event=%p)", this, window, ev);
   const Event* event = reinterpret_cast<const Event*>(ev);
+  DLOG(" main thread (code=%d, action=%d, time=%lld)", event->details.key.key_code, event->action,
+       QDateTime::currentMSecsSinceEpoch());
 
 #if (LOG_EVENTS != 0)
   // Key event logging.
@@ -522,9 +523,9 @@ void QUbuntuBaseInput::dispatchKeyEvent(QWindow* window, const void* ev) {
 void QUbuntuBaseInput::handleKeyEvent(
     QWindow* window, ulong timestamp, QEvent::Type type, int key, Qt::KeyboardModifiers modifiers,
     const QString& text) {
-  DLOG("QUbuntuBaseInput::handleKeyEvent (this=%p window=%p, timestamp=%lu, type=%d, key=%d, "
-       "modifiers=%d, text='%s')", this, window, timestamp, static_cast<int>(type), key,
-       static_cast<int>(modifiers), text.toUtf8().data());
+  // DLOG("QUbuntuBaseInput::handleKeyEvent (this=%p window=%p, timestamp=%lu, type=%d, key=%d, "
+  //      "modifiers=%d, text='%s')", this, window, timestamp, static_cast<int>(type), key,
+  //      static_cast<int>(modifiers), text.toUtf8().data());
   QWindowSystemInterface::handleKeyEvent(window, timestamp, type, key, modifiers, text);
 }
 

@@ -26,7 +26,8 @@
 #include <ubuntu/application/ui/window.h>
 
 static void eventCallback(void* context, const Event* event) {
-  DLOG("eventCallback (context=%p, event=%p)", context, event);
+  DLOG("input thread (code=%d, action=%d, time=%lld)", event->details.key.key_code, event->action,
+       QDateTime::currentMSecsSinceEpoch());
   DASSERT(context != NULL);
   QUbuntuWindow* window = static_cast<QUbuntuWindow*>(context);
   window->input_->postEvent(window->window(), event);

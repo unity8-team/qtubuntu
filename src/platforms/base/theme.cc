@@ -36,8 +36,11 @@ QVariant QUbuntuTheme::themeHint(ThemeHint hint) const {
     } else {
       return QVariant(QString(iconTheme));
     }
+  // } else if (hint == QPlatformTheme::KeyboardInputInterval) {
+  //   return QVariant(0);
+  // } else if (hint == QPlatformTheme::KeyboardAutoRepeatRate) {
+  //   return QVariant(0);
   } else {
     return QGenericUnixTheme::themeHint(hint);
   }
 }
-
