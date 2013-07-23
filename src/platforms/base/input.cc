@@ -61,10 +61,10 @@ static const struct {
   { Qt::Key_9, { 0x0039, 0xffff, 0xffff } },               // ISCL_KEYCODE_9               = 16
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_STAR            = 17
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_POUND           = 18
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_UP         = 19
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_DOWN       = 20
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_LEFT       = 21
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_RIGHT      = 22
+  { Qt::Key_Up, { 0xffff, 0xffff, 0xffff } },              // ISCL_KEYCODE_DPAD_UP         = 19
+  { Qt::Key_Down, { 0xffff, 0xffff, 0xffff } },            // ISCL_KEYCODE_DPAD_DOWN       = 20
+  { Qt::Key_Left, { 0xffff, 0xffff, 0xffff } },            // ISCL_KEYCODE_DPAD_LEFT       = 21
+  { Qt::Key_Right, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_DPAD_RIGHT      = 22
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_DPAD_CENTER     = 23
   { Qt::Key_VolumeUp, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_VOLUME_UP       = 24
   { Qt::Key_VolumeDown, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_VOLUME_DOWN     = 25
@@ -109,7 +109,7 @@ static const struct {
   { Qt::Key_Explorer, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_EXPLORER        = 64
   { Qt::Key_LaunchMail, { 0xffff, 0xffff, 0xffff } },      // ISCL_KEYCODE_ENVELOPE        = 65
   { Qt::Key_Enter, { 0xffff, 0xffff, 0xffff } },           // ISCL_KEYCODE_ENTER           = 66
-  { Qt::Key_Delete, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_DEL             = 67
+  { Qt::Key_Backspace, { 0xffff, 0xffff, 0xffff } },       // ISCL_KEYCODE_DEL             = 67
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_GRAVE           = 68
   { Qt::Key_Minus, { 0x002d, 0xffff, 0xffff } },           // ISCL_KEYCODE_MINUS           = 69
   { Qt::Key_Equal, { 0x003d, 0xffff, 0xffff } },           // ISCL_KEYCODE_EQUALS          = 70
@@ -154,7 +154,7 @@ static const struct {
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_SELECT   = 109
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_BUTTON_MODE     = 110
   { Qt::Key_Escape, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_ESCAPE          = 111
-  { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_FORWARD_DEL     = 112
+  { Qt::Key_Delete, { 0xffff, 0xffff, 0xffff } },          // ISCL_KEYCODE_FORWARD_DEL     = 112
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CTRL_LEFT       = 113
   { Qt::Key_unknown, { 0xffff, 0xffff, 0xffff } },         // ISCL_KEYCODE_CTRL_RIGHT      = 114
   { Qt::Key_CapsLock, { 0xffff, 0xffff, 0xffff } },        // ISCL_KEYCODE_CAPS_LOCK       = 115
