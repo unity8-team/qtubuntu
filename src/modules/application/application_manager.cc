@@ -230,6 +230,11 @@ bool DesktopData::loadDesktopFile(QString desktopFile) {
             int keyLength = kEntryNames[i].size;
             buffer[length-1] = '\0';
 
+            if (length == keyLength + 1) {
+                validLine = false;
+                break;
+            }
+
             if ((const char)buffer[keyLength] != ' ' && (const char)buffer[keyLength] != '=') {
               // Skip, not the key we're looking for.
               continue;
