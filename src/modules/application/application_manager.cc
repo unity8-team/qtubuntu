@@ -207,11 +207,9 @@ bool DesktopData::loadDesktopFile(QString desktopFile) {
   }
 
   // Validate "magic key" (standard group header).
-  if (file.readLine(buffer, kBufferSize) != -1) {
-    if (strncmp(buffer, "[Desktop Entry]", sizeof("[Desktop Entry]" - 1))) {
-      DLOG("not a desktop file");
-      return false;
-    }
+  while (file.readLine(buffer, kBufferSize) != -1) {
+    if (!strncmp(buffer, "[Desktop Entry]", sizeof("[Desktop Entry]" - 1)))
+      break;
   }
 
   int length;
