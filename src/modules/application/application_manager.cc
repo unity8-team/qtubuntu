@@ -181,12 +181,12 @@ bool DesktopData::loadDesktopFile(QString desktopFile) {
        this, desktopFile.toLatin1().data());
   DASSERT(desktopFile != NULL);
   const struct { const char* const name; int size; unsigned int flag; } kEntryNames[] = {
-    { "Name=", sizeof("Name=") - 1, 1 << DesktopData::kNameIndex },
-    { "Comment=", sizeof("Comment=") - 1, 1 << DesktopData::kCommentIndex },
-    { "Icon=", sizeof("Icon=") - 1, 1 << DesktopData::kIconIndex },
-    { "Exec=", sizeof("Exec=") - 1, 1 << DesktopData::kExecIndex },
-    { "Path=", sizeof("Path=") - 1, 1 << DesktopData::kPathIndex },
-    { "X-Ubuntu-StageHint=", sizeof("X-Ubuntu-StageHint=") - 1, 1 << DesktopData::kStageHintIndex }
+    { "Name", sizeof("Name") - 1, 1 << DesktopData::kNameIndex },
+    { "Comment", sizeof("Comment") - 1, 1 << DesktopData::kCommentIndex },
+    { "Icon", sizeof("Icon") - 1, 1 << DesktopData::kIconIndex },
+    { "Exec", sizeof("Exec") - 1, 1 << DesktopData::kExecIndex },
+    { "Path", sizeof("Path") - 1, 1 << DesktopData::kPathIndex },
+    { "X-Ubuntu-StageHint", sizeof("X-Ubuntu-StageHint") - 1, 1 << DesktopData::kStageHintIndex }
   };
   const unsigned int kAllEntriesMask =
       (1 << DesktopData::kNameIndex) | (1 << DesktopData::kCommentIndex)
@@ -222,16 +222,44 @@ bool DesktopData::loadDesktopFile(QString desktopFile) {
         DLOG("reached next group header, leaving loop");
         break;
       }
+      bool validLine = true;
       // Lookup entries ignoring duplicates if any.
       for (int i = 0; i < kEntriesCount; i++) {
         if (!strncmp(buffer, kEntryNames[i].name, kEntryNames[i].size)) {
           if (~entryFlags & kEntryNames[i].flag) {
+            int keyLength = kEntryNames[i].size;
             buffer[length-1] = '\0';
-            entries_[i] = QString::fromLatin1(&buffer[kEntryNames[i].size]);
+
+            if ((const char)buffer[keyLength] != ' ' && (const char)buffer[keyLength] != '=') {
+              // Skip, not the key we're looking for.
+              continue;
+            }
+
+            bool gotEqual = false;
+            while(keyLength < length) {
+              if ((const char)buffer[keyLength] ==  ' ') {
+                // Ignore spaces.
+              } else if ((const char)buffer[keyLength] == '=') {
+                gotEqual = true;
+              } else {
+                break;
+              }
+              keyLength++;
+            }
+            if (!gotEqual) {
+              validLine = false;
+              break;
+            }
+            entries_[i] = QString::fromLatin1(&buffer[keyLength]);
             entryFlags |= kEntryNames[i].flag;
+            DLOG("Found entry for %s: %s", kEntryNames[i].name, entries_[i].toLatin1().data());
             break;
           }
         }
+      }
+      if (!validLine) {
+        DLOG("Malformed .desktop file entry, ignoring: %s", buffer);
+        continue;
       }
       // Stop when matching the right number of entries.
       if (entryFlags == kAllEntriesMask) {
