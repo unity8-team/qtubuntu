@@ -1,3 +1,101 @@
+qtubuntu (0.52+13.10.20130803-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * * Add method to disable/enable sensors opened from the QPA
+    automatically. * Make use of the hook to disable/enable when the
+    application active status changes.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 161
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 03 Aug 2013 02:01:59 +0000
+
+qtubuntu (0.52+13.10.20130731-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Add mapping for some missing special characters. (LP: #1203212)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 159
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 31 Jul 2013 02:01:55 +0000
+
+qtubuntu (0.52+13.10.20130730-0ubuntu1) saucy; urgency=low
+
+  [ Gustavo Pichorim Boiko ]
+  * Add values for the new applications that were created as a result of
+    the splitting of the phone-app.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 157
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 30 Jul 2013 02:01:54 +0000
+
+qtubuntu (0.52+13.10.20130729-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Make the lifecycle signals deliver the ApplicationActive and
+    ApplicationDeactivate events to the running application. (LP:
+    #1183866)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 155
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 29 Jul 2013 02:01:53 +0000
+
+qtubuntu (0.52+13.10.20130723-0ubuntu1) saucy; urgency=low
+
+  [ Michał Sawicz ]
+  * Do not reverse arguments from destkop files. (LP: #1200437)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 153
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 23 Jul 2013 02:01:52 +0000
+
+qtubuntu (0.52+13.10.20130720-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Send colon unicode when hitting key with modifier.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 151
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 20 Jul 2013 02:01:53 +0000
+
+qtubuntu (0.52+13.10.20130718-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Change dep to use the real platform-api package instead of the
+    transitional one.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 149
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 18 Jul 2013 02:02:29 +0000
+
+qtubuntu (0.52+13.10.20130711-0ubuntu1) saucy; urgency=low
+
+  [ Antti Kaijanmäki ]
+  * ApplicationManager: Set APP_ID env variable on started processes.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 147
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 11 Jul 2013 02:01:48 +0000
+
+qtubuntu (0.52+13.10.20130703-0ubuntu1) saucy; urgency=low
+
+  [ Didier Roche ]
+  * Transition qtubuntu to qtubuntu-android (only available on armhf as
+    it's where it's built) and provides a qtubuntu and qtubuntu-shell
+    virtual package, enabling even mock to fulfill the dep
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 145
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 03 Jul 2013 15:14:53 +0000
+
 qtubuntu (0.51daily13.06.17-0ubuntu1) saucy; urgency=low
 
   [ Ken VanDine ]
