@@ -155,14 +155,19 @@ void QUbuntuWindow::setWindowState(Qt::WindowState state) {
     }
     case Qt::WindowMaximized: {
       DLOG("setting window state: 'Maximized'");
+      ua_ui_window_show(window_);
       moveResize(screen()->availableGeometry());
       state_ = Qt::WindowMaximized;
       break;
     }
-    case Qt::WindowActive:
     case Qt::WindowMinimized:
+      DLOG("setting window state: 'Minimized'");
+      ua_ui_window_hide(window_);
+      state_ = Qt::WindowMinimized;
+      break;
+    case Qt::WindowActive:
     default: {
-      DLOG("setting window state: 'Active|Minimized'");
+      DLOG("setting window state: 'Active'");
       break;
     }
   }
