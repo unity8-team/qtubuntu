@@ -32,6 +32,7 @@ class QUbuntuScreen : public QObject, public QUbuntuBaseScreen {
   // QPlatformScreen methods.
   QRect geometry() const { return geometry_; }
   QRect availableGeometry() const { return availableGeometry_; }
+  qreal devicePixelRatio() const;
 
   Qt::ScreenOrientation nativeOrientation() const { return nativeOrientation_; }
   Qt::ScreenOrientation orientation() const { return currentOrientation_; }

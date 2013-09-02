@@ -37,3 +37,8 @@ void QUbuntuBaseWindow::createSurface(EGLNativeWindowType nativeWindow) {
   ASSERT((eglSurface_ = eglCreateWindowSurface(
       screen_->eglDisplay(), screen_->eglConfig(), nativeWindow, NULL)) != EGL_NO_SURFACE);
 }
+
+qreal QUbuntuBaseWindow::devicePixelRatio() const {
+  DLOG("QUbuntuBaseWindow::devicePixelRatio (this=%p)", this);
+  return screen_->devicePixelRatio();
+}

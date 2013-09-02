@@ -108,11 +108,12 @@ void QUbuntuWindow::createWindow() {
   // Create platform window
   window_ = ua_ui_window_new_for_application_with_properties(uainstance_, wprops_);
 
+  qreal pixelRatio = devicePixelRatio();
   if (geometry.width() != 0 || geometry.height() != 0)
-      ua_ui_window_resize(window_, geometry.width(), geometry.height());
+      ua_ui_window_resize(window_, geometry.width() * pixelRatio, geometry.height() * pixelRatio);
 
   if (geometry.x() != 0 || geometry.y() != 0)
-      ua_ui_window_move(window_, geometry.x(), geometry.y());
+      ua_ui_window_move(window_, geometry.x() * pixelRatio, geometry.y() * pixelRatio);
 
   ASSERT(window_ != NULL);
   createSurface(ua_ui_window_get_native_type(window_));
@@ -128,8 +129,9 @@ void QUbuntuWindow::createWindow() {
 void QUbuntuWindow::moveResize(const QRect& rect) {
   fprintf(stderr, "\nQUbuntuWindow::moveResize (this=%p, x=%d, y=%d, w=%d, h=%d)\n", this, rect.x(), rect.y(),
        rect.width(), rect.height());
-  ua_ui_window_move(window_, rect.x(), rect.y());
-  ua_ui_window_resize(window_, rect.width(), rect.height());
+  qreal pixelRatio = devicePixelRatio();
+  ua_ui_window_move(window_, rect.x() * pixelRatio, rect.y() * pixelRatio);
+  ua_ui_window_resize(window_, rect.width() * pixelRatio, rect.height() * pixelRatio);
   QWindowSystemInterface::handleGeometryChange(window(), rect);
   QPlatformWindow::setGeometry(rect);
 }

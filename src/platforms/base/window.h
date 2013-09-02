@@ -28,6 +28,7 @@ class QUbuntuBaseWindow : public QPlatformWindow {
 
   // QPlatformWindow methods.
   WId winId() const { return id_; }
+  qreal devicePixelRatio() const;
 
   // New methods.
   void createSurface(EGLNativeWindowType nativeWindow);

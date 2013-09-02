@@ -375,6 +375,7 @@ void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
   //     needs to be fixed as soon as the compat input lib adds query support.
   const float kMaxPressure = 1.28;
   const QRect kWindowGeometry = window->geometry();
+  qreal pixelRatio = window->devicePixelRatio();
 
   switch (event->action & ISCL_MOTION_EVENT_ACTION_MASK) {
     case ISCL_MOTION_EVENT_ACTION_MOVE: {
@@ -382,10 +383,10 @@ void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
       const int kPointerCount = event->details.motion.pointer_count;
       for (int touchIndex = 0; eventIndex < kPointerCount; touchIndex++) {
         if (touchPoints_[touchIndex].state != Qt::TouchPointReleased) {
-          const float kX = event->details.motion.pointer_coordinates[eventIndex].raw_x;
-          const float kY = event->details.motion.pointer_coordinates[eventIndex].raw_y;
-          const float kW = event->details.motion.pointer_coordinates[eventIndex].touch_major;
-          const float kH = event->details.motion.pointer_coordinates[eventIndex].touch_minor;
+          const float kX = event->details.motion.pointer_coordinates[eventIndex].raw_x / pixelRatio;
+          const float kY = event->details.motion.pointer_coordinates[eventIndex].raw_y / pixelRatio;
+          const float kW = event->details.motion.pointer_coordinates[eventIndex].touch_major / pixelRatio;
+          const float kH = event->details.motion.pointer_coordinates[eventIndex].touch_minor / pixelRatio;
           const float kP = event->details.motion.pointer_coordinates[eventIndex].pressure;
           touchPoints_[touchIndex].area = QRectF(kX - (kW / 2.0), kY - (kH / 2.0), kW, kH);
           touchPoints_[touchIndex].normalPosition = QPointF(
@@ -400,10 +401,10 @@ void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
 
     case ISCL_MOTION_EVENT_ACTION_DOWN: {
       const int kTouchIndex = event->details.motion.pointer_coordinates[0].id;
-      const float kX = event->details.motion.pointer_coordinates[0].raw_x;
-      const float kY = event->details.motion.pointer_coordinates[0].raw_y;
-      const float kW = event->details.motion.pointer_coordinates[0].touch_major;
-      const float kH = event->details.motion.pointer_coordinates[0].touch_minor;
+      const float kX = event->details.motion.pointer_coordinates[0].raw_x / pixelRatio;
+      const float kY = event->details.motion.pointer_coordinates[0].raw_y / pixelRatio;
+      const float kW = event->details.motion.pointer_coordinates[0].touch_major / pixelRatio;
+      const float kH = event->details.motion.pointer_coordinates[0].touch_minor / pixelRatio;
       const float kP = event->details.motion.pointer_coordinates[0].pressure;
       touchPoints_[kTouchIndex].state = Qt::TouchPointPressed;
       touchPoints_[kTouchIndex].area = QRectF(kX - (kW / 2.0), kY - (kH / 2.0), kW, kH);
@@ -423,10 +424,10 @@ void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
       const int eventIndex = (event->action & ISCL_MOTION_EVENT_ACTION_POINTER_INDEX_MASK) >>
           ISCL_MOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
       const int kTouchIndex = event->details.motion.pointer_coordinates[eventIndex].id;
-      const float kX = event->details.motion.pointer_coordinates[eventIndex].raw_x;
-      const float kY = event->details.motion.pointer_coordinates[eventIndex].raw_y;
-      const float kW = event->details.motion.pointer_coordinates[eventIndex].touch_major;
-      const float kH = event->details.motion.pointer_coordinates[eventIndex].touch_minor;
+      const float kX = event->details.motion.pointer_coordinates[eventIndex].raw_x / pixelRatio;
+      const float kY = event->details.motion.pointer_coordinates[eventIndex].raw_y / pixelRatio;
+      const float kW = event->details.motion.pointer_coordinates[eventIndex].touch_major / pixelRatio;
+      const float kH = event->details.motion.pointer_coordinates[eventIndex].touch_minor / pixelRatio;
       const float kP = event->details.motion.pointer_coordinates[eventIndex].pressure;
       touchPoints_[kTouchIndex].state = Qt::TouchPointPressed;
       touchPoints_[kTouchIndex].area = QRectF(kX - (kW / 2.0), kY - (kH / 2.0), kW, kH);

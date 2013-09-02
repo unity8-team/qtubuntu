@@ -76,8 +76,8 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
 
   // Get screen resolution.
   UAUiDisplay* display = ua_ui_display_new_with_index(0);
-  const int kScreenWidth = ua_ui_display_query_horizontal_res(display);
-  const int kScreenHeight = ua_ui_display_query_vertical_res(display);
+  const int kScreenWidth = ua_ui_display_query_horizontal_res(display) / densityPixelRatio_;
+  const int kScreenHeight = ua_ui_display_query_vertical_res(display) / densityPixelRatio_;
   ASSERT(kScreenWidth > 0 && kScreenHeight > 0);
   DLOG("screen resolution: %dx%d", kScreenWidth, kScreenHeight);
   ua_ui_display_destroy(display);
@@ -118,6 +118,11 @@ QUbuntuScreen::~QUbuntuScreen() {
   delete orientationSensor_;
 }
 
+qreal QUbuntuScreen::devicePixelRatio() const {
+  DLOG("QUbuntuScreen::devicePixelRatio (this=%p)", this);
+  return densityPixelRatio_;
+}
+
 void QUbuntuScreen::toggleSensors(bool enable) const {
   DLOG("QUbuntuScreen::toggleSensors (this=%p, enable=%d)", this, enable);
   if (enable)
@@ -128,17 +133,12 @@ void QUbuntuScreen::toggleSensors(bool enable) const {
 
 int QUbuntuScreen::gridUnitToPixel(int value) const {
   DLOG("QUbuntuScreen::gridUnitToPixel (this=%p, value=%d)", this, value);
-  return value * gridUnit_;
+  return value * kDefaultGridUnit;
 }
 
 int QUbuntuScreen::densityPixelToPixel(int value) const {
   DLOG("QUbuntuScreen::densityPixelToPixel (this=%p, value=%d)", this, value);
-  if (value <= 2) {
-    // For values under 2dp, return only multiples of the value.
-    return static_cast<int>(value * qFloor(densityPixelRatio_));
-  } else {
-    return static_cast<int>(qRound(value * densityPixelRatio_));
-  }
+  return value;
 }
 
 void QUbuntuScreen::customEvent(QEvent* event) {
