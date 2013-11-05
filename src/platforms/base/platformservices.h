@@ -13,32 +13,18 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef QUBUNTUBASEWINDOW_H
-#define QUBUNTUBASEWINDOW_H
+#ifndef QUBUNTUBASEPLATFORMSERVICES_H
+#define QUBUNTUBASEPLATFORMSERVICES_H
 
-#include <qpa/qplatformwindow.h>
-#include <EGL/egl.h>
+#include <qpa/qplatformservices.h>
 
-class QUbuntuBaseScreen;
+class QUbuntuBasePlatformServices : public QPlatformServices {
+public:
+    bool openUrl(const QUrl &url);
+    bool openDocument(const QUrl &url);
 
-class QUbuntuBaseWindow : public QPlatformWindow {
- public:
-  QUbuntuBaseWindow(QWindow* w, QUbuntuBaseScreen* screen);
-  ~QUbuntuBaseWindow();
-
-  // QPlatformWindow methods.
-  WId winId() const { return id_; }
-  qreal devicePixelRatio() const;
-
-  // New methods.
-  void createEGLSurface(EGLNativeWindowType nativeWindow);
-  void destroyEGLSurface();
-  EGLSurface eglSurface() const { return eglSurface_; }
-
- private:
-  QUbuntuBaseScreen* screen_;
-  EGLSurface eglSurface_;
-  WId id_;
+private:
+    bool callDispatcher(const QUrl &url);
 };
 
-#endif  // QUBUNTUBASEWINDOW_H
+#endif  // QUBUNTUBASEPLATFORMSERVICES_H

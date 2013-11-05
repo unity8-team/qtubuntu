@@ -1,3 +1,89 @@
+qtubuntu (0.52+13.10.20131016-0ubuntu1) saucy; urgency=low
+
+  [ Michał Sawicz ]
+  * Map PowerDown and PowerOff keys and fix indentation. (LP: #1232122)
+
+  [ Alexandros Frantzis ]
+  * Abort if we can't get an ubuntu application instance. (LP: #1233988)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 189
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 16 Oct 2013 02:33:02 +0000
+
+qtubuntu (0.52+13.10.20131009-0ubuntu1) saucy; urgency=low
+
+  [ Alexandros Frantzis ]
+  * Release the EGL window surface before releasing the attached native
+    window Otherwise, if the native window is released first, as was
+    previously happening, the EGL platform may try to access the freed
+    native window, leading to memory errors and crashes. (LP: #1237052)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 186
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 09 Oct 2013 20:27:39 +0000
+
+qtubuntu (0.52+13.10.20131008-0ubuntu1) saucy; urgency=low
+
+  [ Loïc Minier ]
+  * Add Vcs-Bzr field with lp:qtubuntu.
+
+  [ Robert Carr ]
+  * Map the volume up and down keys to keysyms in mir. (LP: #1233245)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 184
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 08 Oct 2013 12:14:42 +0000
+
+qtubuntu (0.52+13.10.20130920-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * If window has a parent, send duplicate events to it.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 180
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 20 Sep 2013 04:25:44 +0000
+
+qtubuntu (0.52+13.10.20130919-0ubuntu1) saucy; urgency=low
+
+  [ Albert Astals ]
+  * Implement the backend for QDesktopServices::openUrl . (LP: #1186556)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 177
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 18 Sep 2013 14:09:32 +0000
+
+qtubuntu (0.52+13.10.20130912.1-0ubuntu1) saucy; urgency=low
+
+  [ Michael Zanetti ]
+  * register application interface types with QML.
+
+  [ Gerry Boland ]
+  * Fix click package execution, and correct icon path.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 175
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 12 Sep 2013 22:45:06 +0000
+
+qtubuntu (0.52+13.10.20130910.7-0ubuntu1) saucy; urgency=low
+
+  [ Gerry Boland ]
+  * Add fake OSKController component, for compatibility with unity-mir.
+  * Implement ApplicationManager API as defined in unity-api. This
+    requires renaming QML plugin to Unity.Application, removing the
+    ApplicationListModel class and supplying just one model of
+    applications running.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 172
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 10 Sep 2013 23:30:45 +0000
+
 qtubuntu (0.52+13.10.20130821-0ubuntu1) saucy; urgency=low
 
   [ Timo Jyrinki ]
