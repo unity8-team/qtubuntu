@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
 
 class QUbuntuLegacyIntegrationPlugin : public QPlatformIntegrationPlugin {
   Q_OBJECT
-  Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.1"
+  Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.2"
                     FILE "ubuntulegacy.json")
 
  public:

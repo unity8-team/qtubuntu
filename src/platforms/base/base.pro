@@ -19,6 +19,7 @@ SOURCES = integration.cc \
           window.cc \
           input.cc \
           theme.cc \
+          qeglconvenience.cpp \
           platformservices.cc \
           clipboard.cc
 
@@ -31,6 +32,7 @@ HEADERS = integration.h \
           input.h \
           logging.h \
           theme.h \
+          qeglconvenience_p.h \
           platformservices.h \
           clipboard.h
 

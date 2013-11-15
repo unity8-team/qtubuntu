@@ -15,7 +15,7 @@
 
 #include "screen.h"
 #include "logging.h"
-#include <QtPlatformSupport/private/qeglconvenience_p.h>
+#include "qeglconvenience_p.h"
 
 #include <ubuntu/application/ui/display.h>
 
