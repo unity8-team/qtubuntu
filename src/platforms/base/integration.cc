@@ -27,11 +27,9 @@
 #include <QtGui/QOpenGLContext>
 
 QUbuntuBaseIntegration::QUbuntuBaseIntegration()
-    : eventDispatcher_(createUnixEventDispatcher())
-    , nativeInterface_(new QUbuntuBaseNativeInterface())
+    : nativeInterface_(new QUbuntuBaseNativeInterface())
     , fontDb_(new QGenericUnixFontDatabase())
     , platformServices_(new QUbuntuBasePlatformServices()) {
-  QGuiApplicationPrivate::instance()->setEventDispatcher(eventDispatcher_);
   DLOG("QUbuntuBaseIntegration::QUbuntuBaseIntegration (this=%p)", this);
 }
 
@@ -90,4 +88,9 @@ QPlatformTheme* QUbuntuBaseIntegration::createPlatformTheme(const QString& name)
   Q_UNUSED(name);
   DLOG("QUbuntuBaseIntegration::createPlatformTheme (this=%p)", this);
   return new QUbuntuTheme();
+}
+
+QAbstractEventDispatcher* QUbuntuBaseIntegration::createEventDispatcher() const {
+  DLOG("QUbuntuBaseIntegration::createEventDispatcher (this=%p)", this);
+  return createUnixEventDispatcher();
 }
