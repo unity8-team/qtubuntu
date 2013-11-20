@@ -119,7 +119,6 @@ QUbuntuScreen::~QUbuntuScreen() {
 }
 
 qreal QUbuntuScreen::devicePixelRatio() const {
-  DLOG("QUbuntuScreen::devicePixelRatio (this=%p)", this);
   return densityPixelRatio_;
 }
 

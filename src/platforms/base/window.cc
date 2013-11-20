@@ -47,6 +47,5 @@ void QUbuntuBaseWindow::destroyEGLSurface() {
 }
 
 qreal QUbuntuBaseWindow::devicePixelRatio() const {
-  DLOG("QUbuntuBaseWindow::devicePixelRatio (this=%p)", this);
   return screen_->devicePixelRatio();
 }
