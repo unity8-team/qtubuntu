@@ -46,6 +46,8 @@ void QUbuntuBaseWindow::destroyEGLSurface() {
   }
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
 qreal QUbuntuBaseWindow::devicePixelRatio() const {
   return screen_->devicePixelRatio();
 }
+#endif

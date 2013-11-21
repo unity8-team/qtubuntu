@@ -369,7 +369,9 @@ void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
   //     needs to be fixed as soon as the compat input lib adds query support.
   const float kMaxPressure = 1.28;
   const QRect kWindowGeometry = window->geometry();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
   qreal pixelRatio = window->devicePixelRatio();
+#endif
   QList<QWindowSystemInterface::TouchPoint> touchPoints;
 
 
@@ -379,10 +381,17 @@ void QUbuntuBaseInput::dispatchMotionEvent(QWindow* window, const void* ev) {
   for (int i = 0; i < kPointerCount; ++i) {
     QWindowSystemInterface::TouchPoint touchPoint;
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
     const float kX = event->details.motion.pointer_coordinates[i].raw_x / pixelRatio;
     const float kY = event->details.motion.pointer_coordinates[i].raw_y / pixelRatio;
     const float kW = event->details.motion.pointer_coordinates[i].touch_major / pixelRatio;
     const float kH = event->details.motion.pointer_coordinates[i].touch_minor / pixelRatio;
+#else
+    const float kX = event->details.motion.pointer_coordinates[i].raw_x;
+    const float kY = event->details.motion.pointer_coordinates[i].raw_y;
+    const float kW = event->details.motion.pointer_coordinates[i].touch_major;
+    const float kH = event->details.motion.pointer_coordinates[i].touch_minor;
+#endif
     const float kP = event->details.motion.pointer_coordinates[i].pressure;
     touchPoint.id = event->details.motion.pointer_coordinates[i].id;
     touchPoint.normalPosition = QPointF(kX / kWindowGeometry.width(), kY / kWindowGeometry.height());
