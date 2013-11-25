@@ -1,7 +1,7 @@
 TARGET = qubuntumirserver
 TEMPLATE = lib
 
-QT += core-private gui-private platformsupport-private sensors-private
+QT += gui-private platformsupport-private sensors
 
 DEFINES += MESA_EGL_NO_X11_HEADERS
 QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
@@ -13,8 +13,9 @@ CONFIG(debug) {
 
 SOURCES = main.cc 
 
-CONFIG += plugin link_prl
+CONFIG += plugin link_prl link_pkgconfig
 
+PKGCONFIG += egl
 INCLUDEPATH += ../../../ ../../ ../
 LIBS += -Wl,--whole-archive -L../../../base -lubuntubase -L../../ubuntucommon -lqubuntucommon  -L../ubuntumircommon -lqubuntumircommon -Wl,--no-whole-archive -lubuntu_application_api_mirserver
 
