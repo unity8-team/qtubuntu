@@ -7,14 +7,18 @@ ANDROID_DIR = build-android
 DESKTOP_DIR = build-desktop
 
 %:
-	dh $@ --builddirectory=$(ANDROID_DIR) --parallel
-	dh $@ --builddirectory=$(DESKTOP_DIR) --parallel
+	dh $@
 
 override_dh_auto_configure:
-	mkdir -p $(ANDROID_DIR) && dh_auto_configure -- "CONFIG+=mirserver" "CONFIG+=mirclient" "CONFIG+=hybris" "QMAKE_CXXFLAGS=-g" $(CURDIR)
-	mkdir -p $(DESKTOP_DIR) && dh_auto_configure -- "CONFIG+=mirserver" "CONFIG+=mirclient" "QMAKE_CXXFLAGS=-g" $(CURDIR)
+	mkdir -p $(ANDROID_DIR) && dh_auto_configure -B$(ANDROID_DIR) -- "CONFIG+=mirserver" "CONFIG+=mirclient" "CONFIG+=hybris" "QMAKE_CXXFLAGS=-g" $(CURDIR)
+	mkdir -p $(DESKTOP_DIR) && dh_auto_configure -B$(DESKTOP_DIR) -- "CONFIG+=mirserver" "CONFIG+=mirclient" "QMAKE_CXXFLAGS=-g" $(CURDIR)
 
-override_dh_install:
+override_dh_auto_build:
+	dh_auto_build -B$(ANDROID_DIR)
+	dh_auto_build -B$(DESKTOP_DIR)
+
+override_dh_auto_install:
 	rm -f debian/*/usr/lib/*/qt5/examples/qtubuntu/qmlscene-ubuntu
-	dh_install --fail-missing
+	dh_auto_install -B$(ANDROID_DIR) --destdir=$(CURDIR)/debian/tmp/qtubuntu-android
+	dh_auto_install -B$(DESKTOP_DIR) --destdir=$(CURDIR)/debian/tmp/qtubuntu-desktop
 
