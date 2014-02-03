@@ -72,7 +72,12 @@ QUbuntuIntegration::QUbuntuIntegration(QUbuntuInputAdaptorFactory *input_factory
   instance_ = u_application_instance_new_from_description_with_options(desc_, options_);
 
   if (instance_ == NULL)
-    qFatal("QUbuntu: Could not create application instance");
+    qFatal("QUbuntu: Could not create application instance. \n"
+           "If unity8 is the running shell, check $HOME/.cache/upstart/unity8.log for messages \n"
+           "containing the string 'REJECTED' which may give information why unity8 disallowed \n"
+           "this application from starting. If launching with the --desktop_file_hint switch \n"
+           "ensure you pass the full path to a valid desktop file, which must exist in either \n"
+           "/usr/share/applications or $HOME/.local/share/applications");
 
   // Create default screen.
   screen_ = new QUbuntuScreen(options_);
