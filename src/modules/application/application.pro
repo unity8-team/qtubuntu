@@ -1,7 +1,7 @@
 TARGET = unityapplicationplugin
 TEMPLATE = lib
 
-QT += quick-private qml-private
+QT += quick
 CONFIG += link_pkgconfig
 
 # CONFIG += c++11 # only enables C++0x
@@ -37,6 +37,9 @@ CONFIG += plugin
 
 LIBS += -lubuntu_application_api
 
-target.files += libunityapplicationplugin.so qmldir OSKController.qml
 target.path += $$[QT_INSTALL_IMPORTS]/Unity/Application
 INSTALLS += target
+
+assets.files = qmldir OSKController.qml
+assets.path = $$[QT_INSTALL_IMPORTS]/Unity/Application
+INSTALLS += assets
