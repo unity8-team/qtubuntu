@@ -1,4 +1,4 @@
-qtubuntu (0.53+14.04.20140131-0ubuntu2~ppa1) saucy; urgency=low
+qtubuntu (0.53+14.04.20140131-0ubuntu2~ppa1) trusty; urgency=low
 
   * enable OpenGL on the desktop instead of OpenGL|ES (lp: #1274763)
 
