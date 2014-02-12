@@ -70,12 +70,19 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
   DLOG("grid unit is %d", gridUnit);
   DLOG("density pixel ratio is %.2f", densityPixelRatio_);
 
+  const bool forceLandscape_ = qgetenv("NATIVE_ORIENTATION") == "landscape";
+  DLOG("Force landscape: %c", forceLandscape_ ? 'y' : 'n');
+
   // Compute menubar strut.
   // FIXME(loicm) Hard-coded to 3 grid units plus 2 density independent pixels for now.
-  struct { int left; int right; int top; int bottom; } strut = {
-    0, 0, gridUnitToPixel(3) + densityPixelToPixel(2), 0
-  };
-  DLOG("menu bar height is %d pixels", strut.top);
+  const int panelHeight = gridUnitToPixel(3) + densityPixelToPixel(2);
+  LOG("menu bar height is %d pixels", panelHeight);
+  struct { int left; int right; int top; int bottom; } strut = { 0, 0, 0, 0 };
+  if (forceLandscape_) {
+    strut.left = panelHeight;
+  } else {
+    strut.top = panelHeight;
+  }
 
   // Get screen resolution.
   UAUiDisplay* display = ua_ui_display_new_with_index(0);
@@ -87,7 +94,7 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
 
   // Store geometries depending on the stage hint.
   UAUiStage kStageHint = static_cast<UAUiStage>(u_application_options_get_stage(options));
-  if (kScreenWidth/gridUnit < kTabletMinSize)
+  if ( (forceLandscape_ ? kScreenHeight : kScreenWidth)/gridUnit < kTabletMinSize)
     kStageHint = U_MAIN_STAGE;
 
   DASSERT(kStageHint == U_MAIN_STAGE || kStageHint == U_SIDE_STAGE);
@@ -98,11 +105,18 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
         kScreenHeight - strut.top - strut.bottom);
   } else {
     const int kSideStageWidthPixels = gridUnitToPixel(kSideStageWidth);
-    geometry_ = QRect(kScreenWidth - kSideStageWidthPixels, 0, kSideStageWidthPixels,
-                      kScreenHeight);
-    availableGeometry_ = QRect(
-        kScreenWidth - kSideStageWidthPixels + strut.left, strut.top,
-        kSideStageWidthPixels - strut.left - strut.right, kScreenHeight - strut.top - strut.bottom);
+    if (forceLandscape_) {
+      geometry_ = QRect(0, kScreenWidth - kSideStageWidthPixels, kScreenWidth, kSideStageWidthPixels);
+      availableGeometry_ = QRect(
+          strut.left, kScreenWidth - kSideStageWidthPixels + strut.top,
+          kScreenWidth - strut.left - strut.right, kSideStageWidthPixels - strut.top - strut.bottom);
+    } else {
+      geometry_ = QRect(kScreenWidth - kSideStageWidthPixels, 0, kSideStageWidthPixels,
+                        kScreenHeight);
+      availableGeometry_ = QRect(
+          kScreenWidth - kSideStageWidthPixels + strut.left, strut.top,
+          kSideStageWidthPixels - strut.left - strut.right, kScreenHeight - strut.top - strut.bottom);
+    }
   }
 
   DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
