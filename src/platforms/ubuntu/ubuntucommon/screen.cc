@@ -125,7 +125,11 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
   nativeOrientation_ = (availableGeometry_.width() >= availableGeometry_.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
 
   // If it's a landscape device (i.e. some tablets), start in landscape, otherwise portrait
-  currentOrientation_ = (nativeOrientation_ == Qt::LandscapeOrientation) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
+   if (forceLandscape_) {
+    currentOrientation_ = Qt::InvertedLandscapeOrientation;
+  } else {
+    currentOrientation_ = (nativeOrientation_ == Qt::LandscapeOrientation) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
+  }
 
   orientationSensor_ = new QOrientationSensor();
   QObject::connect(orientationSensor_, SIGNAL(readingChanged()), this, SLOT(onOrientationReadingChanged()));
