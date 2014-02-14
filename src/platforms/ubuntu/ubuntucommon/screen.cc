@@ -79,7 +79,7 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
   LOG("menu bar height is %d pixels", panelHeight);
   struct { int left; int right; int top; int bottom; } strut = { 0, 0, 0, 0 };
   if (forceLandscape_) {
-    strut.left = panelHeight;
+    strut.right = panelHeight;
   } else {
     strut.top = panelHeight;
   }
@@ -106,9 +106,9 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
   } else {
     const int kSideStageWidthPixels = gridUnitToPixel(kSideStageWidth);
     if (forceLandscape_) {
-      geometry_ = QRect(0, kScreenWidth - kSideStageWidthPixels, kScreenWidth, kSideStageWidthPixels);
+      geometry_ = QRect(0, kScreenHeight - kSideStageWidthPixels, kScreenWidth, kSideStageWidthPixels);
       availableGeometry_ = QRect(
-          strut.left, kScreenWidth - kSideStageWidthPixels + strut.top,
+          strut.left, kScreenHeight - kSideStageWidthPixels + strut.top,
           kScreenWidth - strut.left - strut.right, kSideStageWidthPixels - strut.top - strut.bottom);
     } else {
       geometry_ = QRect(kScreenWidth - kSideStageWidthPixels, 0, kSideStageWidthPixels,
