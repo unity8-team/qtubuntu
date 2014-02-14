@@ -1,3 +1,9 @@
+qtubuntu (0.53+demo-stuff0) trusty; urgency=medium
+
+  * N7 rotate hacks - do not release into wild
+
+ -- Gerry Boland <gerry.boland@canonical.com>  Fri, 14 Feb 2014 16:21:15 +0000
+
 qtubuntu (0.53+14.04.20140131-0ubuntu1) trusty; urgency=low
 
   [ CI bot ]
