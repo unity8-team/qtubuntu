@@ -126,7 +126,11 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
 
   // If it's a landscape device (i.e. some tablets), start in landscape, otherwise portrait
    if (forceLandscape_) {
-    currentOrientation_ = Qt::InvertedLandscapeOrientation;
+    if (kStageHint != U_SIDE_STAGE) {
+      currentOrientation_ = Qt::InvertedLandscapeOrientation;
+    } else {
+      currentOrientation_ = Qt::PortraitOrientation; // this seems to help side stage apps startup in the right orientation
+    }
   } else {
     currentOrientation_ = (nativeOrientation_ == Qt::LandscapeOrientation) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
   }
