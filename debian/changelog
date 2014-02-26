@@ -1,15 +1,15 @@
+qtubuntu (0.53+14.04.20140221-0ubuntu2~ppa1) trusty; urgency=low
+
+  * enable OpenGL on the desktop instead of OpenGL|ES (lp: #1274763)
+
+ -- Stephen M. Webb <stephen.webb@canonical.com>  Thu, 25 Feb 2014 10:08:58 -0500
+
 qtubuntu (0.53+14.04.20140221-0ubuntu1) trusty; urgency=low
 
   [ Michał Sawicz ]
   * Increase the side stage threshold to 100GU.
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 21 Feb 2014 09:11:59 +0000
-
-qtubuntu (0.53+14.04.20140131-0ubuntu2~ppa1) trusty; urgency=low
-
-  * enable OpenGL on the desktop instead of OpenGL|ES (lp: #1274763)
-
- -- Stephen M. Webb <stephen.webb@canonical.com>  Thu, 06 Feb 2014 10:08:58 -0500
 
 qtubuntu (0.53+14.04.20140131-0ubuntu1) trusty; urgency=low
 
