@@ -71,11 +71,13 @@ void InputFilterArea::onAscendantGeometryChanged() {
   setInputTrap(relativeToAbsoluteGeometry(geometry_));
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
 void InputFilterArea::onWindowChanged() {
   DLOG("InputFilterArea::onWindowChanged (this=%p)", this);
 
   setInputTrap(relativeToAbsoluteGeometry(geometry_));
 }
+#endif
 
 void InputFilterArea::listenToAscendantsChanges() {
   DLOG("InputFilterArea::listenToAscendantsChanges (this=%p)", this);
