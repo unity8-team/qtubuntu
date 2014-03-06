@@ -16,6 +16,7 @@
 #include "input_filter_area.h"
 #include "logging.h"
 #include <ubuntu/ui/ubuntu_ui_session_service.h>
+#include <QtQuick/QQuickWindow>
 
 InputFilterArea::InputFilterArea(QQuickItem* parent)
     : QQuickItem(parent)
@@ -112,7 +113,9 @@ void InputFilterArea::setInputTrap(const QRect & geometry) {
       trapHandle_ = 0;
     }
     if (geometry.isValid()) {
-      trapHandle_ = ubuntu_ui_set_surface_trap(geometry.x(), geometry.y(), geometry.width(), geometry.height());
+      const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
+      trapHandle_ = ubuntu_ui_set_surface_trap(geometry.x() * kPixelRatio, geometry.y() * kPixelRatio,
+                                               geometry.width() * kPixelRatio, geometry.height() * kPixelRatio);
     }
   }
 }
