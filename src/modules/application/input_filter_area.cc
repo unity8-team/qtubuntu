@@ -70,6 +70,12 @@ void InputFilterArea::onAscendantGeometryChanged() {
   setInputTrap(relativeToAbsoluteGeometry(geometry_));
 }
 
+void InputFilterArea::onWindowChanged() {
+  DLOG("InputFilterArea::onWindowChanged (this=%p)", this);
+
+  setInputTrap(relativeToAbsoluteGeometry(geometry_));
+}
+
 void InputFilterArea::listenToAscendantsChanges() {
   DLOG("InputFilterArea::listenToAscendantsChanges (this=%p)", this);
 
@@ -89,6 +95,9 @@ void InputFilterArea::listenToAscendantsChanges() {
     connections_.append(connect(parent, &QQuickItem::yChanged, this, &InputFilterArea::onAscendantGeometryChanged));
     connections_.append(connect(parent, &QQuickItem::widthChanged, this, &InputFilterArea::onAscendantGeometryChanged));
     connections_.append(connect(parent, &QQuickItem::heightChanged, this, &InputFilterArea::onAscendantGeometryChanged));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
+    connections_.append(connect(this, &QQuickItem::windowChanged, this, &InputFilterArea::onWindowChanged));
+#endif
     parent = parent->parentItem();
   }
 }
@@ -113,7 +122,7 @@ void InputFilterArea::setInputTrap(const QRect & geometry) {
       trapHandle_ = 0;
     }
     if (geometry.isValid()) {
-      const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
+      const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) && window() != NULL ? static_cast<float>(window()->devicePixelRatio()) : 1.0f;
       trapHandle_ = ubuntu_ui_set_surface_trap(geometry.x() * kPixelRatio, geometry.y() * kPixelRatio,
                                                geometry.width() * kPixelRatio, geometry.height() * kPixelRatio);
     }

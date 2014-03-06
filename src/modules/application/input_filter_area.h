@@ -40,6 +40,9 @@ class InputFilterArea : public QQuickItem {
  private Q_SLOTS:
   void onAscendantChanged();
   void onAscendantGeometryChanged();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
+  void onWindowChanged();
+#endif
 
  private:
   void listenToAscendantsChanges();
