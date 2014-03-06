@@ -24,6 +24,7 @@
 #include "base/logging.h"
 #include <qpa/qwindowsysteminterface.h>
 #include <ubuntu/application/ui/window.h>
+#include <QtCore/qmath.h>
 
 static void eventCallback(void* context, const Event* event) {
   DLOG("eventCallback (context=%p, event=%p)", context, event);
@@ -106,13 +107,13 @@ void QUbuntuWindow::createWindow() {
   ua_ui_window_properties_set_titlen(wprops_, title.data(), title.size());
   ua_ui_window_properties_set_role(wprops_, static_cast<UAUiWindowRole>(role));
   ua_ui_window_properties_set_input_cb_and_ctx(wprops_, &eventCallback, this);
-  ua_ui_window_properties_set_dimensions(wprops_, geometry.width() * kPixelRatio, geometry.height() * kPixelRatio);
+  ua_ui_window_properties_set_dimensions(wprops_, qCeil(geometry.width() * kPixelRatio), qCeil(geometry.height() * kPixelRatio));
 
   // Create platform window
   window_ = ua_ui_window_new_for_application_with_properties(uainstance_, wprops_);
 
   if (geometry.width() != 0 || geometry.height() != 0)
-      ua_ui_window_resize(window_, geometry.width() * kPixelRatio, geometry.height() * kPixelRatio);
+      ua_ui_window_resize(window_, qCeil(geometry.width() * kPixelRatio), qCeil(geometry.height() * kPixelRatio));
 
   if (geometry.x() != 0 || geometry.y() != 0)
       ua_ui_window_move(window_, geometry.x() * kPixelRatio, geometry.y() * kPixelRatio);
@@ -133,7 +134,7 @@ void QUbuntuWindow::moveResize(const QRect& rect) {
        rect.width(), rect.height());
   const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) ? devicePixelRatio() : 1.0f;
   ua_ui_window_move(window_, rect.x() * kPixelRatio, rect.y() * kPixelRatio);
-  ua_ui_window_resize(window_, rect.width() * kPixelRatio, rect.height() * kPixelRatio);
+  ua_ui_window_resize(window_, qCeil(rect.width() * kPixelRatio), qCeil(rect.height() * kPixelRatio));
   QWindowSystemInterface::handleGeometryChange(window(), rect);
   QPlatformWindow::setGeometry(rect);
 }
