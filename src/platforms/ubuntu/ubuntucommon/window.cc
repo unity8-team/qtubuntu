@@ -101,16 +101,16 @@ void QUbuntuWindow::createWindow() {
           geometry.width(), geometry.height(), title.data());
 
   // Setup platform window creation properties
+  const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) ? devicePixelRatio() : 1.0f;
   wprops_ = ua_ui_window_properties_new_for_normal_window();
   ua_ui_window_properties_set_titlen(wprops_, title.data(), title.size());
   ua_ui_window_properties_set_role(wprops_, static_cast<UAUiWindowRole>(role));
   ua_ui_window_properties_set_input_cb_and_ctx(wprops_, &eventCallback, this);
-  ua_ui_window_properties_set_dimensions(wprops_, geometry.width(), geometry.height());
+  ua_ui_window_properties_set_dimensions(wprops_, geometry.width() * kPixelRatio, geometry.height() * kPixelRatio);
 
   // Create platform window
   window_ = ua_ui_window_new_for_application_with_properties(uainstance_, wprops_);
 
-  const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) ? devicePixelRatio() : 1.0f;
   if (geometry.width() != 0 || geometry.height() != 0)
       ua_ui_window_resize(window_, geometry.width() * kPixelRatio, geometry.height() * kPixelRatio);
 
