@@ -57,6 +57,7 @@ class QUbuntuScreen : public QObject, public QUbuntuBaseScreen {
   Qt::ScreenOrientation nativeOrientation_;
   Qt::ScreenOrientation currentOrientation_;
   QOrientationSensor* orientationSensor_;
+  bool useDevicePixelRatio_;
 };
 
 #endif  // QUBUNTUSCREEN_H

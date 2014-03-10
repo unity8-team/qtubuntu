@@ -55,6 +55,9 @@ const int kSideStageWidth = 40;
 const int kTabletMinSize = 100;
 
 QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
+  useDevicePixelRatio_ = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) &&
+                         (QCoreApplication::applicationName() == "webbrowser-app" ||
+                          QCoreApplication::applicationName() == "webapp-container")
   // Retrieve units from the environment.
   int gridUnit = kDefaultGridUnit;
   QByteArray gridUnitString = qgetenv("GRID_UNIT_PX");
@@ -79,7 +82,7 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
 
   // Get screen resolution.
   UAUiDisplay* display = ua_ui_display_new_with_index(0);
-  const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) && QCoreApplication::applicationName() == "webbrowser-app" ? 1.0f / densityPixelRatio_ : 1.0f;
+  const float kPixelRatio = useDevicePixelRatio_ ? 1.0f / densityPixelRatio_ : 1.0f;
   const int kScreenWidth = ua_ui_display_query_horizontal_res(display) * kPixelRatio;
   const int kScreenHeight = ua_ui_display_query_vertical_res(display) * kPixelRatio;
   ASSERT(kScreenWidth > 0 && kScreenHeight > 0);
@@ -127,7 +130,7 @@ QUbuntuScreen::~QUbuntuScreen() {
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
 qreal QUbuntuScreen::devicePixelRatio() const {
-  if (QCoreApplication::applicationName() == "webbrowser-app") {
+  if (useDevicePixelRatio_) {
     return densityPixelRatio_;
   } else {
     return 1.0;
@@ -145,7 +148,7 @@ void QUbuntuScreen::toggleSensors(bool enable) const {
 
 int QUbuntuScreen::gridUnitToPixel(int value) const {
   DLOG("QUbuntuScreen::gridUnitToPixel (this=%p, value=%d)", this, value);
-  if (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0) && QCoreApplication::applicationName() == "webbrowser-app") {
+  if (useDevicePixelRatio_) {
     return value * kDefaultGridUnit;
   } else {
     return value * gridUnit_;
@@ -154,7 +157,7 @@ int QUbuntuScreen::gridUnitToPixel(int value) const {
 
 int QUbuntuScreen::densityPixelToPixel(int value) const {
   DLOG("QUbuntuScreen::densityPixelToPixel (this=%p, value=%d)", this, value);
-  if (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0) && QCoreApplication::applicationName() == "webbrowser-app") {
+  if (useDevicePixelRatio_) {
     return value;
   } else {
     if (value <= 2) {
