@@ -79,7 +79,7 @@ QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
 
   // Get screen resolution.
   UAUiDisplay* display = ua_ui_display_new_with_index(0);
-  const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) ? 1.0f / densityPixelRatio_ : 1.0f;
+  const float kPixelRatio = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) && QCoreApplication::applicationName() == "webbrowser-app" ? 1.0f / densityPixelRatio_ : 1.0f;
   const int kScreenWidth = ua_ui_display_query_horizontal_res(display) * kPixelRatio;
   const int kScreenHeight = ua_ui_display_query_vertical_res(display) * kPixelRatio;
   ASSERT(kScreenWidth > 0 && kScreenHeight > 0);
@@ -127,7 +127,11 @@ QUbuntuScreen::~QUbuntuScreen() {
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
 qreal QUbuntuScreen::devicePixelRatio() const {
-  return densityPixelRatio_;
+  if (QCoreApplication::applicationName() == "webbrowser-app") {
+    return densityPixelRatio_;
+  } else {
+    return 1.0;
+  }
 }
 #endif
 
@@ -141,25 +145,25 @@ void QUbuntuScreen::toggleSensors(bool enable) const {
 
 int QUbuntuScreen::gridUnitToPixel(int value) const {
   DLOG("QUbuntuScreen::gridUnitToPixel (this=%p, value=%d)", this, value);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
-  return value * kDefaultGridUnit;
-#else
-  return value * gridUnit_;
-#endif
+  if (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0) && QCoreApplication::applicationName() == "webbrowser-app") {
+    return value * kDefaultGridUnit;
+  } else {
+    return value * gridUnit_;
+  }
 }
 
 int QUbuntuScreen::densityPixelToPixel(int value) const {
   DLOG("QUbuntuScreen::densityPixelToPixel (this=%p, value=%d)", this, value);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
-  return value;
-#else
-  if (value <= 2) {
-    // For values under 2dp, return only multiples of the value.
-    return static_cast<int>(value * qFloor(densityPixelRatio_));
+  if (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0) && QCoreApplication::applicationName() == "webbrowser-app") {
+    return value;
   } else {
-    return static_cast<int>(qRound(value * densityPixelRatio_));
+    if (value <= 2) {
+      // For values under 2dp, return only multiples of the value.
+      return static_cast<int>(value * qFloor(densityPixelRatio_));
+    } else {
+      return static_cast<int>(qRound(value * densityPixelRatio_));
+    }
   }
-#endif
 }
 
 void QUbuntuScreen::customEvent(QEvent* event) {
