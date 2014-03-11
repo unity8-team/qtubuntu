@@ -57,7 +57,7 @@ const int kTabletMinSize = 100;
 QUbuntuScreen::QUbuntuScreen(UApplicationOptions *options) {
   useDevicePixelRatio_ = (QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)) &&
                          (QCoreApplication::applicationName() == "webbrowser-app" ||
-                          QCoreApplication::applicationName() == "webapp-container")
+                          QCoreApplication::applicationName() == "webapp-container");
   // Retrieve units from the environment.
   int gridUnit = kDefaultGridUnit;
   QByteArray gridUnitString = qgetenv("GRID_UNIT_PX");
