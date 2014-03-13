@@ -36,4 +36,4 @@ HEADERS = integration.h \
 
 CONFIG += static create_prl egl qpa/genericunixfontdatabase
 
-INCLUDEPATH += .. /usr/include/hybris
+INCLUDEPATH += ..
