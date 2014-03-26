@@ -19,14 +19,24 @@
 #ifndef PLUGGABLEINPUTFILTER_H
 #define PLUGGABLEINPUTFILTER_H
 
-#include <QEvent>
+#include <QKeyEvent>
+#include <QList>
+#include <QHash>
+#include <QMutex>
 
 class PluggableInputFilter
 {
 public:
-    PluggableInputFilter();
+    PluggableInputFilter() = default;
 
-    virtual bool filterEvent(const QEvent *event);
+    bool filterKeyEvent(QKeyEvent *event);
+
+    bool installKeyEventFilterObject(const Qt::Key key, const QObject *filterObject);
+    bool removeKeyEventFilterObject(const QObject *filterObject);
+
+private:
+    QMultiHash<const int, const QObject *> m_filters;
+    mutable QMutex m_mutex;
 };
 
 #endif // PLUGGABLEINPUTFILTER_H

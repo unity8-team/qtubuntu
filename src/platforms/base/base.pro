@@ -4,7 +4,7 @@ TEMPLATE = lib
 QT += core-private gui-private platformsupport-private
 
 DEFINES += MESA_EGL_NO_X11_HEADERS
-QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
+QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -std=c++11
 QMAKE_LFLAGS += -Wl,-no-undefined
 
 CONFIG(debug) {
@@ -39,3 +39,8 @@ HEADERS = integration.h \
 CONFIG += static create_prl egl qpa/genericunixfontdatabase
 
 INCLUDEPATH += .. /usr/include/hybris
+
+install_headers.path = /usr/include/qtubuntu
+install_headers.files = pluggableinputfilter.h
+
+INSTALLS += install_headers

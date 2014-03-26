@@ -66,7 +66,7 @@ void QUbuntuMirServerInput::postEvent(QWindow* window, const void* event) {
         qKeyEvent.setTimestamp(timestamp);
 
         // Filter?
-        if (inputFilter->filterEvent(&qKeyEvent))
+        if (inputFilter->filterKeyEvent(&qKeyEvent))
             return;
     }
 
