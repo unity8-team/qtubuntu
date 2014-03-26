@@ -18,14 +18,16 @@
 
 #include <qpa/qplatformnativeinterface.h>
 
+class PluggableInputFilter;
 class QUbuntuBaseNativeInterface : public QPlatformNativeInterface {
  public:
-  enum ResourceType { EglDisplay, EglContext, NativeOrientation, Display };
+  enum ResourceType { EglDisplay, EglContext, NativeOrientation, Display, InputFilter };
 
   QUbuntuBaseNativeInterface();
   ~QUbuntuBaseNativeInterface();
 
   // QPlatformNativeInterface methods.
+  void* nativeResourceForIntegration(const QByteArray& resourceString);
   void* nativeResourceForContext(const QByteArray& resourceString, QOpenGLContext* context);
   void* nativeResourceForScreen(const QByteArray& resourceString, QScreen* screen);
   void* nativeResourceForWindow(const QByteArray& resourceString, QWindow* window);
@@ -36,6 +38,7 @@ class QUbuntuBaseNativeInterface : public QPlatformNativeInterface {
  private:
   const QByteArray genericEventFilterType_;
   Qt::ScreenOrientation* nativeOrientation_;
+  PluggableInputFilter* pluggableInputFilter_;
 };
 
 #endif  // QUBUNTUNATIVEINTERFACE_H

@@ -17,6 +17,7 @@
 #define QUBUNTU_MIR_INPUT_H
 
 #include "ubuntucommon/input.h"
+#include <ubuntu/application/ui/input/event.h>
 
 class QUbuntuIntegration;
 
@@ -26,6 +27,9 @@ public:
   ~QUbuntuMirInput();
   
   virtual void dispatchKeyEvent(QWindow* window, const void* event);
+
+protected:
+  void parseEvent(const Event* ev, ulong &timestamp, QEvent::Type &keyType, int &sym, Qt::KeyboardModifiers &modifiers, QString &text);
 };
 
 #endif  // QUBUNTU_MIR_INPUT_H

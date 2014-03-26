@@ -20,7 +20,8 @@ SOURCES = integration.cc \
           input.cc \
           theme.cc \
           platformservices.cc \
-          clipboard.cc
+          clipboard.cc \
+          pluggableinputfilter.cpp
 
 HEADERS = integration.h \
           backing_store.h \
@@ -32,7 +33,8 @@ HEADERS = integration.h \
           logging.h \
           theme.h \
           platformservices.h \
-          clipboard.h
+          clipboard.h \
+          pluggableinputfilter.h
 
 CONFIG += static create_prl egl qpa/genericunixfontdatabase
 

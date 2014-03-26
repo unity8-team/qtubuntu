@@ -22,6 +22,7 @@
 #include "screen.h"
 #include "ubuntu/ubuntucommon/screen.h"
 #include "context.h"
+#include "pluggableinputfilter.h"
 #include "logging.h"
 #include <private/qguiapplication_p.h>
 #include <QtGui/qopenglcontext.h>
@@ -36,6 +37,7 @@ class QUbuntuBaseResourceMap : public QMap<QByteArray, QUbuntuBaseNativeInterfac
     insert("eglcontext", QUbuntuBaseNativeInterface::EglContext);
     insert("nativeorientation", QUbuntuBaseNativeInterface::NativeOrientation);
     insert("display", QUbuntuBaseNativeInterface::Display);
+    insert("inputfilter", QUbuntuBaseNativeInterface::InputFilter);
   }
 };
 
@@ -43,14 +45,33 @@ Q_GLOBAL_STATIC(QUbuntuBaseResourceMap, ubuntuResourceMap)
 
 QUbuntuBaseNativeInterface::QUbuntuBaseNativeInterface()
     : genericEventFilterType_(QByteArrayLiteral("Event"))
-    , nativeOrientation_(NULL) {
+    , nativeOrientation_(NULL)
+    , pluggableInputFilter_(NULL) {
   DLOG("QUbuntuBaseNativeInterface::QUbuntuBaseNativeInterface (this=%p)", this);
+  //cheeky
+  if (qgetenv("QT_QPA_PLATFORM") == "ubuntumirserver") {
+    pluggableInputFilter_= new PluggableInputFilter;
+  }
 }
 
 QUbuntuBaseNativeInterface::~QUbuntuBaseNativeInterface() {
   DLOG("QUbuntuBaseNativeInterface::~QUbuntuBaseNativeInterface");
   if (nativeOrientation_)
     delete nativeOrientation_;
+}
+
+void* QUbuntuBaseNativeInterface::nativeResourceForIntegration(const QByteArray& resourceString) {
+  DLOG("QUbuntuBaseNativeInterface::nativeResourceForIntegration (this=%p, resourceString=%s, ",
+       this, resourceString.constData());
+  const QByteArray kLowerCaseResource = resourceString.toLower();
+  if (!ubuntuResourceMap()->contains(kLowerCaseResource))
+    return NULL;
+  const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
+
+  if (kResourceType == QUbuntuBaseNativeInterface::InputFilter) {
+    return pluggableInputFilter_;
+  }
+  return NULL;
 }
 
 void* QUbuntuBaseNativeInterface::nativeResourceForContext(

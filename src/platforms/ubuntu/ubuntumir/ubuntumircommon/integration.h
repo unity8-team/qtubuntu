@@ -21,6 +21,7 @@
 class QUbuntuMirIntegration : public QUbuntuIntegration {
 public:
   QUbuntuMirIntegration();
+  QUbuntuMirIntegration(QUbuntuInputAdaptorFactory* input_factory);
   ~QUbuntuMirIntegration();
 };
 

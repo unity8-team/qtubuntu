@@ -4,14 +4,16 @@ TEMPLATE = lib
 QT += gui-private platformsupport-private sensors
 
 DEFINES += MESA_EGL_NO_X11_HEADERS
-QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden
+QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -std=c++11
 QMAKE_LFLAGS += -Wl,-no-undefined
 
 CONFIG(debug) {
   QMAKE_CXXFLAGS_DEBUG += -Werror
 }
 
-SOURCES = main.cc 
+SOURCES = main.cc \  
+    integration.cc \
+    input.cc
 
 CONFIG += plugin link_prl link_pkgconfig
 
@@ -23,3 +25,7 @@ OTHER_FILES += ubuntu.json
 
 target.path += $$[QT_INSTALL_PLUGINS]/platforms
 INSTALLS += target
+
+HEADERS += \
+    integration.h \
+    input.h

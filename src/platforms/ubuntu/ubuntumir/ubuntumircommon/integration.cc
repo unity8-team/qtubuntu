@@ -16,6 +16,7 @@
 #include "input.h"
 #include "integration.h"
 #include "ubuntucommon/input_adaptor_factory.h"
+#include "base/logging.h"
 
 namespace
 {
@@ -37,6 +38,12 @@ struct InputAdaptorFactory : public QUbuntuInputAdaptorFactory {
 
 QUbuntuMirIntegration::QUbuntuMirIntegration()
   : QUbuntuIntegration(InputAdaptorFactory::instance()) {
+    DLOG("QUbuntuMirIntegration::QUbuntuMirIntegration (this=%p)", this);
+}
+
+QUbuntuMirIntegration::QUbuntuMirIntegration(QUbuntuInputAdaptorFactory* input_factory)
+  : QUbuntuIntegration(input_factory) {
+    DLOG("QUbuntuMirIntegration::QUbuntuMirIntegration (this=%p, input_factory=%p)", this, input_factory);
 }
 
 QUbuntuMirIntegration::~QUbuntuMirIntegration() {

@@ -35,7 +35,7 @@ class QUbuntuBaseInput : public QObject {
   virtual void handleKeyEvent(QWindow* window, ulong timestamp, QEvent::Type type, int key,
                               Qt::KeyboardModifiers modifiers, const QString& text);
 
-  void postEvent(QWindow* window, const void* event);
+  virtual void postEvent(QWindow* window, const void* event);
   QUbuntuBaseIntegration* integration() const { return integration_; }
 
  protected:

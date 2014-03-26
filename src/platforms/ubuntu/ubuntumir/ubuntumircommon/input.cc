@@ -15,6 +15,7 @@
 
 #include "input.h"
 #include "integration.h"
+#include "base/native_interface.h"
 #include "base/logging.h"
 
 #include <QtCore/qglobal.h>
@@ -132,7 +133,7 @@ static uint32_t translateKeysym(uint32_t sym, char *string, size_t size) {
 }
 
 void QUbuntuMirInput::dispatchKeyEvent(QWindow* window, const void* ev) {
-  DLOG("QUbuntuBaseInput::dispatchKeyEvent (this=%p, window=%p, event=%p)", this, window, ev);
+  DLOG("QUbuntuMirInput::dispatchKeyEvent (this=%p, window=%p, event=%p)", this, window, ev);
   const Event* event = reinterpret_cast<const Event*>(ev);
 
 #if (LOG_EVENTS != 0)
@@ -145,30 +146,12 @@ void QUbuntuMirInput::dispatchKeyEvent(QWindow* window, const void* ev) {
       event->details.key.event_time, event->details.key.is_system_key);
 #endif
 
-  ulong timestamp = event->details.key.event_time / 1000000;
-  xkb_keysym_t xk_sym = (xkb_keysym_t)event->details.key.key_code;
-
-  // Key modifier and unicode index mapping.
-  const int kMetaState = event->meta_state;
-  Qt::KeyboardModifiers modifiers = Qt::NoModifier;
-  if (kMetaState & U_KEY_MODIFIER_SHIFT) {
-    modifiers |= Qt::ShiftModifier;
-  }
-  if (kMetaState & U_KEY_MODIFIER_CTRL) {
-    modifiers |= Qt::ControlModifier;
-  }
-  if (kMetaState & U_KEY_MODIFIER_ALT) {
-    modifiers |= Qt::AltModifier;
-  }
-  if (kMetaState & U_KEY_MODIFIER_META) {
-    modifiers |= Qt::MetaModifier;
-  }
-
-  QEvent::Type keyType = event->action == U_KEY_ACTION_DOWN ? QEvent::KeyPress : QEvent::KeyRelease;
-
-  char s[2];
-  int sym = translateKeysym(xk_sym, s, sizeof(s));
-  QString text = QString::fromLatin1(s);
+  ulong timestamp;
+  Qt::KeyboardModifiers modifiers;
+  QEvent::Type keyType;
+  int sym;
+  QString text;
+  parseEvent(event, timestamp, keyType, sym, modifiers, text);
 
   QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
   if (context) {
@@ -181,4 +164,34 @@ void QUbuntuMirInput::dispatchKeyEvent(QWindow* window, const void* ev) {
   }
 
   handleKeyEvent(window, timestamp, keyType, sym, modifiers, text);
+}
+
+void QUbuntuMirInput::parseEvent(const Event* event, ulong &timestamp, QEvent::Type &keyType, int &sym,
+                                 Qt::KeyboardModifiers &modifiers, QString &text) {
+
+    timestamp = event->details.key.event_time / 1000000;
+    xkb_keysym_t xk_sym = (xkb_keysym_t)event->details.key.key_code;
+
+    // Key modifier and unicode index mapping.
+    const int kMetaState = event->meta_state;
+
+    modifiers = Qt::NoModifier;
+    if (kMetaState & U_KEY_MODIFIER_SHIFT) {
+      modifiers |= Qt::ShiftModifier;
+    }
+    if (kMetaState & U_KEY_MODIFIER_CTRL) {
+      modifiers |= Qt::ControlModifier;
+    }
+    if (kMetaState & U_KEY_MODIFIER_ALT) {
+      modifiers |= Qt::AltModifier;
+    }
+    if (kMetaState & U_KEY_MODIFIER_META) {
+      modifiers |= Qt::MetaModifier;
+    }
+
+    keyType = event->action == U_KEY_ACTION_DOWN ? QEvent::KeyPress : QEvent::KeyRelease;
+
+    char s[2];
+    sym = translateKeysym(xk_sym, s, sizeof(s));
+    text = QString::fromLatin1(s);
 }
