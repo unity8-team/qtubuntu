@@ -24,10 +24,12 @@
 #include <QHash>
 #include <QMutex>
 
-class PluggableInputFilter
+class PluggableInputFilter: public QObject
 {
+    Q_OBJECT
+
 public:
-    PluggableInputFilter() = default;
+    PluggableInputFilter(QObject *parent = 0);
 
     bool filterKeyEvent(QKeyEvent *event);
 

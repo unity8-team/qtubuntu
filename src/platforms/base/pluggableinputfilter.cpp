@@ -22,6 +22,11 @@
 #include <QMutexLocker>
 #include <QDebug>
 
+PluggableInputFilter::PluggableInputFilter(QObject *parent)
+    : QObject(parent)
+{
+}
+
 bool PluggableInputFilter::filterKeyEvent(QKeyEvent *event)
 {
     qDebug() << "Filter!!" << event->key() << event->modifiers();
@@ -39,8 +44,8 @@ bool PluggableInputFilter::filterKeyEvent(QKeyEvent *event)
 
 bool PluggableInputFilter::installKeyEventFilterObject(const Qt::Key key, const QObject *filterObject)
 {
-//    QObject::connect(filterObject, &QObject::destroyed, this, &PluggableInputFilter::removeKeyEventFilterObject,
-//                     Qt::DirectConnection); // if no QThread, this will probably fail
+    QObject::connect(filterObject, &QObject::destroyed, this, &PluggableInputFilter::removeKeyEventFilterObject,
+                     Qt::DirectConnection); // if no QThread, this will probably fail
     const QMutexLocker locker(&m_mutex);
 
     m_filters.insert(key, filterObject);
