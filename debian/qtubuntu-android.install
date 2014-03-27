@@ -1,3 +1,4 @@
 usr/lib/*/qt5/plugins/platforms/*
 usr/lib/*/qt5/imports/Unity/*
 usr/include/qtubuntu/*
+usr/lib/*/pkgconfig/*
