@@ -33,7 +33,7 @@ public:
 
     bool filterKeyEvent(QKeyEvent *event);
 
-    bool installKeyEventFilterObject(const Qt::Key key, const QObject *filterObject);
+    bool installKeyEventFilterObject(const int key, const QObject *filterObject);
     bool removeKeyEventFilterObject(const QObject *filterObject);
 
 private:

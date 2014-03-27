@@ -42,7 +42,7 @@ bool PluggableInputFilter::filterKeyEvent(QKeyEvent *event)
     return filtered;
 }
 
-bool PluggableInputFilter::installKeyEventFilterObject(const Qt::Key key, const QObject *filterObject)
+bool PluggableInputFilter::installKeyEventFilterObject(const int key, const QObject *filterObject)
 {
     QObject::connect(filterObject, &QObject::destroyed, this, &PluggableInputFilter::removeKeyEventFilterObject,
                      Qt::DirectConnection); // if no QThread, this will probably fail
