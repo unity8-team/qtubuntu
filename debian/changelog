@@ -1,0 +1,13 @@
+qtubuntu-gles (0.54+14.10.20140430.1-0ubuntu2) utopic; urgency=medium
+
+  * debian/control: not renamining the binary package as qtubuntu-android is
+    not generated for all arches anymore
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 08 May 2014 19:53:01 -0300
+
+qtubuntu-gles (0.54+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
+
+  * Repackging for building gles variants for i386 and amd64.
+    - Based on qtubuntu 0.54+14.10.20140430.1-0ubuntu1
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 07 May 2014 11:16:41 -0300
