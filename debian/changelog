@@ -1,3 +1,9 @@
+qtubuntu-gles (0.54+14.10.20140526.1-0ubuntu1) utopic; urgency=medium
+
+  * Sync package with qtubuntu - 0.54+14.10.20140526.1
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 05 Jun 2014 00:28:32 +0200
+
 qtubuntu-gles (0.54+14.10.20140430.1-0ubuntu2) utopic; urgency=medium
 
   * debian/control: not renamining the binary package as qtubuntu-android is
