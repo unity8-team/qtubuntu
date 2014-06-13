@@ -54,16 +54,17 @@ Description: Qt plugins for Ubuntu Platform API (mobile)
 Package: qtubuntu-desktop
 Architecture: any
 Multi-Arch: same
-Conflicts: qtubuntu-android
+Conflicts: qtubuntu-android,
+           qtubuntu-sensors
 Replaces: qtubuntu (<< 0.52),
-          qtubuntu-android
+          qtubuntu-android,
+          qtubuntu-sensors
 Breaks: qthybris (<< 0.37),
         unity8 (<< 7.85),
 Provides: qtubuntu,
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          libqt5sensors5,
-         qtubuntu-sensors,
          ubuntu-application-api2-desktop,
 Description: Qt plugins for Ubuntu Platform API (desktop)
  QtUbuntu is a set of Qt5 components for the Ubuntu Platform API. It contains a
