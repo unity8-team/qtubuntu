@@ -1,3 +1,11 @@
+qtubuntu-gles (0.60+14.10.20140714-0ubuntu3) UNRELEASED; urgency=medium
+
+  [ Gerry Boland ]
+  * Major refactor: remove SurfaceFlinger & Mir in-server-process-client
+    support, flatten class hierarchy. Only Mir client QPA remains
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 15 Jul 2014 17:36:44 +0200
+
 qtubuntu-gles (0.54+14.10.20140613-0ubuntu2) utopic; urgency=medium
 
   * debian/control: should depend on libqt5quickwidgets5-gles instead
