@@ -1,0 +1,47 @@
+Source: qtubuntu-gles
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: debhelper (>= 9),
+               libatspi2.0-dev,
+               libdbus-1-dev,
+               libegl1-mesa-dev,
+               libfontconfig1-dev,
+               libfreetype6-dev,
+               libgles2-mesa-dev,
+               libglib2.0-dev,
+               libhybris-dev,
+               libubuntu-application-api-dev (>= 2.0.0),
+               libudev-dev,
+               libxrender-dev,
+               libxkbcommon-dev,
+               libqt5gui5-gles,
+               libqt5quicktest5,
+               libqt5quickwidgets5-gles,
+               qt5-default,
+               qtbase5-private-gles-dev,
+               qtdeclarative5-dev,
+               libqt5sensors5-dev,
+               zlib1g-dev,
+Standards-Version: 3.9.4
+Section: libs
+
+Package: qtubuntu-android
+Architecture: i386 amd64
+Multi-Arch: same
+Conflicts: qtubuntu-android, qtubuntu-desktop
+Replaces: qtubuntu-android
+Provides: qtubuntu
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         libqt5sensors5,
+         qtubuntu-sensors,
+         ubuntu-application-api2-touch,
+Description: Qt plugins for Ubuntu Platform API (mobile) - OpenGLES
+ QtUbuntu is a set of Qt5 components for the Ubuntu Platform API. It contains a
+ QPA (Qt Platform Abstraction) plugin based on the Ubuntu Platform API and a
+ legacy QPA plugin based on the compatibility layers. It also provides Qt
+ bindings for Ubuntu Platform API features that are not exposed through the QPA
+ plugins.
+ .
+ This variant of the package is for Android-based phones and tablets (built
+ against the OpenGLES variant of qtbase).

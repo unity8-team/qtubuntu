@@ -1,0 +1,38 @@
+qtubuntu-gles (0.54+14.10.20140613-0ubuntu2) utopic; urgency=medium
+
+  * debian/control: should depend on libqt5quickwidgets5-gles instead
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 19 Jun 2014 03:28:47 -0300
+
+qtubuntu-gles (0.54+14.10.20140613-0ubuntu1) utopic; urgency=medium
+
+  * Sync package with qtubuntu - 0.54+14.10.20140613-0ubuntu1 
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Wed, 18 Jun 2014 11:36:05 +0000
+
+qtubuntu-gles (0.54+14.10.20140612-0ubuntu1) utopic; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Migrate to Platform API v2
+
+ -- Robert Bruce Park <robert.park@canonical.com>  Thu, 12 Jun 2014 13:51:37 -0700
+
+qtubuntu-gles (0.54+14.10.20140526.1-0ubuntu1) utopic; urgency=medium
+
+  * Sync package with qtubuntu - 0.54+14.10.20140526.1
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 05 Jun 2014 00:28:32 +0200
+
+qtubuntu-gles (0.54+14.10.20140430.1-0ubuntu2) utopic; urgency=medium
+
+  * debian/control: not renamining the binary package as qtubuntu-android is
+    not generated for all arches anymore
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 08 May 2014 19:53:01 -0300
+
+qtubuntu-gles (0.54+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
+
+  * Repackging for building gles variants for i386 and amd64.
+    - Based on qtubuntu 0.54+14.10.20140430.1-0ubuntu1
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 07 May 2014 11:16:41 -0300
