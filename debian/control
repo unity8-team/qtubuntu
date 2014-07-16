@@ -21,6 +21,7 @@ Build-Depends: debhelper (>= 9),
                qtdeclarative5-dev,
 Standards-Version: 3.9.4
 Section: libs
+X-Auto-Uploader: no-rewrite-version
 
 Package: qtubuntu-android
 Architecture: i386 amd64
