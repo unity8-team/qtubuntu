@@ -1,4 +1,4 @@
-qtubuntu-gles (0.60+14.10.20140716.1-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.60+14.10.20140722-0ubuntu1) UNRELEASED; urgency=medium
 
   [ Gerry Boland ]
   * Major refactor: remove SurfaceFlinger & Mir in-server-process-client
