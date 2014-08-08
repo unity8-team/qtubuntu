@@ -1,3 +1,9 @@
+qtubuntu-gles (0.60+14.10.201400808-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Sync with upstream.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Fri, 08 Aug 2014 15:49:32 +0300
+
 qtubuntu-gles (0.60+14.10.20140728-0ubuntu1) utopic; urgency=medium
 
   [ Gerry Boland ]
