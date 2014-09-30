@@ -377,7 +377,7 @@ void UbuntuInput::dispatchKeyEvent(QWindow* window, const void* ev)
 {
     const WindowEvent* event = reinterpret_cast<const WindowEvent*>(ev);
 
-    #if (LOG_EVENTS != 0)
+//    #if (LOG_EVENTS != 0)
     // Key event logging.
     LOG("KEY device_id:%d source_id:%d action:%d flags:%d meta_state:%d key_code:%d "
             "scan_code:%d repeat_count:%d down_time:%lld event_time:%lld is_system_key:%d",
@@ -386,7 +386,7 @@ void UbuntuInput::dispatchKeyEvent(QWindow* window, const void* ev)
             event->key.key_code, event->key.scan_code,
             event->key.repeat_count, event->key.down_time,
             event->key.event_time, event->key.is_system_key);
-    #endif
+//    #endif
 
     ulong timestamp = event->key.event_time / 1000000;
     xkb_keysym_t xk_sym = (xkb_keysym_t)event->key.key_code;
