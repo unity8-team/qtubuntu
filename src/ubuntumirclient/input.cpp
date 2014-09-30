@@ -119,6 +119,13 @@ static const uint32_t KeyTable[] = {
     XKB_KEY_XF86PowerOff,            Qt::Key_PowerOff,
     XKB_KEY_XF86PowerDown,           Qt::Key_PowerDown,
 
+    XKB_KEY_XF86AudioMute,           Qt::Key_VolumeMute,
+    XKB_KEY_XF86AudioPrev,           Qt::Key_MediaPrevious,
+    XKB_KEY_XF86AudioNext,           Qt::Key_MediaNext,
+    XKB_KEY_XF86AudioPlay,           Qt::Key_MediaPlay,
+    XKB_KEY_XF86AudioStop,           Qt::Key_MediaStop,
+    XKB_KEY_XF86AudioPause,          Qt::Key_MediaPause,
+
     0,                          0
 };
 
