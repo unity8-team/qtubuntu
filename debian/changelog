@@ -1,8 +1,9 @@
-qtubuntu-gles (0.60+14.10.20141001-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.60+14.10.20141001-0ubuntu1) utopic; urgency=medium
 
+  [ Michael Zanetti ]
   * Sync with upstream
 
- -- Michael Zanetti <michael.zanetti@canonical.com>  Wed, 01 Oct 2014 16:42:37 +0200
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 01 Oct 2014 17:50:35 +0000
 
 qtubuntu-gles (0.60+14.10.20140815.1-0ubuntu1) utopic; urgency=medium
 
