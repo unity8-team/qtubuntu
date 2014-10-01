@@ -379,7 +379,7 @@ void UbuntuInput::dispatchKeyEvent(QWindow* window, const void* ev)
 
 //    #if (LOG_EVENTS != 0)
     // Key event logging.
-    LOG("KEY device_id:%d source_id:%d action:%d flags:%d meta_state:%d key_code:%d "
+    fprintf(stderr, "KEY device_id:%d source_id:%d action:%d flags:%d meta_state:%d key_code:%d "
             "scan_code:%d repeat_count:%d down_time:%lld event_time:%lld is_system_key:%d",
             event->key.device_id, event->key.source_id,
             event->key.action, event->key.flags, event->key.meta_state,
