@@ -295,8 +295,8 @@ void UbuntuInput::dispatchMotionEvent(QWindow* window, const void* ev)
     for (int i = 0; i < kPointerCount; ++i) {
         QWindowSystemInterface::TouchPoint touchPoint;
 
-        const float kX = event->motion.pointer_coordinates[i].raw_x + kWindowGeometry.x();
-        const float kY = event->motion.pointer_coordinates[i].raw_y + kWindowGeometry.y(); // see bug lp:1346633 workaround comments elsewhere
+        const float kX = event->motion.pointer_coordinates[i].x + kWindowGeometry.x();
+        const float kY = event->motion.pointer_coordinates[i].y + kWindowGeometry.y(); // see bug lp:1346633 workaround comments elsewhere
         const float kW = event->motion.pointer_coordinates[i].touch_major;
         const float kH = event->motion.pointer_coordinates[i].touch_minor;
         const float kP = event->motion.pointer_coordinates[i].pressure;
