@@ -1,3 +1,9 @@
+qtubuntu-gles (0.60+15.04.20141028-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Sync with upstream for Qt 5.3.2 rebuild
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 06 Nov 2014 08:56:16 +0200
+
 qtubuntu-gles (0.60+14.10.20141001-0ubuntu1) utopic; urgency=medium
 
   [ Michael Zanetti ]
