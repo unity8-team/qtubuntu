@@ -1,4 +1,4 @@
-qtubuntu-gles (0.60+15.04.20141028-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.60+15.04.20141111-0ubuntu1) UNRELEASED; urgency=medium
 
   * Sync with upstream for Qt 5.3.2 rebuild
 
