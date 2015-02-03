@@ -20,6 +20,8 @@
 // Qt
 #include <qpa/qwindowsysteminterface.h>
 
+#include <mir_toolkit/mir_client_library.h>
+
 class UbuntuClientIntegration;
 class UbuntuWindow;
 
@@ -34,13 +36,17 @@ public:
     // QObject methods.
     void customEvent(QEvent* event) override;
 
-    void postEvent(UbuntuWindow* window, const void* event);
+    // TODO: Update to use MirEvent
+    void postEvent(UbuntuWindow* window, MirEvent const* event);
     UbuntuClientIntegration* integration() const { return mIntegration; }
 
 protected:
-    void dispatchKeyEvent(QWindow* window, const void* event);
-    void dispatchMotionEvent(QWindow* window, const void* event);
-    void dispatchOrientationEvent(QWindow* window, const void* event);
+    void dispatchKeyEvent(QWindow* window, MirInputEvent const* event);
+    void dispatchPointerEvent(QWindow* window, MirInputEvent const* event);
+    void dispatchTouchEvent(QWindow* window, MirInputEvent const* event);
+    void dispatchInputEvent(QWindow* window, MirInputEvent const* event);
+    
+    void dispatchOrientationEvent(QWindow* window, MirOrientationEvent const* event);
 
 private:
     UbuntuClientIntegration* mIntegration;

@@ -48,26 +48,36 @@ public:
     EGLSurface eglSurface;
     WId id;
     UbuntuInput* input;
-    UAUiWindow* window;
     Qt::WindowState state;
     QRect geometry;
-    UApplicationInstance* uaInstance;
-    UAUiWindowProperties* wProps;
+    MirConnection *connection;
+    MirSurface* surface;
     QSize bufferSize;
     QSize targetBufferSize;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
 };
 
-static void eventCallback(void* context, const WindowEvent* event)
+static void eventCallback(MirSurface* surface, const MirEvent *event, void* context)
 {
+    (void) surface;
     DASSERT(context != NULL);
     UbuntuWindow* platformWindow = static_cast<UbuntuWindow*>(context);
     platformWindow->priv()->input->postEvent(platformWindow, event);
 }
 
+static void surfaceCreateCallback(MirSurface* surface, void* context)
+{
+    DASSERT(context != NULL);
+    UbuntuWindow* platformWindow = static_cast<UbuntuWindow*>(context);
+    platformWindow->priv()->surface = surface;
+    
+    MirEventDelegate handler = {eventCallback, context};
+    mir_surface_set_event_handler(surface, &handler);
+}
+
 UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard, UbuntuScreen* screen,
-                           UbuntuInput* input, UApplicationInstance* instance)
+                           UbuntuInput* input, MirConnection* connection)
     : QObject(nullptr), QPlatformWindow(w)
 {
     DASSERT(screen != NULL);
@@ -77,7 +87,7 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     d->eglSurface = EGL_NO_SURFACE;
     d->input = input;
     d->state = window()->windowState();
-    d->uaInstance = instance;
+    d->connection = connection;
     d->clipboard = clipboard;
 
     static int id = 1;
@@ -94,7 +104,9 @@ UbuntuWindow::~UbuntuWindow()
 {
     DLOG("UbuntuWindow::~UbuntuWindow");
     d->destroyEGLSurface();
-    ua_ui_window_destroy(d->window);
+
+    mir_surface_release_sync(d->surface);
+
     delete d;
 }
 
@@ -136,13 +148,27 @@ int UbuntuWindowPrivate::panelHeight()
     return gridUnit * 3 + qFloor(densityPixelRatio) * 2;
 }
 
+namespace
+{
+static MirPixelFormat
+mir_choose_default_pixel_format(MirConnection *connection)
+{
+    MirPixelFormat format[mir_pixel_formats];
+    unsigned int nformats;
+
+    mir_connection_get_available_surface_formats(connection,
+        format, mir_pixel_formats, &nformats);
+    
+    return format[0];
+}
+}
+
 void UbuntuWindow::createWindow()
 {
     DLOG("UbuntuWindow::createWindow (this=%p)", this);
 
     // Get surface role and flags.
     QVariant roleVariant = window()->property("role");
-    int role = roleVariant.isValid() ? roleVariant.toUInt() : 1;  // 1 is the default role for apps.
     QVariant opaqueVariant = window()->property("opaque");
     uint flags = opaqueVariant.isValid() ?
         opaqueVariant.toUInt() ? static_cast<uint>(IS_OPAQUE_FLAG) : 0 : 0;
@@ -187,32 +213,40 @@ void UbuntuWindow::createWindow()
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
             geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
 
-    // Setup platform window creation properties
-    d->wProps = ua_ui_window_properties_new_for_normal_window();
-    ua_ui_window_properties_set_titlen(d->wProps, title.data(), title.size());
-    ua_ui_window_properties_set_role(d->wProps, static_cast<UAUiWindowRole>(role));
-    ua_ui_window_properties_set_event_cb_and_ctx(d->wProps, &eventCallback, this);
-    ua_ui_window_properties_set_dimensions(d->wProps, geometry.width(), geometry.height());
+    MirSurfaceSpec *spec;
+    int role = roleVariant.isValid() ? roleVariant.toUInt() : 1; // 1 is the default role for apps.
+    if (role == U_ON_SCREEN_KEYBOARD_ROLE)
+    {
+        spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
+            geometry.height(), mir_choose_default_pixel_format(d->connection));
+    }
+    else
+    {
+        spec = mir_connection_create_spec_for_normal_surface(d->connection, geometry.width(),
+            geometry.height(), mir_choose_default_pixel_format(d->connection));
+    }
+    mir_surface_spec_set_name(spec, title.data());
 
     // Create platform window
-    d->window = ua_ui_window_new_for_application_with_properties(d->uaInstance, d->wProps);
+    mir_wait_for(mir_surface_create(spec, surfaceCreateCallback, this));
+    mir_surface_spec_release(spec);
+    
+    DASSERT(d->surface != NULL);
+    d->createEGLSurface((EGLNativeWindowType)mir_surface_get_egl_native_window(d->surface));
 
-    if (geometry.x() != 0 || geometry.y() != 0)
-        ua_ui_window_move(d->window, geometry.x(), geometry.y());
-
-    DASSERT(d->window != NULL);
-    d->createEGLSurface(ua_ui_window_get_native_type(d->window));
     if (d->state == Qt::WindowFullScreen) {
-        ua_ui_window_request_fullscreen(d->window);
+    // TODO: We could set this on creation once surface spec supports it (mps already up)
+        mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_fullscreen));
     }
 
     // Window manager can give us a final size different from what we asked for
     // so let's check what we ended up getting
     {
-        uint32_t width, height;
-        ua_ui_window_get_size(d->window, &width, &height);
-        geometry.setWidth(width);
-        geometry.setHeight(height);
+        MirSurfaceParameters parameters;
+        mir_surface_get_parameters(d->surface, &parameters);
+
+        geometry.setWidth(parameters.width);
+        geometry.setHeight(parameters.height);
     }
 
     DLOG("[ubuntumirclient QPA] created surface has size (%d, %d)",
@@ -228,13 +262,8 @@ void UbuntuWindow::createWindow()
 
 void UbuntuWindow::moveResize(const QRect& rect)
 {
-    fprintf(stderr, "\nQUbuntuWindow::moveResize (this=%p, x=%d, y=%d, w=%d, h=%d)\n", this,
-            rect.x(), rect.y(), rect.width(), rect.height());
-    LOG("UbuntuWindow::moveResize(width=%d, height=%d)", rect.width(), rect.height());
-    ua_ui_window_move(d->window, rect.x(), rect.y());
-    ua_ui_window_resize(d->window, rect.width(), rect.height());
-    QWindowSystemInterface::handleGeometryChange(window(), rect);
-    QPlatformWindow::setGeometry(rect);
+    (void) rect;
+    // TODO: Not yet supported by mir.
 }
 
 void UbuntuWindow::handleSurfaceResize(int width, int height)
@@ -316,25 +345,26 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     if (state == d->state)
         return;
 
+    // TODO: Perhaps we should check if the states are applied?
     switch (state) {
     case Qt::WindowNoState:
         DLOG("setting window state: 'NoState'");
-        ua_ui_window_request_state(d->window, U_RESTORED_STATE);
+        mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_restored));
         d->state = Qt::WindowNoState;
         break;
     case Qt::WindowFullScreen:
         DLOG("setting window state: 'FullScreen'");
-        ua_ui_window_request_state(d->window, U_FULLSCREEN_STATE);
+        mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_fullscreen));
         d->state = Qt::WindowFullScreen;
         break;
     case Qt::WindowMaximized:
         DLOG("setting window state: 'Maximized'");
-        ua_ui_window_request_state(d->window, U_MAXIMIZED_STATE);
+        mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_maximized));
         d->state = Qt::WindowMaximized;
         break;
     case Qt::WindowMinimized:
         DLOG("setting window state: 'Minimized'");
-        ua_ui_window_request_state(d->window, U_MINIMIZED_STATE);
+        mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_minimized));
         d->state = Qt::WindowMinimized;
         break;
     default:
@@ -365,11 +395,12 @@ void UbuntuWindow::setVisible(bool visible)
   DLOG("UbuntuWindow::setVisible (this=%p, visible=%s)", this, visible ? "true" : "false");
 
   if (visible) {
-    ua_ui_window_show(d->window);
+    setWindowState(Qt::WindowNoState);
+
     QWindowSystemInterface::handleExposeEvent(window(), QRect());
     QWindowSystemInterface::flushWindowSystemEvents();
   } else {
-    ua_ui_window_hide(d->window);
+    setWindowState(Qt::WindowMinimized);
   }
 }
 
