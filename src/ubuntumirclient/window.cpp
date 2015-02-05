@@ -35,8 +35,6 @@
 
 #include <EGL/egl.h>
 
-#define IS_OPAQUE_FLAG 1
-
 class UbuntuWindowPrivate
 {
 public:
@@ -44,21 +42,21 @@ public:
     void destroyEGLSurface();
     int panelHeight();
 
-    UbuntuScreen* screen;
+    UbuntuScreen *screen;
     EGLSurface eglSurface;
     WId id;
-    UbuntuInput* input;
+    UbuntuInput *input;
     Qt::WindowState state;
     QRect geometry;
     MirConnection *connection;
-    MirSurface* surface;
+    MirSurface *surface = nullptr;
     QSize bufferSize;
     QSize targetBufferSize;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
 };
 
-static void eventCallback(MirSurface* surface, const MirEvent *event, void* context)
+static void eventCallback(MirSurface *surface, const MirEvent *event, void *context)
 {
     (void) surface;
     DASSERT(context != NULL);
@@ -66,7 +64,7 @@ static void eventCallback(MirSurface* surface, const MirEvent *event, void* cont
     platformWindow->priv()->input->postEvent(platformWindow, event);
 }
 
-static void surfaceCreateCallback(MirSurface* surface, void* context)
+static void surfaceCreateCallback(MirSurface *surface, void *context)
 {
     DASSERT(context != NULL);
     UbuntuWindow* platformWindow = static_cast<UbuntuWindow*>(context);
@@ -76,8 +74,8 @@ static void surfaceCreateCallback(MirSurface* surface, void* context)
     mir_surface_set_event_handler(surface, &handler);
 }
 
-UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard, UbuntuScreen* screen,
-                           UbuntuInput* input, MirConnection* connection)
+UbuntuWindow::UbuntuWindow(QWindow *w, QSharedPointer<UbuntuClipboard> clipboard, UbuntuScreen *screen,
+                           UbuntuInput *input, MirConnection *connection)
     : QObject(nullptr), QPlatformWindow(w)
 {
     DASSERT(screen != NULL);
@@ -96,7 +94,7 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     // Use client geometry if set explicitly, use available screen geometry otherwise.
     d->geometry = window()->geometry() != screen->geometry() ?
         window()->geometry() : screen->availableGeometry();
-    createWindow();
+
     DLOG("UbuntuWindow::UbuntuWindow (this=%p, w=%p, screen=%p, input=%p)", this, w, screen, input);
 }
 
@@ -161,30 +159,37 @@ mir_choose_default_pixel_format(MirConnection *connection)
 
     return format[0];
 }
+
+UAUiWindowRole role_for(QWindow *window)
+{
+    QVariant roleVariant = window->property("role");
+
+    if (!roleVariant.isValid())
+        return U_MAIN_ROLE;
+
+    uint role = roleVariant.toUInt();
+    if (role < U_MAIN_ROLE || role > U_SHUTDOWN_DIALOG_ROLE)
+        return U_MAIN_ROLE;
+
+    return static_cast<UAUiWindowRole>(role);
+}
 }
 
 void UbuntuWindow::createWindow()
 {
+    // Already created
+    if (d->surface)
+        return;
+
     DLOG("UbuntuWindow::createWindow (this=%p)", this);
 
-    // Get surface role and flags.
-    QVariant roleVariant = window()->property("role");
-    int role = roleVariant.isValid() ? roleVariant.toUInt() : 1;  // 1 is the default role for apps.
-    QVariant opaqueVariant = window()->property("opaque");
-    uint flags = opaqueVariant.isValid() ?
-        opaqueVariant.toUInt() ? static_cast<uint>(IS_OPAQUE_FLAG) : 0 : 0;
-
-    // FIXME(loicm) Opaque flag is forced for now for non-system sessions (applications) for
-    //     performance reasons.
-    flags |= static_cast<uint>(IS_OPAQUE_FLAG);
-
-    const QByteArray title = (!window()->title().isNull()) ? window()->title().toUtf8() : "Window 1"; // legacy title
+    const QByteArray title = window()->title().isNull() ?
+        "Window 1" : window()->title().toUtf8(); // legacy title
     const int panelHeight = d->panelHeight();
 
 #if !defined(QT_NO_DEBUG)
     LOG("panelHeight: '%d'", panelHeight);
-    LOG("role: '%d'", role);
-    LOG("flags: '%s'", (flags & static_cast<uint>(1)) ? "Opaque" : "NotOpaque");
+    LOG("role: '%d'", role_for(window()));
     LOG("title: '%s'", title.constData());
 #endif
 
@@ -214,17 +219,7 @@ void UbuntuWindow::createWindow()
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
             geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
 
-    MirSurfaceSpec *spec;
-    if (role == U_ON_SCREEN_KEYBOARD_ROLE)
-    {
-        spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
-            geometry.height(), mir_choose_default_pixel_format(d->connection));
-    }
-    else
-    {
-        spec = mir_connection_create_spec_for_normal_surface(d->connection, geometry.width(),
-            geometry.height(), mir_choose_default_pixel_format(d->connection));
-    }
+    auto spec = createSpec(geometry.width(), geometry.height());
     mir_surface_spec_set_name(spec, title.data());
 
     // Create platform window
@@ -258,6 +253,48 @@ void UbuntuWindow::createWindow()
     // Tell Qt about the geometry.
     QWindowSystemInterface::handleGeometryChange(window(), geometry);
     QPlatformWindow::setGeometry(geometry);
+}
+
+UbuntuWindow *UbuntuWindow::transient_parent() const
+{
+    auto parent = window()->transientParent();
+    return parent ? dynamic_cast<UbuntuWindow *>(parent->handle()) : nullptr;
+}
+
+MirSurfaceSpec *UbuntuWindow::createSpec(int width, int height) const
+{
+   UAUiWindowRole role = role_for(window());
+   if (role == U_ON_SCREEN_KEYBOARD_ROLE)
+   {
+       return mir_connection_create_spec_for_input_method(d->connection, width,
+           height, mir_choose_default_pixel_format(d->connection));
+   }
+
+   Qt::WindowType type = window()->type();
+   auto pixel_format =  mir_choose_default_pixel_format(d->connection);
+
+   if (type == Qt::Popup) {
+       auto parent = transient_parent();
+       if (parent) {
+           auto position = parent->window()->position();
+           MirRectangle location{position.x(), position.y(), 0, 0};
+           return mir_connection_create_spec_for_menu(
+               d->connection, width, height, pixel_format, parent->d->surface,
+               &location, mir_edge_attachment_any);
+       }
+   } else if (type == Qt::Dialog) {
+       auto parent = transient_parent();
+       if (parent) {
+           // Modal dialog
+           mir_connection_create_spec_for_modal_dialog(
+               d->connection, width, height, pixel_format, parent->d->surface);
+       } else {
+           // TODO: do Qt parentless dialogs have the same semantics as mir?
+           mir_connection_create_spec_for_dialog(d->connection, width, height, pixel_format);
+       }
+   }
+   return mir_connection_create_spec_for_normal_surface(
+       d->connection, width, height, pixel_format);
 }
 
 void UbuntuWindow::moveResize(const QRect& rect)
@@ -395,12 +432,13 @@ void UbuntuWindow::setVisible(bool visible)
   DLOG("UbuntuWindow::setVisible (this=%p, visible=%s)", this, visible ? "true" : "false");
 
   if (visible) {
-    setWindowState(Qt::WindowNoState);
+      createWindow();
+      setWindowState(Qt::WindowNoState);
 
-    QWindowSystemInterface::handleExposeEvent(window(), QRect());
-    QWindowSystemInterface::flushWindowSystemEvents();
+      QWindowSystemInterface::handleExposeEvent(window(), QRect());
+      QWindowSystemInterface::flushWindowSystemEvents();
   } else {
-    setWindowState(Qt::WindowMinimized);
+      setWindowState(Qt::WindowMinimized);
   }
 }
 

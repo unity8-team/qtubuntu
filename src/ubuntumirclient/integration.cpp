@@ -172,6 +172,10 @@ bool UbuntuClientIntegration::hasCapability(QPlatformIntegration::Capability cap
         return true;
         break;
 
+    case MultipleWindows:
+        return true;
+        break;
+
     case ThreadedOpenGL:
         if (qEnvironmentVariableIsEmpty("QTUBUNTU_NO_THREADED_OPENGL")) {
             return true;
