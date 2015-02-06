@@ -213,7 +213,6 @@ void UbuntuWindow::createWindow()
     } else {
         printf("UbuntuWindow - regular geometry\n");
         geometry = d->geometry;
-        geometry.setY(panelHeight);
     }
 
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
@@ -276,8 +275,9 @@ MirSurfaceSpec *UbuntuWindow::createSpec(int width, int height) const
    if (type == Qt::Popup) {
        auto parent = transient_parent();
        if (parent) {
-           auto position = parent->window()->position();
-           MirRectangle location{position.x(), position.y(), 0, 0};
+           auto pos = window()->geometry().topLeft();
+           pos -= parent->geometry().topLeft();
+           MirRectangle location{pos.x(), pos.y(), 0, 0};
            return mir_connection_create_spec_for_menu(
                d->connection, width, height, pixel_format, parent->d->surface,
                &location, mir_edge_attachment_any);
@@ -286,11 +286,11 @@ MirSurfaceSpec *UbuntuWindow::createSpec(int width, int height) const
        auto parent = transient_parent();
        if (parent) {
            // Modal dialog
-           mir_connection_create_spec_for_modal_dialog(
+           return mir_connection_create_spec_for_modal_dialog(
                d->connection, width, height, pixel_format, parent->d->surface);
        } else {
            // TODO: do Qt parentless dialogs have the same semantics as mir?
-           mir_connection_create_spec_for_dialog(d->connection, width, height, pixel_format);
+           return mir_connection_create_spec_for_dialog(d->connection, width, height, pixel_format);
        }
    }
    return mir_connection_create_spec_for_normal_surface(
