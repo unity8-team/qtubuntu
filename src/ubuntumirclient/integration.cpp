@@ -173,6 +173,7 @@ bool UbuntuClientIntegration::hasCapability(QPlatformIntegration::Capability cap
         break;
 
     case MultipleWindows:
+    case NonFullScreenWindows:
         return true;
         break;
 
