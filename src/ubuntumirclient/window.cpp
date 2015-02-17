@@ -232,7 +232,8 @@ void UbuntuWindow::createWindow()
     mir_surface_spec_release(spec);
     
     DASSERT(d->surface != NULL);
-    d->createEGLSurface((EGLNativeWindowType)mir_surface_get_egl_native_window(d->surface));
+    MirBufferStream *bufferStream = mir_surface_get_buffer_stream(d->surface);
+    d->createEGLSurface((EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(bufferStream));
 
     if (d->state == Qt::WindowFullScreen) {
     // TODO: We could set this on creation once surface spec supports it (mps already up)
