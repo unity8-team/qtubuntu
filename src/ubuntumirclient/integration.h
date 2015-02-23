@@ -19,6 +19,7 @@
 
 #include <qpa/qplatformintegration.h>
 #include <QSharedPointer>
+#include <QOffscreenSurface>
 
 #include "platformservices.h"
 
@@ -53,6 +54,7 @@ public:
     QPlatformClipboard* clipboard() const override;
 
     QPlatformOpenGLContext* createPlatformOpenGLContext(QOpenGLContext* context);
+    QPlatformOffscreenSurface* createPlatformOffscreenSurface(QOffscreenSurface* surface) const override;
     QPlatformWindow* createPlatformWindow(QWindow* window);
     UbuntuScreen* screen() const { return mScreen; }
 

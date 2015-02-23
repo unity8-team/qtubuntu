@@ -22,6 +22,7 @@
 #include <qpa/qplatforminputcontext.h>
 #include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
 #include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
+#include <QtPlatformSupport/private/qeglpbuffer_p.h>
 #include <QOpenGLContext>
 
 // Local
@@ -207,6 +208,19 @@ QPlatformOpenGLContext* UbuntuClientIntegration::createPlatformOpenGLContext(
 {
     return new UbuntuOpenGLContext(static_cast<UbuntuScreen*>(context->screen()->handle()),
                                    static_cast<UbuntuOpenGLContext*>(context->shareHandle()));
+}
+
+QPlatformOffscreenSurface* UbuntuClientIntegration::createPlatformOffscreenSurface(QOffscreenSurface* surface) const
+{
+    QSurfaceFormat format(surface->requestedFormat());
+    format.setAlphaBufferSize(8);
+    format.setRedBufferSize(8);
+    format.setGreenBufferSize(8);
+    format.setBlueBufferSize(8);
+
+    EGLDisplay display = mScreen->eglDisplay();
+    return new QEGLPbuffer(display, format, surface);
+
 }
 
 QStringList UbuntuClientIntegration::themeNames() const
