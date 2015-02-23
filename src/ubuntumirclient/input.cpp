@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -120,18 +120,10 @@ static const uint32_t KeyTable[] = {
     0,                          0
 };
 
-// Lookup table for the key types.
-// FIXME(loicm) Not sure what to do with that multiple thing.
-static const QEvent::Type kEventType[] = {
-    QEvent::KeyPress,    // U_KEY_ACTION_DOWN     = 0
-    QEvent::KeyRelease,  // U_KEY_ACTION_UP       = 1
-    QEvent::KeyPress     // U_KEY_ACTION_MULTIPLE = 2
-};
-
 class UbuntuEvent : public QEvent
 {
 public:
-    UbuntuEvent(UbuntuWindow* window, const MirEvent* event, QEvent::Type type)
+    UbuntuEvent(UbuntuWindow* window, const MirEvent *event, QEvent::Type type)
         : QEvent(type), window(window) {
         nativeEvent = mir_event_ref(event);
     }
@@ -139,9 +131,9 @@ public:
     {
         mir_event_unref(nativeEvent);
     }
-    
-    UbuntuWindow* window;
-    MirEvent const* nativeEvent;
+
+    QPointer<UbuntuWindow> window;
+    const MirEvent *nativeEvent;
 };
 
 UbuntuInput::UbuntuInput(UbuntuClientIntegration* integration)
@@ -198,17 +190,18 @@ void UbuntuInput::customEvent(QEvent* event)
 {
     DASSERT(QThread::currentThread() == thread());
     UbuntuEvent* ubuntuEvent = static_cast<UbuntuEvent*>(event);
-    MirEvent const* nativeEvent = ubuntuEvent->nativeEvent;
+    const MirEvent *nativeEvent = ubuntuEvent->nativeEvent;
 
-    if (ubuntuEvent->window->window() == nullptr) {
-        qWarning() << "Attempted to deliver an event to a non-existant QWindow, ignoring.";
+    if ((ubuntuEvent->window == nullptr) || (ubuntuEvent->window->window() == nullptr)) {
+        qWarning() << "Attempted to deliver an event to a non-existent window, ignoring.";
         return;
     }
 
     // Event filtering.
     long result;
     if (QWindowSystemInterface::handleNativeEvent(
-            ubuntuEvent->window->window(), mEventFilterType, const_cast<void*>(static_cast<void const*>(nativeEvent)), &result) == true) {
+            ubuntuEvent->window->window(), mEventFilterType,
+            const_cast<void *>(static_cast<const void *>(nativeEvent)), &result) == true) {
         DLOG("event filtered out by native interface");
         return;
     }
@@ -247,25 +240,25 @@ void UbuntuInput::customEvent(QEvent* event)
         dispatchOrientationEvent(ubuntuEvent->window->window(), mir_event_get_orientation_event(nativeEvent));
         break;
     default:
-        DLOG("unhandled event type");
+        DLOG("unhandled event type: %d", static_cast<int>(mir_event_get_type(nativeEvent)));
     }
 }
 
-void UbuntuInput::postEvent(UbuntuWindow* platformWindow, MirEvent const* event)
+void UbuntuInput::postEvent(UbuntuWindow *platformWindow, const MirEvent *event)
 {
     QWindow *window = platformWindow->window();
 
     QCoreApplication::postEvent(this, new UbuntuEvent(
-            platformWindow, reinterpret_cast<const MirEvent*>(event), mEventType));
+            platformWindow, event, mEventType));
 
     if ((window->flags() && Qt::WindowTransparentForInput) && window->parent()) {
         QCoreApplication::postEvent(this, new UbuntuEvent(
                     static_cast<UbuntuWindow*>(platformWindow->QPlatformWindow::parent()),
-                    reinterpret_cast<const MirEvent*>(event), mEventType));
+                    event, mEventType));
     }
 }
 
-void UbuntuInput::dispatchInputEvent(QWindow* window, MirInputEvent const* ev)
+void UbuntuInput::dispatchInputEvent(QWindow *window, const MirInputEvent *ev)
 {
     switch (mir_input_event_get_type(ev))
     {
@@ -283,9 +276,9 @@ void UbuntuInput::dispatchInputEvent(QWindow* window, MirInputEvent const* ev)
     }
 }
 
-void UbuntuInput::dispatchTouchEvent(QWindow* window, MirInputEvent const* ev)
+void UbuntuInput::dispatchTouchEvent(QWindow *window, const MirInputEvent *ev)
 {
-    const MirTouchInputEvent* tev = mir_input_event_get_touch_input_event(ev);
+    const MirTouchInputEvent *tev = mir_input_event_get_touch_input_event(ev);
 
     // FIXME(loicm) Max pressure is device specific. That one is for the Samsung Galaxy Nexus. That
     //     needs to be fixed as soon as the compat input lib adds query support.
@@ -309,7 +302,7 @@ void UbuntuInput::dispatchTouchEvent(QWindow* window, MirInputEvent const* ev)
         touchPoint.normalPosition = QPointF(kX / kWindowGeometry.width(), kY / kWindowGeometry.height());
         touchPoint.area = QRectF(kX - (kW / 2.0), kY - (kH / 2.0), kW, kH);
         touchPoint.pressure = kP / kMaxPressure;
-        
+
         MirTouchInputEventTouchAction touch_action = mir_touch_input_event_get_touch_action(tev, i);
         switch (touch_action)
         {
@@ -354,7 +347,7 @@ namespace
 {
 Qt::KeyboardModifiers qt_modifiers_from_mir(MirInputEventModifiers modifiers)
 {
-    int q_modifiers = Qt::NoModifier;
+    Qt::KeyboardModifiers q_modifiers = Qt::NoModifier;
     if (modifiers & mir_input_event_modifier_shift) {
         q_modifiers |= Qt::ShiftModifier;
     }
@@ -367,14 +360,13 @@ Qt::KeyboardModifiers qt_modifiers_from_mir(MirInputEventModifiers modifiers)
     if (modifiers & mir_input_event_modifier_meta) {
         q_modifiers |= Qt::MetaModifier;
     }
-    return static_cast<Qt::KeyboardModifiers>(q_modifiers);
+    return q_modifiers;
 }
 }
 
-void UbuntuInput::dispatchKeyEvent(QWindow* window, MirInputEvent const* ev)
+void UbuntuInput::dispatchKeyEvent(QWindow *window, const MirInputEvent *event)
 {
-    const MirInputEvent* event = reinterpret_cast<const MirInputEvent*>(ev);
-    const MirKeyInputEvent* key_event = mir_input_event_get_key_input_event(event);
+    const MirKeyInputEvent *key_event = mir_input_event_get_key_input_event(event);
 
     ulong timestamp = mir_input_event_get_event_time(event) / 1000000;
     xkb_keysym_t xk_sym = mir_key_input_event_get_key_code(key_event);
@@ -392,7 +384,7 @@ void UbuntuInput::dispatchKeyEvent(QWindow* window, MirInputEvent const* ev)
 
     bool is_auto_rep = action == mir_key_input_event_action_repeat;
 
-    QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
+    QPlatformInputContext *context = QGuiApplicationPrivate::platformIntegration()->inputContext();
     if (context) {
         QKeyEvent qKeyEvent(keyType, sym, modifiers, text, is_auto_rep);
         qKeyEvent.setTimestamp(timestamp);
@@ -407,9 +399,9 @@ void UbuntuInput::dispatchKeyEvent(QWindow* window, MirInputEvent const* ev)
 
 namespace
 {
-Qt::MouseButton extract_buttons(MirPointerInputEvent const* pev)
+Qt::MouseButtons extract_buttons(const MirPointerInputEvent *pev)
 {
-    int buttons = Qt::NoButton;
+    Qt::MouseButtons buttons = Qt::NoButton;
     if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary))
         buttons |= Qt::LeftButton;
     if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_secondary))
@@ -419,11 +411,11 @@ Qt::MouseButton extract_buttons(MirPointerInputEvent const* pev)
 
     // TODO: Should mir back and forward buttons exist?
     // should they be Qt::X button 1 and 2?
-    return static_cast<Qt::MouseButton>(buttons);
+    return buttons;
 }
 }
 
-void UbuntuInput::dispatchPointerEvent(QWindow* window, MirInputEvent const* ev)
+void UbuntuInput::dispatchPointerEvent(QWindow *window, const MirInputEvent *ev)
 {
     auto timestamp = mir_input_event_get_event_time(ev) / 1000000;
 
@@ -460,7 +452,7 @@ static const char* nativeOrientationDirectionToStr(MirOrientation orientation)
 }
 #endif
 
-void UbuntuInput::dispatchOrientationEvent(QWindow* window, MirOrientationEvent const* event)
+void UbuntuInput::dispatchOrientationEvent(QWindow *window, const MirOrientationEvent *event)
 {
     MirOrientation mir_orientation = mir_orientation_event_get_direction(event);
     #if (LOG_EVENTS != 0)
