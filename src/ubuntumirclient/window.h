@@ -38,6 +38,7 @@ public:
     void setGeometry(const QRect&) override;
     void setWindowState(Qt::WindowState state) override;
     void setVisible(bool visible) override;
+    qreal devicePixelRatio() const override;
 
     // New methods.
     void* eglSurface() const;

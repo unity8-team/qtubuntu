@@ -292,8 +292,8 @@ void UbuntuWindow::handleBufferResize(int width, int height)
         QMutexLocker(&d->mutex);
         oldGeometry = geometry();
         newGeometry = oldGeometry;
-        newGeometry.setWidth(width);
-        newGeometry.setHeight(height);
+        newGeometry.setWidth(width / devicePixelRatio());
+        newGeometry.setHeight(height / devicePixelRatio());
 
         d->bufferSize.rwidth() = width;
         d->bufferSize.rheight() = height;
@@ -371,6 +371,11 @@ void UbuntuWindow::setVisible(bool visible)
   } else {
     ua_ui_window_hide(d->window);
   }
+}
+
+qreal UbuntuWindow::devicePixelRatio() const
+{
+    return screen()->devicePixelRatio();
 }
 
 void* UbuntuWindow::eglSurface() const

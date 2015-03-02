@@ -33,6 +33,7 @@ public:
     int depth() const override { return mDepth; }
     QRect geometry() const override { return mGeometry; }
     QRect availableGeometry() const override { return mAvailableGeometry; }
+    qreal devicePixelRatio() const override { return mDevicePixelRatio; }
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
 
@@ -48,6 +49,7 @@ public:
 private:
     QRect mGeometry;
     QRect mAvailableGeometry;
+    qreal mDevicePixelRatio;
     Qt::ScreenOrientation mNativeOrientation;
     Qt::ScreenOrientation mCurrentOrientation;
     QImage::Format mFormat;

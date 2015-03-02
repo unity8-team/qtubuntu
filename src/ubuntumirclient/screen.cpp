@@ -138,17 +138,22 @@ UbuntuScreen::UbuntuScreen()
     eglSwapInterval(mEglDisplay, swapInterval);
 
     // Get screen resolution.
+    QByteArray stringValue = qgetenv("QT_DEVICE_PIXEL_RATIO");
+    bool ok;
+    float value = stringValue.toFloat(&ok);
+    mDevicePixelRatio = ok ? value : 1.0;
+
     UAUiDisplay* display = ua_ui_display_new_with_index(0);
-    const int kScreenWidth = ua_ui_display_query_horizontal_res(display);
-    const int kScreenHeight = ua_ui_display_query_vertical_res(display);
+    const int kScreenWidth = ua_ui_display_query_horizontal_res(display) / mDevicePixelRatio;
+    const int kScreenHeight = ua_ui_display_query_vertical_res(display) / mDevicePixelRatio;
     DASSERT(kScreenWidth > 0 && kScreenHeight > 0);
-    DLOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
+    LOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
     ua_ui_display_destroy(display);
 
     mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
     mAvailableGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
 
-    DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
+    LOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
 
     // Set the default orientation based on the initial screen dimmensions.
     mNativeOrientation = (mAvailableGeometry.width() >= mAvailableGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
