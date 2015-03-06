@@ -1,8 +1,8 @@
-qtubuntu-gles (0.60+15.04.20150305-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.60+15.04.20150306-0ubuntu1) UNRELEASED; urgency=medium
 
   * Sync with upstream
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 05 Mar 2015 12:42:52 +0100
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 06 Mar 2015 14:05:27 +0100
 
 qtubuntu-gles (0.60+15.04.20141212-0ubuntu2) vivid; urgency=medium
 
