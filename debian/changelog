@@ -4,6 +4,12 @@ qtubuntu-gles (0.60+15.04.20150318-0ubuntu2) UNRELEASED; urgency=medium
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 18 Mar 2015 12:49:32 +0100
 
+qtubuntu-gles (0.60+15.04.20141212-0ubuntu3) vivid; urgency=medium
+
+  * No-change rebuild against Qt 5.4.1.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 12 Mar 2015 09:12:30 +0200
+
 qtubuntu-gles (0.60+15.04.20141212-0ubuntu2) vivid; urgency=medium
 
   * No-change rebuild against Qt 5.4.0.
