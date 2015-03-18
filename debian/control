@@ -10,12 +10,15 @@ Build-Depends: debhelper (>= 9),
                libglib2.0-dev,
                libmtdev-dev,
                libqt5gui5-gles,
-               libqt5sensors5-dev,
+               libqt5quick5-gles,
+               libqt5quickparticles5-gles,
                libqt5quicktest5,
+               libqt5quickwidgets5-gles,
+               libqt5sensors5-dev,
                libubuntu-application-api-dev (>= 2.2.0),
                libudev-dev,
-               libxrender-dev,
                libxkbcommon-dev,
+               libxrender-dev,
                qt5-default,
                qtbase5-gles-dev,
                qtbase5-private-gles-dev,
@@ -25,16 +28,17 @@ Section: libs
 X-Auto-Uploader: no-rewrite-version
 
 Package: qtubuntu-android
-Architecture: i386 amd64
+Architecture: amd64 i386
 Multi-Arch: same
-Conflicts: qtubuntu-android, qtubuntu-desktop
-Replaces: qtubuntu-android
-Provides: qtubuntu
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-         libqt5sensors5,
+Conflicts: qtubuntu-android,
+           qtubuntu-desktop,
+Replaces: qtubuntu-android,
+Provides: qtubuntu,
+Depends: libqt5sensors5,
          qtubuntu-sensors,
          ubuntu-application-api2-touch,
+         ${misc:Depends},
+         ${shlibs:Depends},
 Description: Qt plugins for Ubuntu Platform API (mobile) - OpenGLES
  QtUbuntu is a set of Qt5 components for the Ubuntu Platform API. It contains a
  QPA (Qt Platform Abstraction) plugin based on the Ubuntu Platform API and a
