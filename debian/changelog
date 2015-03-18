@@ -1,9 +1,10 @@
-qtubuntu-gles (0.60+15.04.20150318-0ubuntu3) UNRELEASED; urgency=medium
+qtubuntu-gles (0.60+15.04.20150318-0ubuntu3) vivid; urgency=medium
 
+  [ Michał Sawicz ]
   * Sync with upstream
   * wrap-and-sort
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 18 Mar 2015 13:22:02 +0100
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 18 Mar 2015 12:23:29 +0000
 
 qtubuntu-gles (0.60+15.04.20141212-0ubuntu3) vivid; urgency=medium
 
