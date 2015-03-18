@@ -1,6 +1,7 @@
 qtubuntu-gles (0.60+15.04.20150318-0ubuntu3) UNRELEASED; urgency=medium
 
   * Sync with upstream
+  * wrap-and-sort
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 18 Mar 2015 13:22:02 +0100
 
