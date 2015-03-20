@@ -1,3 +1,15 @@
+qtubuntu-gles (0.60+15.04.20150318-0ubuntu5) vivid; urgency=medium
+
+  * No-change rebuild against latest platform-api
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 19 Mar 2015 22:38:01 -0300
+
+qtubuntu-gles (0.60+15.04.20150318-0ubuntu4) vivid; urgency=medium
+
+  * No-change rebuild to correct platform-api dependency
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 19 Mar 2015 11:54:32 +0200
+
 qtubuntu-gles (0.60+15.04.20150318-0ubuntu3) vivid; urgency=medium
 
   [ Michał Sawicz ]
