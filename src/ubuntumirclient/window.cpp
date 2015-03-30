@@ -272,6 +272,11 @@ void UbuntuWindow::createWindow()
         spec = mir_connection_create_spec_for_normal_surface(d->connection, geometry.width(),
             geometry.height(), mir_choose_default_pixel_format(d->connection));
     }
+
+    if (d->state == Qt::WindowFullScreen) {
+        mir_surface_spec_set_fullscreen_on_output(spec, mir_display_output_id_invalid); // invalid = no preference
+    }
+
     mir_surface_spec_set_name(spec, title.data());
 
     // Create platform window
@@ -281,12 +286,7 @@ void UbuntuWindow::createWindow()
     DASSERT(d->surface != NULL);
     d->createEGLSurface((EGLNativeWindowType)mir_surface_get_egl_native_window(d->surface));
 
-    if (d->state == Qt::WindowFullScreen) {
-    // TODO: We could set this on creation once surface spec supports it (mps already up)
-        mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_fullscreen));
-    }
-
-    // Window manager can give us a final size different from what we asked for
+    // Window manager can give us a final size and state different from what we asked for
     // so let's check what we ended up getting
     {
         MirSurfaceParameters parameters;
@@ -294,6 +294,15 @@ void UbuntuWindow::createWindow()
 
         geometry.setWidth(parameters.width);
         geometry.setHeight(parameters.height);
+
+        MirSurfaceState state = mir_surface_get_state(d->surface);
+        if (state != mir_surface_state_fullscreen && d->state == Qt::WindowFullScreen) {
+            d->state = Qt::WindowNoState;
+            QWindowSystemInterface::handleWindowStateChanged(window(), Qt::WindowNoState);
+        } else if (state == mir_surface_state_fullscreen && d->state != Qt::WindowFullScreen) {
+            d->state = Qt::WindowFullScreen;
+            QWindowSystemInterface::handleWindowStateChanged(window(), Qt::WindowFullScreen);
+        }
     }
 
     DLOG("[ubuntumirclient QPA] created surface has size (%d, %d)",
