@@ -254,11 +254,12 @@ void UbuntuWindow::createWindow()
         geometry.setY(panelHeight);
     } else {
         printf("UbuntuWindow - regular geometry\n");
-        geometry = d->geometry;
+        geometry.setWidth(d->geometry.width() * devicePixelRatio());
+        geometry.setHeight(d->geometry.height() * devicePixelRatio());
         geometry.setY(panelHeight);
     }
 
-    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
+    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with pixel size (%d, %d) with title '%s'\n",
             geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
 
     MirSurfaceSpec *spec;
@@ -292,12 +293,12 @@ void UbuntuWindow::createWindow()
         MirSurfaceParameters parameters;
         mir_surface_get_parameters(d->surface, &parameters);
 
-        geometry.setWidth(parameters.width);
-        geometry.setHeight(parameters.height);
-    }
+        geometry.setWidth(parameters.width / devicePixelRatio());
+        geometry.setHeight(parameters.height / devicePixelRatio());
 
-    DLOG("[ubuntumirclient QPA] created surface has size (%d, %d)",
-            geometry.width(), geometry.height());
+        DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
+                parameters.width, parameters.height, geometry.width(), geometry.height());
+    }
 
     // Assume that the buffer size matches the surface size at creation time
     d->bufferSize = geometry.size();
@@ -435,7 +436,7 @@ void UbuntuWindow::setVisible(bool visible)
 
 qreal UbuntuWindow::devicePixelRatio() const
 {
-    return screen()->devicePixelRatio();
+    return screen() ? screen()->devicePixelRatio() : 1.0; // not impossible a Window has no attached Screen
 }
 
 void* UbuntuWindow::eglSurface() const

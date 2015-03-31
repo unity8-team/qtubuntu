@@ -82,6 +82,13 @@ static void printEglConfig(EGLDisplay display, EGLConfig config) {
 }
 #endif
 
+namespace {
+    int qGetEnvIntValue(const char *varName, bool *ok)
+    {
+        return qgetenv(varName).toInt(ok);
+    }
+} // anonymous namespace
+
 
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
@@ -126,22 +133,17 @@ UbuntuScreen::UbuntuScreen()
     #endif
 
     // Set vblank swap interval.
-    int swapInterval = kSwapInterval;
-    QByteArray swapIntervalString = qgetenv("QTUBUNTU_SWAPINTERVAL");
-    if (!swapIntervalString.isEmpty()) {
-        bool ok;
-        swapInterval = swapIntervalString.toInt(&ok);
-        if (!ok)
-            swapInterval = kSwapInterval;
-    }
+    bool ok;
+    int swapInterval = qGetEnvIntValue("QTUBUNTU_SWAPINTERVAL", &ok);
+    if (!ok)
+        swapInterval = kSwapInterval;
+
     DLOG("ubuntumirclient: setting swap interval to %d", swapInterval);
     eglSwapInterval(mEglDisplay, swapInterval);
 
-    // Get screen resolution.
-    QByteArray stringValue = qgetenv("QT_DEVICE_PIXEL_RATIO");
-    bool ok;
-    float value = stringValue.toFloat(&ok);
-    mDevicePixelRatio = ok ? value : 1.0;
+    // Get screen resolution and properties.
+    int dpr = qGetEnvIntValue("QT_DEVICE_PIXEL_RATIO", &ok);
+    mDevicePixelRatio = (ok && dpr > 0) ? dpr : 1.0;
 
     UAUiDisplay* display = ua_ui_display_new_with_index(0);
     const int kScreenWidth = ua_ui_display_query_horizontal_res(display) / mDevicePixelRatio;
