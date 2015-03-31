@@ -1,3 +1,37 @@
+qtubuntu (0.60+15.04.20150318-0ubuntu3) vivid; urgency=medium
+
+  * No-change rebuild against latest platform-api
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 19 Mar 2015 22:37:16 -0300
+
+qtubuntu (0.60+15.04.20150318-0ubuntu2) vivid; urgency=medium
+
+  * No-change rebuild to correct platform-api dependency
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 19 Mar 2015 11:54:20 +0200
+
+qtubuntu (0.60+15.04.20150318-0ubuntu1) vivid; urgency=medium
+
+  [ Alberto Aguirre ]
+  * Port qtubuntu to direct mirclient usage for window creation and
+    input handling.
+
+  [ Daniel d'Andrada ]
+  * Port qtubuntu to direct mirclient usage for window creation and
+    input handling.
+
+  [ Robert Carr ]
+  * Port qtubuntu to direct mirclient usage for window creation and
+    input handling.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 18 Mar 2015 10:12:48 +0000
+
+qtubuntu (0.60+15.04.20141212-0ubuntu3) vivid; urgency=medium
+
+  * No-change rebuild against Qt 5.4.1.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Wed, 11 Mar 2015 08:25:45 +0200
+
 qtubuntu (0.60+15.04.20141212-0ubuntu2) vivid; urgency=medium
 
   * No-change rebuild against Qt 5.4.0.
