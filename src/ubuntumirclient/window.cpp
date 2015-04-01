@@ -19,6 +19,7 @@
 #include "input.h"
 #include "window.h"
 #include "screen.h"
+#include "utils.h"
 #include "logging.h"
 
 // Qt
@@ -293,8 +294,8 @@ void UbuntuWindow::createWindow()
         MirSurfaceParameters parameters;
         mir_surface_get_parameters(d->surface, &parameters);
 
-        geometry.setWidth(parameters.width / devicePixelRatio());
-        geometry.setHeight(parameters.height / devicePixelRatio());
+        geometry.setWidth(divideAndRoundUp(parameters.width, devicePixelRatio()));
+        geometry.setHeight(divideAndRoundUp(parameters.height, devicePixelRatio()));
 
         DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
                 parameters.width, parameters.height, geometry.width(), geometry.height());
@@ -369,8 +370,8 @@ void UbuntuWindow::handleBufferResize(int width, int height)
         QMutexLocker(&d->mutex);
         oldGeometry = geometry();
         newGeometry = oldGeometry;
-        newGeometry.setWidth(width / devicePixelRatio());
-        newGeometry.setHeight(height / devicePixelRatio());
+        newGeometry.setWidth(divideAndRoundUp(width, devicePixelRatio()));
+        newGeometry.setHeight(divideAndRoundUp(height, devicePixelRatio()));
 
         d->bufferSize.rwidth() = width;
         d->bufferSize.rheight() = height;

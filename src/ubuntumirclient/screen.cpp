@@ -26,6 +26,7 @@
 #include "screen.h"
 #include "logging.h"
 #include "orientationchangeevent_p.h"
+#include "utils.h"
 
 // platform-api
 #include <ubuntu/application/ui/display.h>
@@ -146,8 +147,8 @@ UbuntuScreen::UbuntuScreen()
     mDevicePixelRatio = (ok && dpr > 0) ? dpr : 1.0;
 
     UAUiDisplay* display = ua_ui_display_new_with_index(0);
-    const int kScreenWidth = ua_ui_display_query_horizontal_res(display) / mDevicePixelRatio;
-    const int kScreenHeight = ua_ui_display_query_vertical_res(display) / mDevicePixelRatio;
+    const int kScreenWidth = divideAndRoundUp(ua_ui_display_query_horizontal_res(display), mDevicePixelRatio);
+    const int kScreenHeight = divideAndRoundUp(ua_ui_display_query_vertical_res(display), mDevicePixelRatio);
     DASSERT(kScreenWidth > 0 && kScreenHeight > 0);
     LOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
     ua_ui_display_destroy(display);
