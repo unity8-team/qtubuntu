@@ -150,13 +150,13 @@ UbuntuScreen::UbuntuScreen()
     const int kScreenWidth = divideAndRoundUp(ua_ui_display_query_horizontal_res(display), mDevicePixelRatio);
     const int kScreenHeight = divideAndRoundUp(ua_ui_display_query_vertical_res(display), mDevicePixelRatio);
     DASSERT(kScreenWidth > 0 && kScreenHeight > 0);
-    LOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
+    DLOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
     ua_ui_display_destroy(display);
 
     mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
     mAvailableGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
 
-    LOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
+    DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
 
     // Set the default orientation based on the initial screen dimmensions.
     mNativeOrientation = (mAvailableGeometry.width() >= mAvailableGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
