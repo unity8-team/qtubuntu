@@ -255,24 +255,27 @@ void UbuntuWindow::createWindow()
         geometry.setY(panelHeight);
     } else {
         printf("UbuntuWindow - regular geometry\n");
-        geometry.setWidth(d->geometry.width() * devicePixelRatio());
-        geometry.setHeight(d->geometry.height() * devicePixelRatio());
+        geometry = d->geometry;
         geometry.setY(panelHeight);
     }
 
+    // Convert to pixels when talking with Mir
+    d->bufferSize.setWidth(d->geometry.width() * devicePixelRatio());
+    d->bufferSize.setHeight(d->geometry.height() * devicePixelRatio());
+
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with pixel size (%d, %d) with title '%s'\n",
-            geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
+            d->bufferSize.x(), d->bufferSize.y(), d->bufferSize.width(), d->bufferSize.height(), title.data());
 
     MirSurfaceSpec *spec;
     if (role == U_ON_SCREEN_KEYBOARD_ROLE)
     {
-        spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
-            geometry.height(), mir_choose_default_pixel_format(d->connection));
+        spec = mir_connection_create_spec_for_input_method(d->connection, d->bufferSize.width(),
+            d->bufferSize.height(), mir_choose_default_pixel_format(d->connection));
     }
     else
     {
-        spec = mir_connection_create_spec_for_normal_surface(d->connection, geometry.width(),
-            geometry.height(), mir_choose_default_pixel_format(d->connection));
+        spec = mir_connection_create_spec_for_normal_surface(d->connection, d->bufferSize.width(),
+            d->bufferSize.height(), mir_choose_default_pixel_format(d->connection));
     }
     mir_surface_spec_set_name(spec, title.data());
 
@@ -297,12 +300,13 @@ void UbuntuWindow::createWindow()
         geometry.setWidth(divideAndRoundUp(parameters.width, devicePixelRatio()));
         geometry.setHeight(divideAndRoundUp(parameters.height, devicePixelRatio()));
 
-        DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
-                parameters.width, parameters.height, geometry.width(), geometry.height());
+        // Assume that the buffer size matches the surface size at creation time
+        d->bufferSize.setWidth(parameters.width);
+        d->bufferSize.setHeight(parameters.height);
     }
 
-    // Assume that the buffer size matches the surface size at creation time
-    d->bufferSize = geometry.size();
+    DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
+            d->bufferSize.width, d->bufferSize.height, geometry.width(), geometry.height());
 
     // Tell Qt about the geometry.
     QWindowSystemInterface::handleGeometryChange(window(), geometry);
