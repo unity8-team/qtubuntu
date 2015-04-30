@@ -38,6 +38,11 @@
 
 #define IS_OPAQUE_FLAG 1
 
+/*
+ * Note: all geometry is in device-pixels, except that contained in variables with the
+ * suffix "Px" - whose units are pixels
+ */
+
 namespace
 {
 MirSurfaceState qtWindowStateToMirSurfaceState(Qt::WindowState state)
@@ -100,8 +105,8 @@ public:
     QRect geometry;
     MirConnection *connection;
     MirSurface* surface;
-    QSize bufferSize;
-    QSize targetBufferSize;
+    QSize bufferSizePx;
+    QSize targetbufferSizePx;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
 };
@@ -260,22 +265,22 @@ void UbuntuWindow::createWindow()
     }
 
     // Convert to pixels when talking with Mir
-    d->bufferSize.setWidth(d->geometry.width() * devicePixelRatio());
-    d->bufferSize.setHeight(d->geometry.height() * devicePixelRatio());
+    d->bufferSizePx.setWidth(d->geometry.width() * devicePixelRatio());
+    d->bufferSizePx.setHeight(d->geometry.height() * devicePixelRatio());
 
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with pixel size (%d, %d) with title '%s'\n",
-            d->bufferSize.x(), d->bufferSize.y(), d->bufferSize.width(), d->bufferSize.height(), title.data());
+            d->bufferSizePx.x(), d->bufferSizePx.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
 
     MirSurfaceSpec *spec;
     if (role == U_ON_SCREEN_KEYBOARD_ROLE)
     {
-        spec = mir_connection_create_spec_for_input_method(d->connection, d->bufferSize.width(),
-            d->bufferSize.height(), mir_choose_default_pixel_format(d->connection));
+        spec = mir_connection_create_spec_for_input_method(d->connection, d->bufferSizePx.width(),
+            d->bufferSizePx.height(), mir_choose_default_pixel_format(d->connection));
     }
     else
     {
-        spec = mir_connection_create_spec_for_normal_surface(d->connection, d->bufferSize.width(),
-            d->bufferSize.height(), mir_choose_default_pixel_format(d->connection));
+        spec = mir_connection_create_spec_for_normal_surface(d->connection, d->bufferSizePx.width(),
+            d->bufferSizePx.height(), mir_choose_default_pixel_format(d->connection));
     }
     mir_surface_spec_set_name(spec, title.data());
 
@@ -301,12 +306,12 @@ void UbuntuWindow::createWindow()
         geometry.setHeight(divideAndRoundUp(parameters.height, devicePixelRatio()));
 
         // Assume that the buffer size matches the surface size at creation time
-        d->bufferSize.setWidth(parameters.width);
-        d->bufferSize.setHeight(parameters.height);
+        d->bufferSizePx.setWidth(parameters.width);
+        d->bufferSizePx.setHeight(parameters.height);
     }
 
     DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
-            d->bufferSize.width, d->bufferSize.height, geometry.width(), geometry.height());
+            d->bufferSizePx.width, d->bufferSizePx.height, geometry.width(), geometry.height());
 
     // Tell Qt about the geometry.
     QWindowSystemInterface::handleGeometryChange(window(), geometry);
@@ -319,9 +324,9 @@ void UbuntuWindow::moveResize(const QRect& rect)
     // TODO: Not yet supported by mir.
 }
 
-void UbuntuWindow::handleSurfaceResize(int width, int height)
+void UbuntuWindow::handleSurfaceResize(int widthPx, int heightPx)
 {
-    LOG("UbuntuWindow::handleSurfaceResize(width=%d, height=%d)", width, height);
+    LOG("UbuntuWindow::handleSurfaceResize(widthPx=%d, heightPx=%d)", widthPx, heightPx);
 
     // The current buffer size hasn't actually changed. so just render on it and swap
     // buffers until we render on a buffer with the target size.
@@ -330,10 +335,10 @@ void UbuntuWindow::handleSurfaceResize(int width, int height)
 
     {
         QMutexLocker(&d->mutex);
-        d->targetBufferSize.rwidth() = width;
-        d->targetBufferSize.rheight() = height;
+        d->targetbufferSizePx.rwidth() = widthPx;
+        d->targetbufferSizePx.rheight() = heightPx;
 
-        shouldSwapBuffers = d->bufferSize != d->targetBufferSize;
+        shouldSwapBuffers = d->bufferSizePx != d->targetbufferSizePx;
     }
 
     if (shouldSwapBuffers) {
@@ -341,7 +346,7 @@ void UbuntuWindow::handleSurfaceResize(int width, int height)
     } else {
         qWarning("[ubuntumirclient QPA] UbuntuWindow::handleSurfaceResize"
                  " current buffer already has the target size");
-        d->targetBufferSize = QSize();
+        d->targetbufferSizePx = QSize();
     }
 }
 
@@ -363,9 +368,9 @@ void UbuntuWindow::handleSurfaceFocusChange(bool focused)
     QWindowSystemInterface::handleWindowActivated(activatedWindow, Qt::ActiveWindowFocusReason);
 }
 
-void UbuntuWindow::handleBufferResize(int width, int height)
+void UbuntuWindow::handleBufferResize(int widthPx, int heightPx)
 {
-    DLOG("UbuntuWindow::handleBufferResize(width=%d, height=%d)", width, height);
+    DLOG("UbuntuWindow::handleBufferResize(widthPx=%d, heightPx=%d)", widthPx, heightPx);
 
     QRect oldGeometry;
     QRect newGeometry;
@@ -374,11 +379,11 @@ void UbuntuWindow::handleBufferResize(int width, int height)
         QMutexLocker(&d->mutex);
         oldGeometry = geometry();
         newGeometry = oldGeometry;
-        newGeometry.setWidth(divideAndRoundUp(width, devicePixelRatio()));
-        newGeometry.setHeight(divideAndRoundUp(height, devicePixelRatio()));
+        newGeometry.setWidth(divideAndRoundUp(widthPx, devicePixelRatio()));
+        newGeometry.setHeight(divideAndRoundUp(heightPx, devicePixelRatio()));
 
-        d->bufferSize.rwidth() = width;
-        d->bufferSize.rheight() = height;
+        d->bufferSizePx.rwidth() = widthPx;
+        d->bufferSizePx.rheight() = heightPx;
         d->geometry = newGeometry;
     }
 
@@ -454,28 +459,28 @@ WId UbuntuWindow::winId() const
     return d->id;
 }
 
-void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBufferHeight)
+void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBufferHeightPx)
 {
     QMutexLocker(&d->mutex);
 
-    bool sizeKnown = newBufferWidth > 0 && newBufferHeight > 0;
+    bool sizeKnown = newBufferWidthPx > 0 && newBufferHeightPx > 0;
 
-    if (sizeKnown && (d->bufferSize.width() != newBufferWidth ||
-                d->bufferSize.height() != newBufferHeight)) {
+    if (sizeKnown && (d->bufferSizePx.width() != newBufferWidthPx ||
+                d->bufferSizePx.height() != newBufferHeightPx)) {
         QMetaObject::invokeMethod(this, "handleBufferResize",
                 Qt::QueuedConnection,
-                Q_ARG(int, newBufferWidth), Q_ARG(int, newBufferHeight));
+                Q_ARG(int, newBufferWidthPx), Q_ARG(int, newBufferHeightPx));
     } else {
         // buffer size hasn't changed
-        if (d->targetBufferSize.isValid()) {
-            if (d->bufferSize != d->targetBufferSize) {
+        if (d->targetbufferSizePx.isValid()) {
+            if (d->bufferSizePx != d->targetbufferSizePx) {
                 // but we still didn't reach the promised buffer size from the mir resize event.
                 // thus keep swapping buffers
                 QMetaObject::invokeMethod(this, "forceRedraw", Qt::QueuedConnection);
             } else {
                 // target met. we have just provided a render with the target size and
                 // can therefore finally rest.
-                d->targetBufferSize = QSize();
+                d->targetbufferSizePx = QSize();
             }
         }
     }
