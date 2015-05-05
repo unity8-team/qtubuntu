@@ -268,8 +268,8 @@ void UbuntuWindow::createWindow()
     d->bufferSizePx.setWidth(d->geometry.width() * devicePixelRatio());
     d->bufferSizePx.setHeight(d->geometry.height() * devicePixelRatio());
 
-    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with pixel size (%d, %d) with title '%s'\n",
-            d->bufferSizePx.x(), d->bufferSizePx.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
+    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) DP with actual pixel size (%d, %d) and title '%s'\n",
+            d->geometry.x(), d->geometry.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
 
     MirSurfaceSpec *spec;
     if (role == U_ON_SCREEN_KEYBOARD_ROLE)
@@ -311,7 +311,7 @@ void UbuntuWindow::createWindow()
     }
 
     DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
-            d->bufferSizePx.width, d->bufferSizePx.height, geometry.width(), geometry.height());
+            d->bufferSizePx.width(), d->bufferSizePx.height(), geometry.width(), geometry.height());
 
     // Tell Qt about the geometry.
     QWindowSystemInterface::handleGeometryChange(window(), geometry);

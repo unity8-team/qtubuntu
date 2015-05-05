@@ -209,7 +209,7 @@ void UbuntuInput::customEvent(QEvent* event)
         return;
     }
 
-    //DLOG("UbuntuInput::customEvent(type=%s)", nativeEventTypeToStr(mir_event_get_type(nativeEvent)));
+    DLOG("UbuntuInput::customEvent(type=%s)", nativeEventTypeToStr(mir_event_get_type(nativeEvent)));
 
     // Event dispatching.
     switch (mir_event_get_type(nativeEvent)) 
