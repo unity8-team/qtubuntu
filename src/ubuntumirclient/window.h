@@ -26,6 +26,7 @@ class UbuntuClipboard;
 class UbuntuInput;
 class UbuntuScreen;
 class UbuntuWindowPrivate;
+struct MirSurfaceSpec;
 
 class UbuntuWindow : public QObject, public QPlatformWindow
 {
@@ -56,6 +57,8 @@ public Q_SLOTS:
 private:
     void createWindow();
     void moveResize(const QRect& rect);
+    MirSurfaceSpec *createSpec(int width, int height) const;
+    UbuntuWindow *transient_parent() const;
 
     UbuntuWindowPrivate *d;
 };
