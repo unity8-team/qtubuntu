@@ -1,4 +1,4 @@
-qtubuntu-gles (0.61) UNRELEASED; urgency=medium
+qtubuntu-gles (0.61+15.10.20150522-0ubuntu1) UNRELEASED; urgency=medium
 
   * Rebuild for shellRotation
 
