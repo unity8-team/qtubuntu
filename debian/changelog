@@ -1,3 +1,9 @@
+qtubuntu-gles (0.60+15.04.20150318-0ubuntu6) wily; urgency=medium
+
+  * Rebuild for shellRotation
+
+ -- Albert Astals Cid <albert.astals@canonical.com> Tud, 26 May 2015 11:41:40 +0000
+
 qtubuntu-gles (0.60+15.04.20150318-0ubuntu5) vivid; urgency=medium
 
   * No-change rebuild against latest platform-api
