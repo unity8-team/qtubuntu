@@ -23,7 +23,7 @@
 
 // Qt
 #include <qpa/qwindowsysteminterface.h>
-#include <qpa/qwindowsysteminterface.h>
+#include <QtPlatformSupport/private/qeglconvenience_p.h>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QSize>
@@ -32,10 +32,6 @@
 // Platform API
 #include <ubuntu/application/instance.h>
 #include <ubuntu/application/ui/window.h>
-
-#include <EGL/egl.h>
-
-#define IS_OPAQUE_FLAG 1
 
 namespace
 {
@@ -93,6 +89,7 @@ public:
 
     UbuntuScreen* screen;
     EGLSurface eglSurface;
+    QSurfaceFormat format;
     WId id;
     UbuntuInput* input;
     Qt::WindowState state;
@@ -132,9 +129,11 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     d = new UbuntuWindowPrivate;
     d->screen = screen;
     d->eglSurface = EGL_NO_SURFACE;
+    d->format = window()->requestedFormat();
     d->input = input;
     d->state = window()->windowState();
     d->connection = connection;
+    d->surface = nullptr;
     d->clipboard = clipboard;
 
     static int id = 1;
@@ -155,17 +154,6 @@ UbuntuWindow::~UbuntuWindow()
     mir_surface_release_sync(d->surface);
 
     delete d;
-}
-
-void UbuntuWindowPrivate::createEGLSurface(EGLNativeWindowType nativeWindow)
-{
-  DLOG("UbuntuWindowPrivate::createEGLSurface (this=%p, nativeWindow=%p)",
-          this, reinterpret_cast<void*>(nativeWindow));
-
-  eglSurface = eglCreateWindowSurface(screen->eglDisplay(), screen->eglConfig(),
-          nativeWindow, nullptr);
-
-  DASSERT(eglSurface != EGL_NO_SURFACE);
 }
 
 void UbuntuWindowPrivate::destroyEGLSurface()
@@ -195,35 +183,45 @@ int UbuntuWindowPrivate::panelHeight()
     return gridUnit * 3 + qFloor(densityPixelRatio) * 2;
 }
 
-namespace
+// Gets the best pixel format available through that connection. Falls back to an opaque format if
+// no satisfying ARGB pixel format can be found.
+static MirPixelFormat getPixelFormat(MirConnection *connection, bool hasAlpha)
 {
-static MirPixelFormat
-mir_choose_default_pixel_format(MirConnection *connection)
-{
-    MirPixelFormat format[mir_pixel_formats];
-    unsigned int nformats;
+    const unsigned int formatsCount = 5;
+    const MirPixelFormat formats[formatsCount] = {
+        mir_pixel_format_argb_8888, mir_pixel_format_abgr_8888, mir_pixel_format_xrgb_8888,
+        mir_pixel_format_xbgr_8888, mir_pixel_format_bgr_888
+    };
 
-    mir_connection_get_available_surface_formats(connection,
-        format, mir_pixel_formats, &nformats);
+    unsigned int availableFormatsCount;
+    MirPixelFormat availableFormats[mir_pixel_formats];
+    mir_connection_get_available_surface_formats(
+        connection, availableFormats, mir_pixel_formats, &availableFormatsCount);
 
-    return format[0];
-}
+    for (unsigned int i = hasAlpha ? 0 : 2; i < formatsCount; i++) {
+        for (unsigned int j = 0; j < availableFormatsCount; j++) {
+            if (formats[i] == availableFormats[j]) {
+#if !defined(QT_NO_DEBUG)
+                const char* formatsName[formatsCount] =
+                    { "ARGB_8888", "ABGR_8888", "XRGB_8888", "XBGR_8888", "BGR_888" };
+                LOG("best pixel format found for surface is %s", formatsName[i]);
+#endif
+                return formats[i];
+            }
+        }
+    }
+
+    qWarning("[ubuntumirclient QPA] can't find a valid pixel format");
+    return mir_pixel_format_invalid;
 }
 
 void UbuntuWindow::createWindow()
 {
     DLOG("UbuntuWindow::createWindow (this=%p)", this);
 
-    // Get surface role and flags.
+    // Get surface role.
     QVariant roleVariant = window()->property("role");
     int role = roleVariant.isValid() ? roleVariant.toUInt() : 1;  // 1 is the default role for apps.
-    QVariant opaqueVariant = window()->property("opaque");
-    uint flags = opaqueVariant.isValid() ?
-        opaqueVariant.toUInt() ? static_cast<uint>(IS_OPAQUE_FLAG) : 0 : 0;
-
-    // FIXME(loicm) Opaque flag is forced for now for non-system sessions (applications) for
-    //     performance reasons.
-    flags |= static_cast<uint>(IS_OPAQUE_FLAG);
 
     const QByteArray title = (!window()->title().isNull()) ? window()->title().toUtf8() : "Window 1"; // legacy title
     const int panelHeight = d->panelHeight();
@@ -231,7 +229,6 @@ void UbuntuWindow::createWindow()
 #if !defined(QT_NO_DEBUG)
     LOG("panelHeight: '%d'", panelHeight);
     LOG("role: '%d'", role);
-    LOG("flags: '%s'", (flags & static_cast<uint>(1)) ? "Opaque" : "NotOpaque");
     LOG("title: '%s'", title.constData());
 #endif
 
@@ -261,16 +258,21 @@ void UbuntuWindow::createWindow()
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
             geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
 
+    EGLDisplay eglDisplay = d->screen->eglDisplay();
+    EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format, true);
+    d->format = q_glFormatFromConfig(eglDisplay, eglConfig, d->format);
+
     MirSurfaceSpec *spec;
+    MirPixelFormat pixelFormat = getPixelFormat(d->connection, d->format.alphaBufferSize() == 8);
     if (role == U_ON_SCREEN_KEYBOARD_ROLE)
     {
         spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
-            geometry.height(), mir_choose_default_pixel_format(d->connection));
+            geometry.height(), pixelFormat);
     }
     else
     {
         spec = mir_connection_create_spec_for_normal_surface(d->connection, geometry.width(),
-            geometry.height(), mir_choose_default_pixel_format(d->connection));
+            geometry.height(), pixelFormat);
     }
     mir_surface_spec_set_name(spec, title.data());
 
@@ -278,8 +280,10 @@ void UbuntuWindow::createWindow()
     mir_wait_for(mir_surface_create(spec, surfaceCreateCallback, this));
     mir_surface_spec_release(spec);
 
-    DASSERT(d->surface != NULL);
-    d->createEGLSurface((EGLNativeWindowType)mir_surface_get_egl_native_window(d->surface));
+    DASSERT(d->surface != nullptr);
+    d->eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig,
+        (EGLNativeWindowType) mir_surface_get_egl_native_window(d->surface), nullptr);
+    DASSERT(d->eglSurface != EGL_NO_SURFACE);
 
     if (d->state == Qt::WindowFullScreen) {
     // TODO: We could set this on creation once surface spec supports it (mps already up)
@@ -436,6 +440,11 @@ void UbuntuWindow::setVisible(bool visible)
 void* UbuntuWindow::eglSurface() const
 {
     return d->eglSurface;
+}
+
+QSurfaceFormat UbuntuWindow::format() const
+{
+    return d->format;
 }
 
 WId UbuntuWindow::winId() const

@@ -23,11 +23,11 @@
 class UbuntuOpenGLContext : public QPlatformOpenGLContext
 {
 public:
-    UbuntuOpenGLContext(UbuntuScreen* screen, UbuntuOpenGLContext* share);
+    UbuntuOpenGLContext(QOpenGLContext* context);
     virtual ~UbuntuOpenGLContext();
 
     // QPlatformOpenGLContext methods.
-    QSurfaceFormat format() const override { return mScreen->surfaceFormat(); }
+    QSurfaceFormat format() const override { return mSurfaceFormat; }
     void swapBuffers(QPlatformSurface* surface) override;
     bool makeCurrent(QPlatformSurface* surface) override;
     void doneCurrent() override;
@@ -37,9 +37,10 @@ public:
     EGLContext eglContext() const { return mEglContext; }
 
 private:
-    UbuntuScreen* mScreen;
-    EGLContext mEglContext;
     EGLDisplay mEglDisplay;
+    EGLContext mEglContext;
+    QSurfaceFormat mSurfaceFormat;
+    int mSwapInterval;
 };
 
 #endif // UBUNTU_OPENGL_CONTEXT_H
