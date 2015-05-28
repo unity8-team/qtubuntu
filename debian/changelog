@@ -1,8 +1,9 @@
-qtubuntu-gles (0.60+15.10.20150528-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.60+15.10.20150528-0ubuntu1) wily; urgency=medium
 
+  [ Alan Griffiths ]
   * 
 
- -- Alan Griffiths <alan@Octopull-desktop>  Thu, 28 May 2015 10:07:36 +0100
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 28 May 2015 09:08:16 +0000
 
 qtubuntu-gles (0.60+15.04.20150318-0ubuntu5) vivid; urgency=medium
 
