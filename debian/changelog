@@ -1,8 +1,9 @@
-qtubuntu-gles (0.61+15.10.20150611-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.61+15.10.20150611-0ubuntu1) wily; urgency=medium
 
+  [ Michael Zanetti ]
   * Rebuild for shellRotation
 
- -- Michael Zanetti <michael.zanetti@canonical.com>  Tue, 02 Jun 2015 11:41:40 +0000
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 11 Jun 2015 11:40:33 +0000
 
 qtubuntu-gles (0.60+15.10.20150528-0ubuntu1) wily; urgency=medium
 
