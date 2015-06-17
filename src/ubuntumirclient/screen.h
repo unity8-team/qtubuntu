@@ -32,7 +32,7 @@ public:
     QImage::Format format() const override { return mFormat; }
     int depth() const override { return mDepth; }
     QRect geometry() const override { return mGeometry; }
-    QRect availableGeometry() const override { return mAvailableGeometry; }
+    QRect availableGeometry() const override { return mGeometry; }
     qreal devicePixelRatio() const override { return mDevicePixelRatio; }
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
@@ -42,13 +42,13 @@ public:
     EGLDisplay eglDisplay() const { return mEglDisplay; }
     EGLConfig eglConfig() const { return mEglConfig; }
     EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
+    void handleWindowSurfaceResize(int width, int height);
 
     // QObject methods.
     void customEvent(QEvent* event);
 
 private:
     QRect mGeometry;
-    QRect mAvailableGeometry;
     qreal mDevicePixelRatio;
     Qt::ScreenOrientation mNativeOrientation;
     Qt::ScreenOrientation mCurrentOrientation;
