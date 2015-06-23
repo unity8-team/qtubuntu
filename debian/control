@@ -36,7 +36,7 @@ Replaces: qtubuntu-android,
 Provides: qtubuntu,
 Depends: libqt5sensors5,
          qtubuntu-sensors,
-         ubuntu-application-api2-touch,
+         ubuntu-application-api3-touch,
          ${misc:Depends},
          ${shlibs:Depends},
 Description: Qt plugins for Ubuntu Platform API (mobile) - OpenGLES
