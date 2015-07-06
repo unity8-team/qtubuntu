@@ -1,3 +1,36 @@
+qtubuntu (0.61+15.10.20150617-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Drastically improve surface resize responsiveness
+
+  [ Gerry Boland ]
+  * Add support for Mir window close event (LP: #1434584)
+
+  [ Lukáš Tinkl ]
+  * fix logic error when testing QFlags
+
+  [ Timo Jyrinki ]
+  * Build depend against libinput-dev to fix build with Qt 5.5 (LP:
+    #1437192) (LP: #1437192)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 17 Jun 2015 13:46:52 +0000
+
+qtubuntu (0.61+15.10.20150611-0ubuntu2) wily; urgency=medium
+
+  * No-change rebuild against Qt 5.4.2.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Mon, 15 Jun 2015 12:31:56 +0300
+
+qtubuntu (0.61+15.10.20150611-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Flip screen dimensions to compensate for a rotated window
+
+  [ Alan Griffiths ]
+  * Track mir deprecations and renames.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 11 Jun 2015 09:10:57 +0000
+
 qtubuntu (0.60+15.04.20150318-0ubuntu3) vivid; urgency=medium
 
   * No-change rebuild against latest platform-api
