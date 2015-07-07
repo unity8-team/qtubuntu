@@ -31,7 +31,6 @@
 
 // Platform API
 #include <ubuntu/application/instance.h>
-#include <ubuntu/application/ui/window.h>
 
 namespace
 {
@@ -217,6 +216,8 @@ void UbuntuWindow::createWindow()
 {
     DLOG("UbuntuWindow::createWindow (this=%p)", this);
 
+    // FIXME: remove this remnant of an old platform-api enum - needs ubuntu-keyboard update
+    const int SCREEN_KEYBOARD_ROLE = 7;
     // Get surface role.
     QVariant roleVariant = window()->property("role");
     int role = roleVariant.isValid() ? roleVariant.toUInt() : 1;  // 1 is the default role for apps.
@@ -262,7 +263,7 @@ void UbuntuWindow::createWindow()
 
     MirSurfaceSpec *spec;
     MirPixelFormat pixelFormat = getPixelFormat(d->connection, d->format.alphaBufferSize() == 8);
-    if (role == U_ON_SCREEN_KEYBOARD_ROLE)
+    if (role == SCREEN_KEYBOARD_ROLE)
     {
         spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
             geometry.height(), pixelFormat);
@@ -279,7 +280,8 @@ void UbuntuWindow::createWindow()
     mir_surface_spec_release(spec);
 
     DASSERT(d->surface != nullptr);
-    d->createEGLSurface((EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(d->surface)));
+    d->eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig,
+        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_surface_get_buffer_stream(d->surface)), nullptr);
     DASSERT(d->eglSurface != EGL_NO_SURFACE);
 
     if (d->state == Qt::WindowFullScreen) {

@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mir_toolkit/mir_client_library.h>
+
 // Qt
 #include <QCoreApplication>
 #include <QtCore/qmath.h>
@@ -26,9 +28,7 @@
 #include "logging.h"
 #include "orientationchangeevent_p.h"
 
-// platform-api
-#include <ubuntu/application/ui/display.h>
-#include <ubuntu/application/ui/options.h>
+#include "memory"
 
 #if !defined(QT_NO_DEBUG)
 
@@ -101,8 +101,28 @@ static void printEglConfig(EGLDisplay display, EGLConfig config) {
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
 
+static const MirDisplayOutput *find_active_output(
+    const MirDisplayConfiguration *conf)
+{
+    const MirDisplayOutput *output = NULL;
+    for (uint32_t d = 0; d < conf->num_outputs; d++)
+    {
+        const MirDisplayOutput *out = conf->outputs + d;
 
-UbuntuScreen::UbuntuScreen()
+        if (out->used &&
+            out->connected &&
+            out->num_modes &&
+            out->current_mode < out->num_modes)
+        {
+            output = out;
+            break;
+        }
+    }
+
+    return output;
+}
+
+UbuntuScreen::UbuntuScreen(MirConnection *connection)
     : mFormat(QImage::Format_RGB32)
     , mDepth(32)
     , mEglDisplay(EGL_NO_DISPLAY)
@@ -110,22 +130,28 @@ UbuntuScreen::UbuntuScreen()
     // Initialize EGL.
     ASSERT(eglBindAPI(EGL_OPENGL_ES_API) == EGL_TRUE);
 
-    UAUiDisplay* u_display = ua_ui_display_new_with_index(0);
-    mEglNativeDisplay = ua_ui_display_get_native_type(u_display);
+    mEglNativeDisplay = mir_connection_get_egl_native_display(connection);
     ASSERT((mEglDisplay = eglGetDisplay(mEglNativeDisplay)) != EGL_NO_DISPLAY);
-    ua_ui_display_destroy(u_display);
     ASSERT(eglInitialize(mEglDisplay, nullptr, nullptr) == EGL_TRUE);
 #if !defined(QT_NO_DEBUG)
     printEglInfo(mEglDisplay);
 #endif
 
     // Get screen resolution.
-    UAUiDisplay* display = ua_ui_display_new_with_index(0);
-    const int kScreenWidth = ua_ui_display_query_horizontal_res(display);
-    const int kScreenHeight = ua_ui_display_query_vertical_res(display);
+    auto configDeleter = [](MirDisplayConfiguration *config) { mir_display_config_destroy(config); };
+    using configUp = std::unique_ptr<MirDisplayConfiguration, decltype(configDeleter)>;
+    configUp displayConfig(mir_connection_create_display_config(connection), configDeleter);
+    ASSERT(displayConfig != nullptr);
+
+    auto const displayOutput = find_active_output(displayConfig.get());
+    ASSERT(displayOutput != nullptr);
+
+    const MirDisplayMode *mode = &displayOutput->modes[displayOutput->current_mode];
+    const int kScreenWidth = mode->horizontal_resolution;
+    const int kScreenHeight = mode->vertical_resolution;
     DASSERT(kScreenWidth > 0 && kScreenHeight > 0);
+
     DLOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
-    ua_ui_display_destroy(display);
 
     mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
 
