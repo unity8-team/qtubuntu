@@ -1,3 +1,9 @@
+qtubuntu-gles (0.61+15.10.20150706-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Sync with upstream
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 24 Jun 2015 12:51:01 -0500
+
 qtubuntu-gles (0.61+15.10.20150617-0ubuntu1) wily; urgency=medium
 
   [ Gerry Boland ]
