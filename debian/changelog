@@ -1,3 +1,10 @@
+qtubuntu-gles (0.61+15.10.20150707.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Andreas Pokorny ]
+  * Sync with upstream
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Thu, 09 Jul 2015 14:51:35 +0200
+
 qtubuntu-gles (0.61+15.10.20150706-0ubuntu1) wily; urgency=medium
 
   [ Alberto Aguirre ]
