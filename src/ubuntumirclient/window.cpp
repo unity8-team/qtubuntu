@@ -102,7 +102,6 @@ public:
     WId id;
     UbuntuInput* input;
     Qt::WindowState state;
-    QRect geometry;
     MirConnection *connection;
     MirSurface* surface;
     QSize bufferSizePx;
@@ -146,8 +145,8 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     d->id = id++;
 
     // Use client geometry if set explicitly, use available screen geometry otherwise.
-    d->geometry = window()->geometry() != screen->geometry() ?
-        window()->geometry() : screen->availableGeometry();
+    QPlatformWindow::setGeometry(window()->geometry() != screen->geometry() ?
+        window()->geometry() : screen->availableGeometry());
     createWindow();
     DLOG("UbuntuWindow::UbuntuWindow (this=%p, w=%p, screen=%p, input=%p)", this, w, screen, input);
 }
@@ -259,7 +258,7 @@ void UbuntuWindow::createWindow()
         geometry.setY(panelHeight);
     } else {
         printf("UbuntuWindow - regular geometry\n");
-        geometry = d->geometry;
+        geometry = this->geometry();
         geometry.setY(panelHeight);
     }
 
@@ -326,21 +325,14 @@ void UbuntuWindow::moveResize(const QRect& rect)
 void UbuntuWindow::handleSurfaceResize(int widthPx, int heightPx)
 {
     LOG("UbuntuWindow::handleSurfaceResize(widthPx=%d, heightPx=%d)", widthPx, heightPx);
+    QMutexLocker(&d->mutex);
 
     // The current buffer size hasn't actually changed. so just render on it and swap
     // buffers until we render on a buffer with the target size.
+    d->targetBufferSize.rwidth() = widthPx;
+    d->targetBufferSize.rheight() = heightPx;
 
-    bool shouldSwapBuffers;
-
-    {
-        QMutexLocker(&d->mutex);
-        d->targetbufferSizePx.rwidth() = widthPx;
-        d->targetbufferSizePx.rheight() = heightPx;
-
-        shouldSwapBuffers = d->bufferSizePx != d->targetbufferSizePx;
-    }
-
-    if (shouldSwapBuffers) {
+    if (d->bufferSize != d->targetBufferSize) {
         QWindowSystemInterface::handleExposeEvent(window(), geometry());
     } else {
         qWarning("[ubuntumirclient QPA] UbuntuWindow::handleSurfaceResize"
@@ -367,35 +359,6 @@ void UbuntuWindow::handleSurfaceFocusChange(bool focused)
     QWindowSystemInterface::handleWindowActivated(activatedWindow, Qt::ActiveWindowFocusReason);
 }
 
-void UbuntuWindow::handleBufferResize(int widthPx, int heightPx)
-{
-    DLOG("UbuntuWindow::handleBufferResize(widthPx=%d, heightPx=%d)", widthPx, heightPx);
-
-    QRect oldGeometry;
-    QRect newGeometry;
-
-    {
-        QMutexLocker(&d->mutex);
-        oldGeometry = geometry();
-        newGeometry = oldGeometry;
-        newGeometry.setWidth(divideAndRoundUp(widthPx, devicePixelRatio()));
-        newGeometry.setHeight(divideAndRoundUp(heightPx, devicePixelRatio()));
-
-        d->bufferSizePx.rwidth() = widthPx;
-        d->bufferSizePx.rheight() = heightPx;
-        d->geometry = newGeometry;
-    }
-
-    QPlatformWindow::setGeometry(newGeometry);
-    QWindowSystemInterface::handleGeometryChange(window(), newGeometry, oldGeometry);
-    QWindowSystemInterface::handleExposeEvent(window(), newGeometry);
-}
-
-void UbuntuWindow::forceRedraw()
-{
-    QWindowSystemInterface::handleExposeEvent(window(), geometry());
-}
-
 void UbuntuWindow::setWindowState(Qt::WindowState state)
 {
     QMutexLocker(&d->mutex);
@@ -417,7 +380,7 @@ void UbuntuWindow::setGeometry(const QRect& rect)
 
     {
         QMutexLocker(&d->mutex);
-        d->geometry = rect;
+        QPlatformWindow::setGeometry(rect);
         doMoveResize = d->state != Qt::WindowFullScreen && d->state != Qt::WindowMaximized;
     }
 
@@ -464,18 +427,32 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBuff
 
     bool sizeKnown = newBufferWidthPx > 0 && newBufferHeightPx > 0;
 
-    if (sizeKnown && (d->bufferSizePx.width() != newBufferWidthPx ||
-                d->bufferSizePx.height() != newBufferHeightPx)) {
-        QMetaObject::invokeMethod(this, "handleBufferResize",
-                Qt::QueuedConnection,
-                Q_ARG(int, newBufferWidthPx), Q_ARG(int, newBufferHeightPx));
+    if (sizeKnown && (d->bufferSize.width() != newBufferWidthPx ||
+                d->bufferSize.height() != newBufferHeightPx)) {
+
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe - buffer size changed from (%d,%d) to (%d,%d)",
+                d->bufferSize.width(), d->bufferSize.height(), newBufferWidthPx, newBufferHeightPx);
+
+        d->bufferSize.rwidth() = newBufferWidthPx;
+        d->bufferSize.rheight() = newBufferHeightPx;
+
+        QRect newGeometry;
+
+        newGeometry = geometry();
+        newGeometry.setWidth(d->bufferSize.width());
+        newGeometry.setHeight(d->bufferSize.height());
+
+        QPlatformWindow::setGeometry(newGeometry);
+        QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
+        QWindowSystemInterface::handleExposeEvent(window(), newGeometry);
+
     } else {
         // buffer size hasn't changed
         if (d->targetbufferSizePx.isValid()) {
             if (d->bufferSizePx != d->targetbufferSizePx) {
                 // but we still didn't reach the promised buffer size from the mir resize event.
                 // thus keep swapping buffers
-                QMetaObject::invokeMethod(this, "forceRedraw", Qt::QueuedConnection);
+                QWindowSystemInterface::handleExposeEvent(window(), geometry());
             } else {
                 // target met. we have just provided a render with the target size and
                 // can therefore finally rest.
