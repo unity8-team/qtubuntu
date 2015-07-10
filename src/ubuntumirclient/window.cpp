@@ -264,11 +264,11 @@ void UbuntuWindow::createWindow()
     }
 
     // Convert to pixels when talking with Mir
-    d->bufferSizePx.setWidth(d->geometry.width() * devicePixelRatio());
-    d->bufferSizePx.setHeight(d->geometry.height() * devicePixelRatio());
+    d->bufferSizePx.setWidth(geometry.width() * devicePixelRatio());
+    d->bufferSizePx.setHeight(geometry.height() * devicePixelRatio());
 
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) DP with actual pixel size (%d, %d) and title '%s'\n",
-            d->geometry.x(), d->geometry.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
+            geometry.x(), geometry.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
 
     MirSurfaceSpec *spec;
     if (role == SCREEN_KEYBOARD_ROLE)
