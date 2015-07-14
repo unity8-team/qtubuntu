@@ -104,7 +104,7 @@ public:
     MirConnection *connection;
     MirSurface* surface;
     QSize bufferSizePx;
-    QSize targetbufferSizePx;
+    QSize targetBufferSizePx;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
 };
@@ -330,15 +330,15 @@ void UbuntuWindow::handleSurfaceResize(int widthPx, int heightPx)
 
     // The current buffer size hasn't actually changed. so just render on it and swap
     // buffers until we render on a buffer with the target size.
-    d->targetBufferSize.rwidth() = widthPx;
-    d->targetBufferSize.rheight() = heightPx;
+    d->targetBufferSizePx.rwidth() = widthPx;
+    d->targetBufferSizePx.rheight() = heightPx;
 
-    if (d->bufferSize != d->targetBufferSize) {
+    if (d->bufferSizePx != d->targetBufferSizePx) {
         QWindowSystemInterface::handleExposeEvent(window(), geometry());
     } else {
         qWarning("[ubuntumirclient QPA] UbuntuWindow::handleSurfaceResize"
                  " current buffer already has the target size");
-        d->targetbufferSizePx = QSize();
+        d->targetBufferSizePx = QSize();
     }
 }
 
@@ -428,20 +428,20 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBuff
 
     bool sizeKnown = newBufferWidthPx > 0 && newBufferHeightPx > 0;
 
-    if (sizeKnown && (d->bufferSize.width() != newBufferWidthPx ||
-                d->bufferSize.height() != newBufferHeightPx)) {
+    if (sizeKnown && (d->bufferSizePx.width() != newBufferWidthPx ||
+                d->bufferSizePx.height() != newBufferHeightPx)) {
 
         DLOG("UbuntuWindow::onBuffersSwapped_threadSafe - buffer size changed from (%d,%d) to (%d,%d)",
-                d->bufferSize.width(), d->bufferSize.height(), newBufferWidthPx, newBufferHeightPx);
+                d->bufferSizePx.width(), d->bufferSizePx.height(), newBufferWidthPx, newBufferHeightPx);
 
-        d->bufferSize.rwidth() = newBufferWidthPx;
-        d->bufferSize.rheight() = newBufferHeightPx;
+        d->bufferSizePx.rwidth() = newBufferWidthPx;
+        d->bufferSizePx.rheight() = newBufferHeightPx;
 
         QRect newGeometry;
 
         newGeometry = geometry();
-        newGeometry.setWidth(d->bufferSize.width());
-        newGeometry.setHeight(d->bufferSize.height());
+        newGeometry.setWidth(d->bufferSizePx.width());
+        newGeometry.setHeight(d->bufferSizePx.height());
 
         QPlatformWindow::setGeometry(newGeometry);
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
@@ -449,15 +449,15 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBuff
 
     } else {
         // buffer size hasn't changed
-        if (d->targetbufferSizePx.isValid()) {
-            if (d->bufferSizePx != d->targetbufferSizePx) {
+        if (d->targetBufferSizePx.isValid()) {
+            if (d->bufferSizePx != d->targetBufferSizePx) {
                 // but we still didn't reach the promised buffer size from the mir resize event.
                 // thus keep swapping buffers
                 QWindowSystemInterface::handleExposeEvent(window(), geometry());
             } else {
                 // target met. we have just provided a render with the target size and
                 // can therefore finally rest.
-                d->targetbufferSizePx = QSize();
+                d->targetBufferSizePx = QSize();
             }
         }
     }
