@@ -350,6 +350,13 @@ void UbuntuWindow::handleSurfaceFocusChange(bool focused)
     QWindowSystemInterface::handleWindowActivated(activatedWindow, Qt::ActiveWindowFocusReason);
 }
 
+void UbuntuWindow::handleSurfaceVisibleChange(bool visible)
+{
+    LOG("UbuntuWindow::handleSurfaceVisibleChange(visible=%s)", visible ? "true" : "false");
+    this->setVisible(visible);
+}
+
+
 void UbuntuWindow::setWindowState(Qt::WindowState state)
 {
     QMutexLocker(&d->mutex);
