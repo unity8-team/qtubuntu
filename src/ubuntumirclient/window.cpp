@@ -353,7 +353,12 @@ void UbuntuWindow::handleSurfaceFocusChange(bool focused)
 void UbuntuWindow::handleSurfaceVisibleChange(bool visible)
 {
     LOG("UbuntuWindow::handleSurfaceVisibleChange(visible=%s)", visible ? "true" : "false");
+
     this->setVisible(visible);
+    if (m_visible != visible) {
+        m_visible = visible;
+        QWindowSystemInterface::handleExposeEvent (window(), m_visible ? geometry() : QRect());
+    }
 }
 
 
@@ -402,6 +407,11 @@ void UbuntuWindow::setVisible(bool visible)
         //       Will have to change qtmir and unity8 for that.
         mir_wait_for(mir_surface_set_state(d->surface, mir_surface_state_minimized));
     }
+}
+
+bool UbuntuWindow::isExposed() const
+{
+    return m_visible;
 }
 
 void* UbuntuWindow::eglSurface() const

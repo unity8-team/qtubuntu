@@ -40,6 +40,7 @@ public:
     void setGeometry(const QRect&) override;
     void setWindowState(Qt::WindowState state) override;
     void setVisible(bool visible) override;
+    bool isExposed() const override;
 
     // New methods.
     void* eglSurface() const;
@@ -55,6 +56,7 @@ private:
     void moveResize(const QRect& rect);
 
     UbuntuWindowPrivate *d;
+    bool m_visible;
 };
 
 #endif // UBUNTU_WINDOW_H
