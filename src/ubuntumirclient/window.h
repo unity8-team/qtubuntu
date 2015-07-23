@@ -46,7 +46,7 @@ public:
     void* eglSurface() const;
     void handleSurfaceResize(int width, int height);
     void handleSurfaceFocusChange(bool focused);
-    void handleSurfaceVisibleChange(bool visible);
+    void handleSurfaceExposedChange(bool exposed);
     void onBuffersSwapped_threadSafe(int newBufferWidth, int newBufferHeight);
 
     UbuntuWindowPrivate* priv() { return d; }
@@ -56,7 +56,7 @@ private:
     void moveResize(const QRect& rect);
 
     UbuntuWindowPrivate *d;
-    bool m_visible;
+    bool m_exposed;
 };
 
 #endif // UBUNTU_WINDOW_H

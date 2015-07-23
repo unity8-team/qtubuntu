@@ -350,14 +350,14 @@ void UbuntuWindow::handleSurfaceFocusChange(bool focused)
     QWindowSystemInterface::handleWindowActivated(activatedWindow, Qt::ActiveWindowFocusReason);
 }
 
-void UbuntuWindow::handleSurfaceVisibleChange(bool visible)
+void UbuntuWindow::handleSurfaceExposedChange(bool exposed)
 {
-    LOG("UbuntuWindow::handleSurfaceVisibleChange(visible=%s)", visible ? "true" : "false");
+    LOG("UbuntuWindow::handleSurfaceExposedChange(exposed=%s)", exposed ? "true" : "false");
 
-    this->setVisible(visible);
-    if (m_visible != visible) {
-        m_visible = visible;
-        QWindowSystemInterface::handleExposeEvent (window(), m_visible ? geometry() : QRect());
+    this->setVisible(exposed);
+    if (m_exposed != exposed) {
+        m_exposed = exposed;
+        QWindowSystemInterface::handleExposeEvent (window(), m_exposed ? geometry() : QRect());
     }
 }
 
@@ -411,7 +411,7 @@ void UbuntuWindow::setVisible(bool visible)
 
 bool UbuntuWindow::isExposed() const
 {
-    return m_visible;
+    return m_exposed;
 }
 
 void* UbuntuWindow::eglSurface() const
