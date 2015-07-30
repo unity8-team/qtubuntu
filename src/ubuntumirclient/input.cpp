@@ -232,6 +232,14 @@ void UbuntuInput::customEvent(QEvent* event)
     case mir_event_type_surface:
     {
         auto surfaceEvent = mir_event_get_surface_event(nativeEvent);
+
+        if (mir_surface_event_get_attribute(surfaceEvent) == mir_surface_attrib_focus) {
+            LOG("UbuntuInput::customEvent() - mir_surface_attrib_focus");
+        }
+        if (mir_surface_event_get_attribute(surfaceEvent) == mir_surface_attrib_visibility) {
+            LOG("UbuntuInput::customEvent() - mir_surface_attrib_visibility");
+        }
+
         if (mir_surface_event_get_attribute(surfaceEvent) == mir_surface_attrib_focus) {
             ubuntuEvent->window->handleSurfaceFocusChange(mir_surface_event_get_attribute_value(surfaceEvent) ==
                 mir_surface_focused);
