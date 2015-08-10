@@ -20,7 +20,7 @@
 #include <qpa/qplatformintegration.h>
 #include <QSharedPointer>
 
-#include "platformservices.h"
+#include "qmirclientplatformservices.h"
 
 // platform-api
 #include <ubuntu/application/description.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "clipboard.h"
+#include "qmirclientclipboard.h"
 
 #include <QtCore/QMimeData>
 #include <QtCore/QStringList>

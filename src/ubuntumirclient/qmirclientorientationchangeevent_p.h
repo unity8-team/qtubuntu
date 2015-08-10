@@ -19,7 +19,7 @@
 
 #include <QEvent>
 #include <QOrientationReading>
-#include "logging.h"
+#include "qmirclientlogging.h"
 
 class OrientationChangeEvent : public QEvent {
 public:

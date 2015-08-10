@@ -18,7 +18,7 @@
 #define UBUNTU_OPENGL_CONTEXT_H
 
 #include <qpa/qplatformopenglcontext.h>
-#include "screen.h"
+#include "qmirclientscreen.h"
 
 class UbuntuOpenGLContext : public QPlatformOpenGLContext
 {

@@ -25,9 +25,9 @@
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
 
 // local
-#include "screen.h"
-#include "logging.h"
-#include "orientationchangeevent_p.h"
+#include "qmirclientscreen.h"
+#include "qmirclientlogging.h"
+#include "qmirclientorientationchangeevent_p.h"
 
 #include "memory"
 

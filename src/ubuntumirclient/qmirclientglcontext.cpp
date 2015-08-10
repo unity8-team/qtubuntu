@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "glcontext.h"
-#include "window.h"
-#include "logging.h"
+#include "qmirclientglcontext.h"
+#include "qmirclientwindow.h"
+#include "qmirclientlogging.h"
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
 
 #if !defined(QT_NO_DEBUG)

@@ -25,16 +25,16 @@
 #include <QOpenGLContext>
 
 // Local
-#include "backingstore.h"
-#include "clipboard.h"
-#include "glcontext.h"
-#include "input.h"
-#include "integration.h"
-#include "logging.h"
-#include "nativeinterface.h"
-#include "screen.h"
-#include "theme.h"
-#include "window.h"
+#include "qmirclientbackingstore.h"
+#include "qmirclientclipboard.h"
+#include "qmirclientglcontext.h"
+#include "qmirclientinput.h"
+#include "qmirclientintegration.h"
+#include "qmirclientlogging.h"
+#include "qmirclientnativeinterface.h"
+#include "qmirclientscreen.h"
+#include "qmirclienttheme.h"
+#include "qmirclientwindow.h"
 
 // platform-api
 #include <ubuntu/application/lifecycle_delegate.h>

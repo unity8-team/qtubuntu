@@ -15,13 +15,13 @@
  */
 
 // Local
-#include "input.h"
-#include "integration.h"
-#include "nativeinterface.h"
-#include "screen.h"
-#include "window.h"
-#include "logging.h"
-#include "orientationchangeevent_p.h"
+#include "qmirclientinput.h"
+#include "qmirclientintegration.h"
+#include "qmirclientnativeinterface.h"
+#include "qmirclientscreen.h"
+#include "qmirclientwindow.h"
+#include "qmirclientlogging.h"
+#include "qmirclientorientationchangeevent_p.h"
 
 // Qt
 #if !defined(QT_NO_DEBUG)

@@ -15,11 +15,11 @@
  */
 
 // Local
-#include "clipboard.h"
-#include "input.h"
-#include "window.h"
-#include "screen.h"
-#include "logging.h"
+#include "qmirclientclipboard.h"
+#include "qmirclientinput.h"
+#include "qmirclientwindow.h"
+#include "qmirclientscreen.h"
+#include "qmirclientlogging.h"
 
 // Qt
 #include <qpa/qwindowsysteminterface.h>

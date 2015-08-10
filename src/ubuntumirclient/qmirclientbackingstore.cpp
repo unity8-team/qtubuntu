@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "backingstore.h"
-#include "logging.h"
+#include "qmirclientbackingstore.h"
+#include "qmirclientlogging.h"
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLTexture>
 #include <QtGui/QMatrix4x4>

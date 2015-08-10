@@ -21,9 +21,9 @@
 #include <QtCore/QMap>
 
 // Local
-#include "nativeinterface.h"
-#include "screen.h"
-#include "glcontext.h"
+#include "qmirclientnativeinterface.h"
+#include "qmirclientscreen.h"
+#include "qmirclientglcontext.h"
 
 class UbuntuResourceMap : public QMap<QByteArray, UbuntuNativeInterface::ResourceType>
 {
