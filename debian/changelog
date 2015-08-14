@@ -1,8 +1,9 @@
-qtubuntu-gles (0.62+15.04.20150814-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.62+15.04.20150814-0ubuntu1) vivid; urgency=medium
 
+  [ Michael Zanetti ]
   * Sync with upstream
 
- -- Michael Zanetti <michael.zanetti@canonical.com>  Fri, 14 Aug 2015 13:57:04 +0200
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 14 Aug 2015 13:39:08 +0000
 
 qtubuntu-gles (0.61+15.10.20150722-0ubuntu2) wily; urgency=medium
 
