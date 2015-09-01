@@ -1,3 +1,9 @@
+qtubuntu-gles (0.62+15.04.20150901-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Sync with upstream
+
+ -- Gerry Boland <gerry.boland@canonical.com>  Tue, 01 Sep 2015 17:52:50 +0100
+
 qtubuntu-gles (0.62+15.04.20150828-0ubuntu2) vivid; urgency=medium
 
   [ Michael Zanetti ]
@@ -7,12 +13,6 @@ qtubuntu-gles (0.62+15.04.20150828-0ubuntu2) vivid; urgency=medium
   * No-change rebuild.
 
  -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 28 Aug 2015 08:43:25 +0000
-
-qtubuntu-gles (0.62+15.04.20150824-0ubuntu1) UNRELEASED; urgency=medium
-
-  * Sync with upstream
-
- -- Gerry Boland <gerry.boland@canonical.com>  Mon, 24 Aug 2015 17:52:50 +0100
 
 qtubuntu-gles (0.62+15.04.20150814-0ubuntu1) vivid; urgency=medium
 
