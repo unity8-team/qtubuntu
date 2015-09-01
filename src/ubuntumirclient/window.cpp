@@ -106,6 +106,10 @@ public:
     QSize bufferSizePx;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
+    int resizeCatchUpAttempts;
+#if !defined(QT_NO_DEBUG)
+    int frameNumber;
+#endif
 };
 
 static void eventCallback(MirSurface* surface, const MirEvent *event, void* context)
@@ -138,9 +142,14 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     d->state = window()->windowState();
     d->connection = connection;
     d->clipboard = clipboard;
+    d->resizeCatchUpAttempts = 0;
 
     static int id = 1;
     d->id = id++;
+
+#if !defined(QT_NO_DEBUG)
+    d->frameNumber = 0;
+#endif
 
     // Use client geometry if set explicitly, use available screen geometry otherwise.
     QPlatformWindow::setGeometry(window()->geometry() != screen->geometry() ?
@@ -324,7 +333,8 @@ void UbuntuWindow::moveResize(const QRect& rect)
 
 void UbuntuWindow::handleSurfaceResize(int widthPx, int heightPx)
 {
-    LOG("UbuntuWindow::handleSurfaceResize(widthPx=%d, heightPx=%d)", widthPx, heightPx);
+    DLOG("UbuntuWindow::handleSurfaceResize(widthPx=%d, heightPx=%d) [%d]", widthPx, heightPx,
+        d->frameNumber);
     QMutexLocker(&d->mutex);
 
     // The current buffer size hasn't actually changed. so just render on it and swap
@@ -335,6 +345,12 @@ void UbuntuWindow::handleSurfaceResize(int widthPx, int heightPx)
     // no synchronicity whatsoever between the processing of resize events and the
     // consumption of buffers.
     if (d->bufferSizePx.width() != widthPx || d->bufferSizePx.height() != heightPx) {
+        // if the next buffer doesn't have a different size, try some
+        // more
+        // FIXME: This is working around a mir bug! We really shound't have to
+        // swap more than once to get a buffer with the new size!
+        d->resizeCatchUpAttempts = 2;
+
         QWindowSystemInterface::handleExposeEvent(window(), geometry());
         QWindowSystemInterface::flushWindowSystemEvents();
     }
@@ -426,11 +442,18 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBuff
 
     bool sizeKnown = newBufferWidthPx > 0 && newBufferHeightPx > 0;
 
+#if !defined(QT_NO_DEBUG)
+    ++d->frameNumber;
+#endif
+
     if (sizeKnown && (d->bufferSizePx.width() != newBufferWidthPx ||
                 d->bufferSizePx.height() != newBufferHeightPx)) {
+        d->resizeCatchUpAttempts = 0;
 
-        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe - buffer size changed from (%d,%d) to (%d,%d)",
-                d->bufferSizePx.width(), d->bufferSizePx.height(), newBufferWidthPx, newBufferHeightPx);
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size changed from (%d,%d) to (%d,%d)"
+               " resizeCatchUpAttempts=%d",
+               d->frameNumber, d->bufferSizePx.width(), d->bufferSizePx.height(), newBufferWidthPx, newBufferHeightPx,
+               d->resizeCatchUpAttempts);
 
         d->bufferSizePx.rwidth() = newBufferWidthPx;
         d->bufferSizePx.rheight() = newBufferHeightPx;
@@ -443,5 +466,14 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBuff
 
         QPlatformWindow::setGeometry(newGeometry);
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
+    } else if (d->resizeCatchUpAttempts > 0) {
+        --d->resizeCatchUpAttempts;
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). Redrawing to catch up a resized buffer."
+               " resizeCatchUpAttempts=%d",
+               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
+        QWindowSystemInterface::handleExposeEvent(window(), geometry());
+    } else {
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). resizeCatchUpAttempts=%d",
+               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
     }
 }
