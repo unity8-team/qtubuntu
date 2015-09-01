@@ -1,3 +1,13 @@
+qtubuntu-gles (0.62+15.04.20150828-0ubuntu2) vivid; urgency=medium
+
+  [ Michael Zanetti ]
+  * sync with upstream
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 28 Aug 2015 08:43:25 +0000
+
 qtubuntu-gles (0.62+15.04.20150824-0ubuntu1) UNRELEASED; urgency=medium
 
   * Sync with upstream
