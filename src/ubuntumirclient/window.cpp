@@ -95,9 +95,12 @@ public:
     MirConnection *connection;
     MirSurface* surface;
     QSize bufferSize;
-    QSize targetBufferSize;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
+    int resizeCatchUpAttempts;
+#if !defined(QT_NO_DEBUG)
+    int frameNumber;
+#endif
 };
 
 static void eventCallback(MirSurface* surface, const MirEvent *event, void* context)
@@ -132,9 +135,14 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     d->connection = connection;
     d->surface = nullptr;
     d->clipboard = clipboard;
+    d->resizeCatchUpAttempts = 0;
 
     static int id = 1;
     d->id = id++;
+
+#if !defined(QT_NO_DEBUG)
+    d->frameNumber = 0;
+#endif
 
     // Use client geometry if set explicitly, use available screen geometry otherwise.
     QPlatformWindow::setGeometry(window()->geometry() != screen->geometry() ?
@@ -319,20 +327,25 @@ void UbuntuWindow::moveResize(const QRect& rect)
 void UbuntuWindow::handleSurfaceResize(int width, int height)
 {
     QMutexLocker(&d->mutex);
-    LOG("UbuntuWindow::handleSurfaceResize(width=%d, height=%d)", width, height);
+    DLOG("UbuntuWindow::handleSurfaceResize(width=%d, height=%d) [%d]", width, height,
+        d->frameNumber);
 
     // The current buffer size hasn't actually changed. so just render on it and swap
-    // buffers until we render on a buffer with the target size.
+    // buffers in the hope that the next buffer will match the surface size advertised
+    // in this event.
+    // But since this event is processed by a thread different from the one that swaps
+    // buffers, you can never know if this information is already outdated as there's
+    // no synchronicity whatsoever between the processing of resize events and the
+    // consumption of buffers.
+    if (d->bufferSize.width() != width || d->bufferSize.height() != height) {
+        // if the next buffer doesn't have a different size, try some
+        // more
+        // FIXME: This is working around a mir bug! We really shound't have to
+        // swap more than once to get a buffer with the new size!
+        d->resizeCatchUpAttempts = 2;
 
-    d->targetBufferSize.rwidth() = width;
-    d->targetBufferSize.rheight() = height;
-
-    if (d->bufferSize != d->targetBufferSize) {
         QWindowSystemInterface::handleExposeEvent(window(), geometry());
-    } else {
-        qWarning("[ubuntumirclient QPA] UbuntuWindow::handleSurfaceResize"
-                 " current buffer already has the target size");
-        d->targetBufferSize = QSize();
+        QWindowSystemInterface::flushWindowSystemEvents();
     }
 }
 
@@ -422,11 +435,18 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBuffer
 
     bool sizeKnown = newBufferWidth > 0 && newBufferHeight > 0;
 
+#if !defined(QT_NO_DEBUG)
+    ++d->frameNumber;
+#endif
+
     if (sizeKnown && (d->bufferSize.width() != newBufferWidth ||
                 d->bufferSize.height() != newBufferHeight)) {
+        d->resizeCatchUpAttempts = 0;
 
-        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe - buffer size changed from (%d,%d) to (%d,%d)",
-                d->bufferSize.width(), d->bufferSize.height(), newBufferWidth, newBufferHeight);
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size changed from (%d,%d) to (%d,%d)"
+               " resizeCatchUpAttempts=%d",
+               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), newBufferWidth, newBufferHeight,
+               d->resizeCatchUpAttempts);
 
         d->bufferSize.rwidth() = newBufferWidth;
         d->bufferSize.rheight() = newBufferHeight;
@@ -439,20 +459,14 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBuffer
 
         QPlatformWindow::setGeometry(newGeometry);
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
-        QWindowSystemInterface::handleExposeEvent(window(), newGeometry);
-
+    } else if (d->resizeCatchUpAttempts > 0) {
+        --d->resizeCatchUpAttempts;
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). Redrawing to catch up a resized buffer."
+               " resizeCatchUpAttempts=%d",
+               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
+        QWindowSystemInterface::handleExposeEvent(window(), geometry());
     } else {
-        // buffer size hasn't changed
-        if (d->targetBufferSize.isValid()) {
-            if (d->bufferSize != d->targetBufferSize) {
-                // but we still didn't reach the promised buffer size from the mir resize event.
-                // thus keep swapping buffers
-                QWindowSystemInterface::handleExposeEvent(window(), geometry());
-            } else {
-                // target met. we have just provided a render with the target size and
-                // can therefore finally rest.
-                d->targetBufferSize = QSize();
-            }
-        }
+        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). resizeCatchUpAttempts=%d",
+               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
     }
 }
