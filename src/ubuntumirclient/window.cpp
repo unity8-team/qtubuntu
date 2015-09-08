@@ -458,22 +458,20 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBuff
         d->bufferSizePx.rwidth() = newBufferWidthPx;
         d->bufferSizePx.rheight() = newBufferHeightPx;
 
-        QRect newGeometry;
-
-        newGeometry = geometry();
-        newGeometry.setWidth(d->bufferSizePx.width());
-        newGeometry.setHeight(d->bufferSizePx.height());
+        QRect newGeometry(geometry());
+        newGeometry.setWidth(divideAndRoundUp(d->bufferSizePx.width(), devicePixelRatio()));
+        newGeometry.setHeight(divideAndRoundUp(d->bufferSizePx.height(), devicePixelRatio()));
 
         QPlatformWindow::setGeometry(newGeometry);
-        QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
+        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
     } else if (d->resizeCatchUpAttempts > 0) {
         --d->resizeCatchUpAttempts;
         DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). Redrawing to catch up a resized buffer."
                " resizeCatchUpAttempts=%d",
-               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
+               d->frameNumber, d->bufferSizePx.width(), d->bufferSizePx.height(), d->resizeCatchUpAttempts);
         QWindowSystemInterface::handleExposeEvent(window(), geometry());
     } else {
         DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). resizeCatchUpAttempts=%d",
-               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
+               d->frameNumber, d->bufferSizePx.width(), d->bufferSizePx.height(), d->resizeCatchUpAttempts);
     }
 }
