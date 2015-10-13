@@ -317,7 +317,7 @@ void UbuntuWindow::createWindow()
         d->bufferSizePx.setHeight(parameters.height);
     }
 
-    DLOG("[ubuntumirclient QPA] created surface has pixel size (%d, %d) and device-pixel size (%d, %d)",
+    DLOG("[ubuntumirclient QPA] created surface has physical pixel size (%d, %d) and device-independent pixel size (%d, %d)",
             d->bufferSizePx.width(), d->bufferSizePx.height(), geometry.width(), geometry.height());
 
     // Tell Qt about the geometry.
