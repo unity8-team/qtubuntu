@@ -38,7 +38,7 @@
 #define IS_OPAQUE_FLAG 1
 
 /*
- * Note: all geometry is in density-independent pixels, except that contained in variables with the
+ * Note: all geometry is in device-independent pixels, except that contained in variables with the
  * suffix "Px" - whose units are (physical) pixels
  */
 
@@ -271,11 +271,11 @@ void UbuntuWindow::createWindow()
         geometry.setY(panelHeight);
     }
 
-    // Convert to pixels when talking with Mir
+    // Convert to physical pixels when talking with Mir
     d->bufferSizePx.setWidth(geometry.width() * devicePixelRatio());
     d->bufferSizePx.setHeight(geometry.height() * devicePixelRatio());
 
-    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) DP with actual pixel size (%d, %d) and title '%s'\n",
+    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) device-independent pixels with physicsl pixel size (%d, %d) and title '%s'\n",
             geometry.x(), geometry.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
 
     MirSurfaceSpec *spec;
