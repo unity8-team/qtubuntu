@@ -17,26 +17,10 @@
 #include "glcontext.h"
 #include "window.h"
 #include "logging.h"
-#include <QtPlatformSupport/private/qeglconvenience_p.h>
 
-#if !defined(QT_NO_DEBUG)
-static void printOpenGLESConfig() {
-  static bool once = true;
-  if (once) {
-    const char* string = (const char*) glGetString(GL_VENDOR);
-    LOG("OpenGL ES vendor: %s", string);
-    string = (const char*) glGetString(GL_RENDERER);
-    LOG("OpenGL ES renderer: %s", string);
-    string = (const char*) glGetString(GL_VERSION);
-    LOG("OpenGL ES version: %s", string);
-    string = (const char*) glGetString(GL_SHADING_LANGUAGE_VERSION);
-    LOG("OpenGL ES Shading Language version: %s", string);
-    string = (const char*) glGetString(GL_EXTENSIONS);
-    LOG("OpenGL ES extensions: %s", string);
-    once = false;
-  }
-}
-#endif
+#include <QtGui/QScreen>
+#include <QtGui/QOpenGLContext>
+#include <QtPlatformSupport/private/qeglconvenience_p.h>
 
 static EGLenum api_in_use()
 {
@@ -47,21 +31,23 @@ static EGLenum api_in_use()
 #endif
 }
 
-UbuntuOpenGLContext::UbuntuOpenGLContext(UbuntuScreen* screen, UbuntuOpenGLContext* share)
+UbuntuOpenGLContext::UbuntuOpenGLContext(QOpenGLContext* context)
+    : mSwapInterval(-1)
 {
-    ASSERT(screen != NULL);
-    mEglDisplay = screen->eglDisplay();
-    mScreen = screen;
+    mEglDisplay = static_cast<UbuntuScreen*>(context->screen()->handle())->eglDisplay();
+    EGLConfig config = q_configFromGLFormat(mEglDisplay, context->format());
+    mSurfaceFormat = q_glFormatFromConfig(mEglDisplay, config);
 
-    // Create an OpenGL ES 2 context.
+    // Use QSG_INFO=1 to print GL/EGL config
     QVector<EGLint> attribs;
     attribs.append(EGL_CONTEXT_CLIENT_VERSION);
-    attribs.append(2);
+    attribs.append(mSurfaceFormat.majorVersion());
     attribs.append(EGL_NONE);
     ASSERT(eglBindAPI(api_in_use()) == EGL_TRUE);
 
-    mEglContext = eglCreateContext(mEglDisplay, screen->eglConfig(), share ? share->eglContext() : EGL_NO_CONTEXT,
-                                   attribs.constData());
+    UbuntuOpenGLContext* sharedContext = static_cast<UbuntuOpenGLContext*>(context->shareHandle());
+    EGLContext sharedEglContext = sharedContext ? sharedContext->eglContext() : EGL_NO_CONTEXT;
+    mEglContext = eglCreateContext(mEglDisplay, config, sharedEglContext, attribs.constData());
     DASSERT(mEglContext != EGL_NO_CONTEXT);
 }
 
@@ -74,15 +60,19 @@ bool UbuntuOpenGLContext::makeCurrent(QPlatformSurface* surface)
 {
     DASSERT(surface->surface()->surfaceType() == QSurface::OpenGLSurface);
     EGLSurface eglSurface = static_cast<UbuntuWindow*>(surface)->eglSurface();
-#if defined(QT_NO_DEBUG)
+
     eglBindAPI(api_in_use());
-    eglMakeCurrent(mEglDisplay, eglSurface, eglSurface, mEglContext);
-#else
-    ASSERT(eglBindAPI(api_in_use()) == EGL_TRUE);
-    ASSERT(eglMakeCurrent(mEglDisplay, eglSurface, eglSurface, mEglContext) == EGL_TRUE);
-    printOpenGLESConfig();
-#endif
-    return true;
+    const bool ok = eglMakeCurrent(mEglDisplay, eglSurface, eglSurface, mEglContext);
+    if (ok) {
+        const int requestedSwapInterval = surface->format().swapInterval();
+        if (requestedSwapInterval >= 0 && mSwapInterval != requestedSwapInterval) {
+            mSwapInterval = requestedSwapInterval;
+            eglSwapInterval(mEglDisplay, mSwapInterval);
+        }
+    } else {
+        qWarning("[ubuntumirclient QPA] makeCurrent() EGL error: %x", eglGetError());
+    }
+    return ok;
 }
 
 void UbuntuOpenGLContext::doneCurrent()

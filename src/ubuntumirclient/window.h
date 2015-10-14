@@ -36,6 +36,7 @@ public:
     virtual ~UbuntuWindow();
 
     // QPlatformWindow methods.
+    QSurfaceFormat format() const override;
     WId winId() const override;
     void setGeometry(const QRect&) override;
     void setWindowState(Qt::WindowState state) override;

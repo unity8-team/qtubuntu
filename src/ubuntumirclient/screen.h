@@ -39,9 +39,7 @@ public:
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
 
     // New methods.
-    QSurfaceFormat surfaceFormat() const { return mSurfaceFormat; }
     EGLDisplay eglDisplay() const { return mEglDisplay; }
-    EGLConfig eglConfig() const { return mEglConfig; }
     EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
     void handleWindowSurfaceResize(int width, int height);
 
@@ -54,9 +52,7 @@ private:
     Qt::ScreenOrientation mCurrentOrientation;
     QImage::Format mFormat;
     int mDepth;
-    QSurfaceFormat mSurfaceFormat;
     EGLDisplay mEglDisplay;
-    EGLConfig mEglConfig;
     EGLNativeDisplayType mEglNativeDisplay;
 };
 
