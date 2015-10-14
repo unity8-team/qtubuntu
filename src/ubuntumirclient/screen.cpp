@@ -48,55 +48,7 @@ static const char *orientationToStr(Qt::ScreenOrientation orientation) {
             return "INVALID!";
     }
 }
-
-static void printEglConfig(EGLDisplay display, EGLConfig config) {
-  DASSERT(display != EGL_NO_DISPLAY);
-  DASSERT(config != nullptr);
-  static const struct { const EGLint attrib; const char* name; } kAttribs[] = {
-    { EGL_BUFFER_SIZE, "EGL_BUFFER_SIZE" },
-    { EGL_ALPHA_SIZE, "EGL_ALPHA_SIZE" },
-    { EGL_BLUE_SIZE, "EGL_BLUE_SIZE" },
-    { EGL_GREEN_SIZE, "EGL_GREEN_SIZE" },
-    { EGL_RED_SIZE, "EGL_RED_SIZE" },
-    { EGL_DEPTH_SIZE, "EGL_DEPTH_SIZE" },
-    { EGL_STENCIL_SIZE, "EGL_STENCIL_SIZE" },
-    { EGL_CONFIG_CAVEAT, "EGL_CONFIG_CAVEAT" },
-    { EGL_CONFIG_ID, "EGL_CONFIG_ID" },
-    { EGL_LEVEL, "EGL_LEVEL" },
-    { EGL_MAX_PBUFFER_HEIGHT, "EGL_MAX_PBUFFER_HEIGHT" },
-    { EGL_MAX_PBUFFER_PIXELS, "EGL_MAX_PBUFFER_PIXELS" },
-    { EGL_MAX_PBUFFER_WIDTH, "EGL_MAX_PBUFFER_WIDTH" },
-    { EGL_NATIVE_RENDERABLE, "EGL_NATIVE_RENDERABLE" },
-    { EGL_NATIVE_VISUAL_ID, "EGL_NATIVE_VISUAL_ID" },
-    { EGL_NATIVE_VISUAL_TYPE, "EGL_NATIVE_VISUAL_TYPE" },
-    { EGL_SAMPLES, "EGL_SAMPLES" },
-    { EGL_SAMPLE_BUFFERS, "EGL_SAMPLE_BUFFERS" },
-    { EGL_SURFACE_TYPE, "EGL_SURFACE_TYPE" },
-    { EGL_TRANSPARENT_TYPE, "EGL_TRANSPARENT_TYPE" },
-    { EGL_TRANSPARENT_BLUE_VALUE, "EGL_TRANSPARENT_BLUE_VALUE" },
-    { EGL_TRANSPARENT_GREEN_VALUE, "EGL_TRANSPARENT_GREEN_VALUE" },
-    { EGL_TRANSPARENT_RED_VALUE, "EGL_TRANSPARENT_RED_VALUE" },
-    { EGL_BIND_TO_TEXTURE_RGB, "EGL_BIND_TO_TEXTURE_RGB" },
-    { EGL_BIND_TO_TEXTURE_RGBA, "EGL_BIND_TO_TEXTURE_RGBA" },
-    { EGL_MIN_SWAP_INTERVAL, "EGL_MIN_SWAP_INTERVAL" },
-    { EGL_MAX_SWAP_INTERVAL, "EGL_MAX_SWAP_INTERVAL" },
-    { -1, NULL }
-  };
-  const char* string = eglQueryString(display, EGL_VENDOR);
-  LOG("EGL vendor: %s", string);
-  string = eglQueryString(display, EGL_VERSION);
-  LOG("EGL version: %s", string);
-  string = eglQueryString(display, EGL_EXTENSIONS);
-  LOG("EGL extensions: %s", string);
-  LOG("EGL configuration attibutes:");
-  for (int index = 0; kAttribs[index].attrib != -1; index++) {
-    EGLint value;
-    if (eglGetConfigAttrib(display, config, kAttribs[index].attrib, &value))
-      LOG("  %s: %d", kAttribs[index].name, static_cast<int>(value));
-  }
-}
 #endif
-
 
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
@@ -133,9 +85,6 @@ UbuntuScreen::UbuntuScreen(MirConnection *connection)
     mEglNativeDisplay = mir_connection_get_egl_native_display(connection);
     ASSERT((mEglDisplay = eglGetDisplay(mEglNativeDisplay)) != EGL_NO_DISPLAY);
     ASSERT(eglInitialize(mEglDisplay, nullptr, nullptr) == EGL_TRUE);
-#if !defined(QT_NO_DEBUG)
-    printEglInfo(mEglDisplay);
-#endif
 
     // Get screen resolution.
     auto configDeleter = [](MirDisplayConfiguration *config) { mir_display_config_destroy(config); };
