@@ -189,7 +189,7 @@ int UbuntuWindowPrivate::panelHeight()
 }
 
 // Gets the best pixel format available through that connection. Falls back to an opaque format if
-// no satisfying ARGB pixel format can be found.
+// no satisfying ARGB pixel format can be found. Note that Qt defaults to GL_RGBA.
 static MirPixelFormat getPixelFormat(MirConnection *connection, bool hasAlpha)
 {
     const unsigned int formatsCount = 5;
@@ -267,10 +267,11 @@ void UbuntuWindow::createWindow()
 
     EGLDisplay eglDisplay = d->screen->eglDisplay();
     EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format, true);
+    const bool needsAlpha = d->format.alphaBufferSize() > 0;
     d->format = q_glFormatFromConfig(eglDisplay, eglConfig, d->format);
+    MirPixelFormat pixelFormat = getPixelFormat(d->connection, needsAlpha);
 
     MirSurfaceSpec *spec;
-    MirPixelFormat pixelFormat = getPixelFormat(d->connection, d->format.alphaBufferSize() == 8);
     if (role == SCREEN_KEYBOARD_ROLE)
     {
         spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
