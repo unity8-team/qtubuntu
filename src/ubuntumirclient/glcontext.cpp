@@ -22,50 +22,6 @@
 #include <QtGui/QOpenGLContext>
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
 
-#if !defined(QT_NO_DEBUG)
-static void printEglConfig(EGLDisplay display, EGLConfig config)
-{
-    DASSERT(display != EGL_NO_DISPLAY);
-    DASSERT(config != nullptr);
-    static const struct { const EGLint attrib; const char* name; } kAttribs[] = {
-        { EGL_BUFFER_SIZE, "EGL_BUFFER_SIZE" },
-        { EGL_ALPHA_SIZE, "EGL_ALPHA_SIZE" },
-        { EGL_BLUE_SIZE, "EGL_BLUE_SIZE" },
-        { EGL_GREEN_SIZE, "EGL_GREEN_SIZE" },
-        { EGL_RED_SIZE, "EGL_RED_SIZE" },
-        { EGL_DEPTH_SIZE, "EGL_DEPTH_SIZE" },
-        { EGL_STENCIL_SIZE, "EGL_STENCIL_SIZE" },
-        { EGL_CONFIG_CAVEAT, "EGL_CONFIG_CAVEAT" },
-        { EGL_CONFIG_ID, "EGL_CONFIG_ID" },
-        { EGL_LEVEL, "EGL_LEVEL" },
-        { EGL_MAX_PBUFFER_HEIGHT, "EGL_MAX_PBUFFER_HEIGHT" },
-        { EGL_MAX_PBUFFER_PIXELS, "EGL_MAX_PBUFFER_PIXELS" },
-        { EGL_MAX_PBUFFER_WIDTH, "EGL_MAX_PBUFFER_WIDTH" },
-        { EGL_NATIVE_RENDERABLE, "EGL_NATIVE_RENDERABLE" },
-        { EGL_NATIVE_VISUAL_ID, "EGL_NATIVE_VISUAL_ID" },
-        { EGL_NATIVE_VISUAL_TYPE, "EGL_NATIVE_VISUAL_TYPE" },
-        { EGL_SAMPLES, "EGL_SAMPLES" },
-        { EGL_SAMPLE_BUFFERS, "EGL_SAMPLE_BUFFERS" },
-        { EGL_SURFACE_TYPE, "EGL_SURFACE_TYPE" },
-        { EGL_TRANSPARENT_TYPE, "EGL_TRANSPARENT_TYPE" },
-        { EGL_TRANSPARENT_BLUE_VALUE, "EGL_TRANSPARENT_BLUE_VALUE" },
-        { EGL_TRANSPARENT_GREEN_VALUE, "EGL_TRANSPARENT_GREEN_VALUE" },
-        { EGL_TRANSPARENT_RED_VALUE, "EGL_TRANSPARENT_RED_VALUE" },
-        { EGL_BIND_TO_TEXTURE_RGB, "EGL_BIND_TO_TEXTURE_RGB" },
-        { EGL_BIND_TO_TEXTURE_RGBA, "EGL_BIND_TO_TEXTURE_RGBA" },
-        { EGL_MIN_SWAP_INTERVAL, "EGL_MIN_SWAP_INTERVAL" },
-        { EGL_MAX_SWAP_INTERVAL, "EGL_MAX_SWAP_INTERVAL" },
-        { -1, NULL }
-    };
-    LOG("EGL configuration attibutes:");
-    for (int index = 0; kAttribs[index].attrib != -1; index++) {
-        EGLint value;
-        if (eglGetConfigAttrib(display, config, kAttribs[index].attrib, &value))
-            LOG("  %s: %d", kAttribs[index].name, static_cast<int>(value));
-    }
-}
-#endif
-
 static EGLenum api_in_use()
 {
 #ifdef QTUBUNTU_USE_OPENGL
@@ -81,10 +37,8 @@ UbuntuOpenGLContext::UbuntuOpenGLContext(QOpenGLContext* context)
     mEglDisplay = static_cast<UbuntuScreen*>(context->screen()->handle())->eglDisplay();
     EGLConfig config = q_configFromGLFormat(mEglDisplay, context->format());
     mSurfaceFormat = q_glFormatFromConfig(mEglDisplay, config);
-#if !defined(QT_NO_DEBUG)
-    printEglConfig(mEglDisplay, config);
-#endif
 
+    // Use QSG_INFO=1 to print GL/EGL config
     QVector<EGLint> attribs;
     attribs.append(EGL_CONTEXT_CLIENT_VERSION);
     attribs.append(mSurfaceFormat.majorVersion());
