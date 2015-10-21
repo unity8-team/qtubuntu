@@ -21,6 +21,7 @@
 #include <QtCore/QMap>
 
 // Local
+#include "integration.h"
 #include "nativeinterface.h"
 #include "screen.h"
 #include "glcontext.h"
@@ -40,9 +41,10 @@ public:
 
 Q_GLOBAL_STATIC(UbuntuResourceMap, ubuntuResourceMap)
 
-UbuntuNativeInterface::UbuntuNativeInterface()
+UbuntuNativeInterface::UbuntuNativeInterface(UbuntuClientIntegration *integration)
     : mGenericEventFilterType(QByteArrayLiteral("Event"))
     , mNativeOrientation(nullptr)
+    , mIntegration(integration)
     , mMirConnection(nullptr)
 {
 }
@@ -84,7 +86,7 @@ void* UbuntuNativeInterface::nativeResourceForContext(
     const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
 
     if (kResourceType == UbuntuNativeInterface::EglContext)
-        return static_cast<UbuntuOpenGLContext*>(context->handle())->eglContext();
+        return static_cast<UbuntuOpenGLContext*>(context->handle())->eglContext(); // Needed by Oxide!!
     else
         return nullptr;
 }
@@ -96,12 +98,7 @@ void* UbuntuNativeInterface::nativeResourceForWindow(const QByteArray& resourceS
         return NULL;
     const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
     if (kResourceType == UbuntuNativeInterface::EglDisplay) {
-        if (window) {
-            return static_cast<UbuntuScreen*>(window->screen()->handle())->eglDisplay();
-        } else {
-            return static_cast<UbuntuScreen*>(
-                    QGuiApplication::primaryScreen()->handle())->eglDisplay();
-        }
+        return mIntegration->eglDisplay();
     } else if (kResourceType == UbuntuNativeInterface::NativeOrientation) {
         // Return the device's native screen orientation.
         if (window) {
@@ -117,16 +114,14 @@ void* UbuntuNativeInterface::nativeResourceForWindow(const QByteArray& resourceS
     }
 }
 
-void* UbuntuNativeInterface::nativeResourceForScreen(const QByteArray& resourceString, QScreen* screen)
+void* UbuntuNativeInterface::nativeResourceForScreen(const QByteArray& resourceString, QScreen* /*screen*/)
 {
     const QByteArray kLowerCaseResource = resourceString.toLower();
     if (!ubuntuResourceMap()->contains(kLowerCaseResource))
         return NULL;
     const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
     if (kResourceType == UbuntuNativeInterface::Display) {
-        if (!screen)
-            screen = QGuiApplication::primaryScreen();
-        return static_cast<UbuntuScreen*>(screen->handle())->eglNativeDisplay();
+        return mIntegration->eglNativeDisplay(); // needed by Oxide!
     } else
         return NULL;
 }

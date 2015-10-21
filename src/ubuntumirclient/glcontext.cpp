@@ -15,6 +15,7 @@
  */
 
 #include "glcontext.h"
+#include "integration.h"
 #include "window.h"
 #include "logging.h"
 
@@ -31,10 +32,14 @@ static EGLenum api_in_use()
 #endif
 }
 
-UbuntuOpenGLContext::UbuntuOpenGLContext(QOpenGLContext* context)
+UbuntuOpenGLContext::UbuntuOpenGLContext(UbuntuClientIntegration *integration, QOpenGLContext* context)
     : mSwapInterval(-1)
 {
-    mEglDisplay = static_cast<UbuntuScreen*>(context->screen()->handle())->eglDisplay();
+    // Initialize EGL.
+    ASSERT(eglBindAPI(EGL_OPENGL_ES_API) == EGL_TRUE);
+    mEglDisplay = integration->eglDisplay();
+    ASSERT(eglInitialize(mEglDisplay, nullptr, nullptr) == EGL_TRUE);
+
     EGLConfig config = q_configFromGLFormat(mEglDisplay, context->format());
     mSurfaceFormat = q_glFormatFromConfig(mEglDisplay, config);
 

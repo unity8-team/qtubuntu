@@ -19,11 +19,13 @@
 
 #include <qpa/qplatformnativeinterface.h>
 
+class UbuntuClientIntegration;
+
 class UbuntuNativeInterface : public QPlatformNativeInterface {
 public:
     enum ResourceType { EglDisplay, EglContext, NativeOrientation, Display, MirConnection };
 
-    UbuntuNativeInterface();
+    UbuntuNativeInterface(UbuntuClientIntegration *integration);
     ~UbuntuNativeInterface();
 
     // QPlatformNativeInterface methods.
@@ -41,7 +43,8 @@ public:
 
 private:
     const QByteArray mGenericEventFilterType;
-    Qt::ScreenOrientation* mNativeOrientation;
+    Qt::ScreenOrientation *mNativeOrientation;
+    UbuntuClientIntegration *mIntegration;
     void *mMirConnection;
 };
 

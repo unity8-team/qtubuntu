@@ -21,10 +21,13 @@
 #include <QSharedPointer>
 
 #include "platformservices.h"
+#include "screenobserver.h"
 
 // platform-api
 #include <ubuntu/application/description.h>
 #include <ubuntu/application/instance.h>
+
+#include <EGL/egl.h>
 
 class UbuntuClipboard;
 class UbuntuInput;
@@ -53,7 +56,12 @@ public:
 
     QPlatformOpenGLContext* createPlatformOpenGLContext(QOpenGLContext* context);
     QPlatformWindow* createPlatformWindow(QWindow* window);
-    UbuntuScreen* screen() const { return mScreen; }
+
+    void initialize() override;
+
+    // Additions
+    EGLDisplay eglDisplay() const { return mEglDisplay; }
+    EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
 
 private:
     void setupOptions();
@@ -64,11 +72,14 @@ private:
 
     UbuntuPlatformServices* mServices;
 
-    UbuntuScreen* mScreen;
     UbuntuInput* mInput;
     QPlatformInputContext* mInputContext;
     QSharedPointer<UbuntuClipboard> mClipboard;
+    QScopedPointer<UbuntuScreenObserver> mScreenObserver;
     qreal mScaleFactor;
+
+    EGLDisplay mEglDisplay;
+    EGLNativeDisplayType mEglNativeDisplay;
 
     // Platform API stuff
     UApplicationOptions* mOptions;

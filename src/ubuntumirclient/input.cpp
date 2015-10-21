@@ -217,33 +217,22 @@ void UbuntuInput::customEvent(QEvent* event)
         break;
     case mir_event_type_resize:
     {
-        Q_ASSERT(ubuntuEvent->window->screen() == mIntegration->screen());
-
         auto resizeEvent = mir_event_get_resize_event(nativeEvent);
 
-        mIntegration->screen()->handleWindowSurfaceResize(
-                mir_resize_event_get_width(resizeEvent),
-                mir_resize_event_get_height(resizeEvent));
+//        mIntegration->screen()->handleWindowSurfaceResize( /////?????GERRY
+//                mir_resize_event_get_width(resizeEvent),
+//                mir_resize_event_get_height(resizeEvent));
 
         ubuntuEvent->window->handleSurfaceResize(mir_resize_event_get_width(resizeEvent),
             mir_resize_event_get_height(resizeEvent));
         break;
     }
     case mir_event_type_surface:
-    {
-        auto surfaceEvent = mir_event_get_surface_event(nativeEvent);
-        auto surfaceEventAttribute = mir_surface_event_get_attribute(surfaceEvent);
-
-        if (surfaceEventAttribute == mir_surface_attrib_focus) {
-            ubuntuEvent->window->handleSurfaceFocusChange(mir_surface_event_get_attribute_value(surfaceEvent) ==
-                mir_surface_focused);
-
-        } else if (surfaceEventAttribute == mir_surface_attrib_visibility) {
-            ubuntuEvent->window->handleSurfaceExposeChange(mir_surface_event_get_attribute_value(surfaceEvent) ==
-                                                           mir_surface_visibility_exposed);
-        }
+        handleSurfaceEvent(ubuntuEvent->window, mir_event_get_surface_event(nativeEvent));
         break;
-    }
+    case mir_event_type_surface_output:
+        handleSurfaceOutputEvent(ubuntuEvent->window, mir_event_get_surface_output_event(nativeEvent));
+        break;
     case mir_event_type_orientation:
         dispatchOrientationEvent(ubuntuEvent->window->window(), mir_event_get_orientation_event(nativeEvent));
         break;
@@ -501,5 +490,35 @@ void UbuntuInput::dispatchOrientationEvent(QWindow *window, const MirOrientation
     // [Platform]Screen can also factor in the native orientation.
     QCoreApplication::postEvent(static_cast<UbuntuScreen*>(window->screen()->handle()),
                                 new OrientationChangeEvent(OrientationChangeEvent::mType, orientation));
+}
+
+void UbuntuInput::handleSurfaceEvent(QPointer<UbuntuWindow> window, const MirSurfaceEvent *event)
+{
+    auto surfaceEventAttribute = mir_surface_event_get_attribute(event);
+
+    switch (surfaceEventAttribute) {
+    case mir_surface_attrib_focus:
+        window->handleSurfaceFocusChange(
+                    mir_surface_event_get_attribute_value(event) == mir_surface_focused);
+        break;
+    case mir_surface_attrib_visibility:
+        window->handleSurfaceExposeChange(
+                    mir_surface_event_get_attribute_value(event) == mir_surface_visibility_exposed);
+        break;
+    // Remaining attributes are ones client sets for server, and server should not override them
+    case mir_surface_attrib_type:
+    case mir_surface_attrib_state:
+    case mir_surface_attrib_swapinterval:
+    case mir_surface_attrib_dpi:
+    case mir_surface_attrib_preferred_orientation:
+    case mir_surface_attribs:
+        break;
+    }
+}
+
+void UbuntuInput::handleSurfaceOutputEvent(QPointer<UbuntuWindow> window, const MirSurfaceOutputEvent *event)
+{
+    Q_UNUSED(window)
+    Q_UNUSED(event)
 }
 

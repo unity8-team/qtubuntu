@@ -24,6 +24,7 @@ SOURCES = \
     platformservices.cpp \
     plugin.cpp \
     screen.cpp \
+    screenobserver.cpp \
     theme.cpp \
     window.cpp
 
@@ -39,6 +40,7 @@ HEADERS = \
     platformservices.h \
     plugin.h \
     screen.h \
+    screenobserver.h \
     theme.h \
     window.h
 

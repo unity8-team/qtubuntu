@@ -36,4 +36,6 @@
 #define DNOT_REACHED() qt_noop()
 #endif
 
+#include <QDebug>
+
 #endif  // QUBUNTULOGGING_H

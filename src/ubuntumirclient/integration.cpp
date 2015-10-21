@@ -67,7 +67,7 @@ static void aboutToStopCallback(UApplicationArchive *archive, void* context)
 
 UbuntuClientIntegration::UbuntuClientIntegration()
     : QPlatformIntegration()
-    , mNativeInterface(new UbuntuNativeInterface)
+    , mNativeInterface(new UbuntuNativeInterface(this))
     , mFontDb(new QGenericUnixFontDatabase)
     , mServices(new UbuntuPlatformServices)
     , mClipboard(new UbuntuClipboard)
@@ -84,20 +84,36 @@ UbuntuClientIntegration::UbuntuClientIntegration()
                "running, and the correct socket is being used and is accessible. The shell may have\n"
                "rejected the incoming connection, so check its log file");
 
-    mNativeInterface->setMirConnection(u_application_instance_get_mir_connection(mInstance));
+    MirConnection *mirConnection = u_application_instance_get_mir_connection(mInstance);
+    mNativeInterface->setMirConnection(mirConnection);
+}
 
-    // Create default screen.
-    mScreen = new UbuntuScreen(u_application_instance_get_mir_connection(mInstance));
-    screenAdded(mScreen);
+void UbuntuClientIntegration::initialize()
+{
+    MirConnection *mirConnection = u_application_instance_get_mir_connection(mInstance);
+
+    // Set shared EGLDisplay
+    ASSERT(eglBindAPI(EGL_OPENGL_ES_API) == EGL_TRUE);
+    EGLNativeDisplayType eglNativeDisplay = mir_connection_get_egl_native_display(mirConnection);
+    mEglDisplay = eglGetDisplay(eglNativeDisplay);
+    if (mEglDisplay == EGL_NO_DISPLAY)
+        qFatal("Could not open egl display");
+
+    EGLint major, minor;
+    if (!eglInitialize(mEglDisplay, &major, &minor))
+        qFatal("Could not initialize egl display");
+
+    // Init the ScreenObserver
+    mScreenObserver.reset(new UbuntuScreenObserver(mirConnection));
+    QObject::connect(mScreenObserver.data(), &UbuntuScreenObserver::screenAdded,
+            [this](UbuntuScreen *screen) { this->screenAdded(screen); });
+    Q_FOREACH(auto screen, mScreenObserver->screens()) {
+        screenAdded(screen);
+    }
 
     // Initialize input.
-    if (qEnvironmentVariableIsEmpty("QTUBUNTU_NO_INPUT")) {
-        mInput = new UbuntuInput(this);
-        mInputContext = QPlatformInputContextFactory::create();
-    } else {
-        mInput = nullptr;
-        mInputContext = nullptr;
-    }
+    mInput = new UbuntuInput(this);
+    mInputContext = QPlatformInputContextFactory::create();
 
     // compute the scale factor
     const int defaultGridUnit = 8;
@@ -117,7 +133,6 @@ UbuntuClientIntegration::~UbuntuClientIntegration()
 {
     delete mInput;
     delete mInputContext;
-    delete mScreen;
     delete mServices;
 }
 
@@ -145,7 +160,8 @@ void UbuntuClientIntegration::setupOptions()
 void UbuntuClientIntegration::setupDescription()
 {
     mDesc = u_application_description_new();
-    UApplicationId* id = u_application_id_new_from_stringn("QtUbuntu", 8);
+    QString appName = qApp->applicationName();
+    UApplicationId* id = u_application_id_new_from_stringn(appName.toLatin1().constData(), appName.length());
     u_application_description_set_application_id(mDesc, id);
 
     UApplicationLifecycleDelegate* delegate = u_application_lifecycle_delegate_new();
@@ -163,7 +179,7 @@ QPlatformWindow* UbuntuClientIntegration::createPlatformWindow(QWindow* window) 
 QPlatformWindow* UbuntuClientIntegration::createPlatformWindow(QWindow* window)
 {
     QPlatformWindow* platformWindow = new UbuntuWindow(
-            window, mClipboard, static_cast<UbuntuScreen*>(mScreen), mInput, u_application_instance_get_mir_connection(mInstance));
+            window, mClipboard, mInput, u_application_instance_get_mir_connection(mInstance), this);
     platformWindow->requestActivateWindow();
     return platformWindow;
 }
@@ -212,7 +228,7 @@ QPlatformOpenGLContext* UbuntuClientIntegration::createPlatformOpenGLContext(
 QPlatformOpenGLContext* UbuntuClientIntegration::createPlatformOpenGLContext(
         QOpenGLContext* context)
 {
-    return new UbuntuOpenGLContext(context);
+    return new UbuntuOpenGLContext(this, context);
 }
 
 QStringList UbuntuClientIntegration::themeNames() const

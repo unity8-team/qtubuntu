@@ -19,11 +19,14 @@
 
 #include <qpa/qplatformopenglcontext.h>
 #include "screen.h"
+#include <EGL/egl.h>
+
+class UbuntuClientIntegration;
 
 class UbuntuOpenGLContext : public QPlatformOpenGLContext
 {
 public:
-    UbuntuOpenGLContext(QOpenGLContext* context);
+    explicit UbuntuOpenGLContext(UbuntuClientIntegration *integration, QOpenGLContext* context);
     virtual ~UbuntuOpenGLContext();
 
     // QPlatformOpenGLContext methods.

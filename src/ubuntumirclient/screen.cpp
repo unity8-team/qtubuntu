@@ -50,61 +50,59 @@ static const char *orientationToStr(Qt::ScreenOrientation orientation) {
 }
 #endif
 
+static inline bool isLittleEndian() {
+    unsigned int i = 1;
+    char *c = (char*)&i;
+    return *c == 1;
+}
+
+static enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat) {
+    switch (mirPixelFormat) {
+    case mir_pixel_format_abgr_8888:
+        if (isLittleEndian()) {
+            // 0xRR,0xGG,0xBB,0xAA
+            return QImage::Format_RGBA8888;
+        } else {
+            // 0xAA,0xBB,0xGG,0xRR
+            qFatal("[ubuntumirclient QPA] "
+                   "Qt doesn't support mir_pixel_format_abgr_8888 in a big endian architecture");
+        }
+        break;
+    case mir_pixel_format_xbgr_8888:
+        if (isLittleEndian()) {
+            // 0xRR,0xGG,0xBB,0xXX
+            return QImage::Format_RGBX8888;
+        } else {
+            // 0xXX,0xBB,0xGG,0xRR
+            qFatal("[ubuntumirclient QPA] "
+                   "Qt doesn't support mir_pixel_format_xbgr_8888 in a big endian architecture");
+        }
+        break;
+    case mir_pixel_format_argb_8888:
+        // 0xAARRGGBB
+        return QImage::Format_ARGB32;
+        break;
+    case mir_pixel_format_xrgb_8888:
+        // 0xffRRGGBB
+        return QImage::Format_RGB32;
+        break;
+    case mir_pixel_format_bgr_888:
+        qFatal("[ubuntumirclient QPA] Qt doesn't support mir_pixel_format_bgr_888");
+        break;
+    default:
+        qFatal("[ubuntumirclient QPA] Unknown mir pixel format");
+        break;
+    }
+}
+
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
 
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
+
+UbuntuScreen::UbuntuScreen(const MirDisplayOutput &output)
 {
-    const MirDisplayOutput *output = NULL;
-    for (uint32_t d = 0; d < conf->num_outputs; d++)
-    {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
-        {
-            output = out;
-            break;
-        }
-    }
-
-    return output;
-}
-
-UbuntuScreen::UbuntuScreen(MirConnection *connection)
-    : mFormat(QImage::Format_RGB32)
-    , mDepth(32)
-    , mEglDisplay(EGL_NO_DISPLAY)
-{
-    // Initialize EGL.
-    ASSERT(eglBindAPI(EGL_OPENGL_ES_API) == EGL_TRUE);
-
-    mEglNativeDisplay = mir_connection_get_egl_native_display(connection);
-    ASSERT((mEglDisplay = eglGetDisplay(mEglNativeDisplay)) != EGL_NO_DISPLAY);
-    ASSERT(eglInitialize(mEglDisplay, nullptr, nullptr) == EGL_TRUE);
-
-    // Get screen resolution.
-    auto configDeleter = [](MirDisplayConfiguration *config) { mir_display_config_destroy(config); };
-    using configUp = std::unique_ptr<MirDisplayConfiguration, decltype(configDeleter)>;
-    configUp displayConfig(mir_connection_create_display_config(connection), configDeleter);
-    ASSERT(displayConfig != nullptr);
-
-    auto const displayOutput = find_active_output(displayConfig.get());
-    ASSERT(displayOutput != nullptr);
-
-    const MirDisplayMode *mode = &displayOutput->modes[displayOutput->current_mode];
-    const int kScreenWidth = mode->horizontal_resolution;
-    const int kScreenHeight = mode->vertical_resolution;
-    DASSERT(kScreenWidth > 0 && kScreenHeight > 0);
-
-    DLOG("ubuntumirclient: screen resolution: %dx%d", kScreenWidth, kScreenHeight);
-
-    mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
-
     DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
+    setMirDisplayOutput(output);
 
     // Set the default orientation based on the initial screen dimmensions.
     mNativeOrientation = (mGeometry.width() >= mGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
@@ -115,7 +113,6 @@ UbuntuScreen::UbuntuScreen(MirConnection *connection)
 
 UbuntuScreen::~UbuntuScreen()
 {
-    eglTerminate(mEglDisplay);
 }
 
 void UbuntuScreen::customEvent(QEvent* event) {
@@ -185,4 +182,28 @@ void UbuntuScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
         DLOG("UbuntuScreen::handleWindowSurfaceResize - new orientation %s",orientationToStr(mCurrentOrientation));
         QWindowSystemInterface::handleScreenOrientationChange(screen(), mCurrentOrientation);
     }
+}
+
+void UbuntuScreen::setMirDisplayOutput(const MirDisplayOutput &output)
+{
+    // Physical screen size
+    mPhysicalSize.setWidth(output.physical_width_mm);
+    mPhysicalSize.setHeight(output.physical_height_mm);
+
+    // Pixel Format
+    mFormat = qImageFormatFromMirPixelFormat(output.current_format);
+
+    // Pixel depth
+    mDepth = 8 * MIR_BYTES_PER_PIXEL(output.current_format);
+
+    // Mode = Resolution & refresh rate
+    MirDisplayMode mode = output.modes[output.current_mode];
+    mGeometry.setX(output.position_x);
+    mGeometry.setY(output.position_y);
+    mGeometry.setWidth(mode.horizontal_resolution);
+    mGeometry.setHeight(mode.vertical_resolution);
+
+    // Misc
+    mRefreshRate = mode.refresh_rate;
+    mOutputId = output.output_id;
 }

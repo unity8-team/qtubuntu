@@ -19,15 +19,14 @@
 
 #include <qpa/qplatformscreen.h>
 #include <QSurfaceFormat>
-#include <EGL/egl.h>
 
-struct MirConnection;
+struct MirDisplayOutput;
 
 class UbuntuScreen : public QObject, public QPlatformScreen
 {
     Q_OBJECT
 public:
-    UbuntuScreen(MirConnection *connection);
+    explicit UbuntuScreen(const MirDisplayOutput &output);
     virtual ~UbuntuScreen();
 
     // QPlatformScreen methods.
@@ -35,13 +34,15 @@ public:
     int depth() const override { return mDepth; }
     QRect geometry() const override { return mGeometry; }
     QRect availableGeometry() const override { return mGeometry; }
+    QSizeF physicalSize() const override { return mPhysicalSize; }
+    qreal refreshRate() const override { return mRefreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
 
     // New methods.
-    EGLDisplay eglDisplay() const { return mEglDisplay; }
-    EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
     void handleWindowSurfaceResize(int width, int height);
+    void setMirDisplayOutput(const MirDisplayOutput &output);
+    uint32_t outputId() const { return mOutputId; }
 
     // QObject methods.
     void customEvent(QEvent* event);
@@ -52,8 +53,9 @@ private:
     Qt::ScreenOrientation mCurrentOrientation;
     QImage::Format mFormat;
     int mDepth;
-    EGLDisplay mEglDisplay;
-    EGLNativeDisplayType mEglNativeDisplay;
+    uint32_t mOutputId;
+    QSizeF mPhysicalSize;
+    qreal mRefreshRate;
 };
 
 #endif // UBUNTU_SCREEN_H

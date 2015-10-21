@@ -17,6 +17,7 @@
 // Local
 #include "clipboard.h"
 #include "input.h"
+#include "integration.h"
 #include "window.h"
 #include "screen.h"
 #include "logging.h"
@@ -86,7 +87,7 @@ public:
     void destroyEGLSurface();
     int panelHeight();
 
-    UbuntuScreen* screen;
+    UbuntuClientIntegration *integration;
     EGLSurface eglSurface;
     QSurfaceFormat format;
     WId id;
@@ -121,14 +122,12 @@ static void surfaceCreateCallback(MirSurface* surface, void* context)
     mir_surface_set_event_handler(surface, eventCallback, context);
 }
 
-UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard, UbuntuScreen* screen,
-                           UbuntuInput* input, MirConnection* connection)
+UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard,
+                           UbuntuInput* input, MirConnection* connection, UbuntuClientIntegration *integration)
     : QObject(nullptr), QPlatformWindow(w)
 {
-    DASSERT(screen != NULL);
-
     d = new UbuntuWindowPrivate;
-    d->screen = screen;
+    d->integration = integration;
     d->eglSurface = EGL_NO_SURFACE;
     d->format = window()->requestedFormat();
     d->input = input;
@@ -147,10 +146,10 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
 #endif
 
     // Use client geometry if set explicitly, use available screen geometry otherwise.
-    QPlatformWindow::setGeometry(window()->geometry() != screen->geometry() ?
-        window()->geometry() : screen->availableGeometry());
+    QPlatformWindow::setGeometry(window()->geometry() != screen()->geometry() ?
+        window()->geometry() : screen()->availableGeometry());
     createWindow();
-    DLOG("UbuntuWindow::UbuntuWindow (this=%p, w=%p, screen=%p, input=%p)", this, w, screen, input);
+    DLOG("UbuntuWindow::UbuntuWindow (this=%p, w=%p, screen=%p, input=%p)", this, w, screen(), input);
 }
 
 UbuntuWindow::~UbuntuWindow()
@@ -167,7 +166,7 @@ void UbuntuWindowPrivate::destroyEGLSurface()
 {
     DLOG("UbuntuWindowPrivate::destroyEGLSurface (this=%p)", this);
     if (eglSurface != EGL_NO_SURFACE) {
-        eglDestroySurface(screen->eglDisplay(), eglSurface);
+        eglDestroySurface(integration->eglDisplay(), eglSurface);
         eglSurface = EGL_NO_SURFACE;
     }
 }
@@ -267,7 +266,7 @@ void UbuntuWindow::createWindow()
     DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
             geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
 
-    EGLDisplay eglDisplay = d->screen->eglDisplay();
+    EGLDisplay eglDisplay = d->integration->eglDisplay();
     EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format, true);
     const bool needsAlpha = d->format.alphaBufferSize() > 0;
     d->format = q_glFormatFromConfig(eglDisplay, eglConfig, d->format);
