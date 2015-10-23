@@ -189,38 +189,6 @@ int UbuntuWindowPrivate::panelHeight()
     return gridUnit * 3 + qFloor(densityPixelRatio) * 2;
 }
 
-// Gets the best pixel format available through that connection. Falls back to an opaque format if
-// no satisfying ARGB pixel format can be found. Note that Qt defaults to GL_RGBA.
-static MirPixelFormat getPixelFormat(MirConnection *connection, bool hasAlpha)
-{
-    const unsigned int formatsCount = 5;
-    const MirPixelFormat formats[formatsCount] = {
-        mir_pixel_format_argb_8888, mir_pixel_format_abgr_8888, mir_pixel_format_xrgb_8888,
-        mir_pixel_format_xbgr_8888, mir_pixel_format_bgr_888
-    };
-
-    unsigned int availableFormatsCount;
-    MirPixelFormat availableFormats[mir_pixel_formats];
-    mir_connection_get_available_surface_formats(
-        connection, availableFormats, mir_pixel_formats, &availableFormatsCount);
-
-    for (unsigned int i = hasAlpha ? 0 : 2; i < formatsCount; i++) {
-        for (unsigned int j = 0; j < availableFormatsCount; j++) {
-            if (formats[i] == availableFormats[j]) {
-#if !defined(QT_NO_DEBUG)
-                const char* formatsName[formatsCount] =
-                    { "ARGB_8888", "ABGR_8888", "XRGB_8888", "XBGR_8888", "BGR_888" };
-                LOG("best pixel format found for surface is %s", formatsName[i]);
-#endif
-                return formats[i];
-            }
-        }
-    }
-
-    qWarning("[ubuntumirclient QPA] can't find a valid pixel format");
-    return mir_pixel_format_invalid;
-}
-
 void UbuntuWindow::createWindow()
 {
     DLOG("UbuntuWindow::createWindow (this=%p)", this);
@@ -268,9 +236,9 @@ void UbuntuWindow::createWindow()
 
     EGLDisplay eglDisplay = d->screen->eglDisplay();
     EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format);
-    const bool needsAlpha = d->format.alphaBufferSize() > 0;
     d->format = q_glFormatFromConfig(eglDisplay, eglConfig, d->format);
-    MirPixelFormat pixelFormat = getPixelFormat(d->connection, needsAlpha);
+    MirPixelFormat pixelFormat =
+        mir_connection_get_egl_pixel_format(d->connection, eglDisplay, eglConfig);
 
     MirSurfaceSpec *spec;
     if (role == SCREEN_KEYBOARD_ROLE)
