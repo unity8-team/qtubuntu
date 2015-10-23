@@ -31,11 +31,41 @@ static EGLenum api_in_use()
 #endif
 }
 
+// static
+QSurfaceFormat UbuntuOpenGLContext::filterFormat(const QSurfaceFormat& inputFormat)
+{
+#if QT_VERSION >= 0x050500
+    static const bool dontFilter = qEnvironmentVariableIntValue("QTUBUNTU_NO_RGB888_FILTER");
+#else
+    static const bool dontFilter = qgetenv("QTUBUNTU_NO_RGB888_FILTER").toInt();
+#endif
+
+    if (!dontFilter) {
+        // The EGL convenience platform helper from Qt selects the lowest
+        // quality EGL config when the requested window format has the RGB
+        // channel sizes unset. We prefer to force 8-bit RGB channels when the
+        // user has not specified a preference.
+        QSurfaceFormat format = inputFormat;
+        if (format.redBufferSize() == -1) {
+            format.setRedBufferSize(8);
+        }
+        if (format.greenBufferSize() == -1) {
+            format.setGreenBufferSize(8);
+        }
+        if (format.blueBufferSize() == -1) {
+            format.setBlueBufferSize(8);
+        }
+        return format;
+    } else {
+        return inputFormat;
+    }
+}
+
 UbuntuOpenGLContext::UbuntuOpenGLContext(QOpenGLContext* context)
     : mSwapInterval(-1)
 {
     mEglDisplay = static_cast<UbuntuScreen*>(context->screen()->handle())->eglDisplay();
-    EGLConfig config = q_configFromGLFormat(mEglDisplay, context->format());
+    EGLConfig config = q_configFromGLFormat(mEglDisplay, filterFormat(context->format()));
     mSurfaceFormat = q_glFormatFromConfig(mEglDisplay, config);
 
     // Use QSG_INFO=1 to print GL/EGL config

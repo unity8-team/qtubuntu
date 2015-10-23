@@ -36,6 +36,8 @@ public:
 
     EGLContext eglContext() const { return mEglContext; }
 
+    static QSurfaceFormat filterFormat(const QSurfaceFormat& inputFormat);
+
 private:
     EGLDisplay mEglDisplay;
     EGLContext mEglContext;

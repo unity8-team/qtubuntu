@@ -19,6 +19,7 @@
 #include "input.h"
 #include "window.h"
 #include "screen.h"
+#include "glcontext.h"
 #include "logging.h"
 
 // Qt
@@ -129,7 +130,7 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     d = new UbuntuWindowPrivate;
     d->screen = screen;
     d->eglSurface = EGL_NO_SURFACE;
-    d->format = window()->requestedFormat();
+    d->format = UbuntuOpenGLContext::filterFormat(window()->requestedFormat());
     d->input = input;
     d->state = window()->windowState();
     d->connection = connection;
@@ -266,7 +267,7 @@ void UbuntuWindow::createWindow()
             geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
 
     EGLDisplay eglDisplay = d->screen->eglDisplay();
-    EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format, true);
+    EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format);
     const bool needsAlpha = d->format.alphaBufferSize() > 0;
     d->format = q_glFormatFromConfig(eglDisplay, eglConfig, d->format);
     MirPixelFormat pixelFormat = getPixelFormat(d->connection, needsAlpha);
