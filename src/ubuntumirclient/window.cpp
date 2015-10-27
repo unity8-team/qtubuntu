@@ -189,36 +189,49 @@ int UbuntuWindowPrivate::panelHeight()
     return gridUnit * 3 + qFloor(densityPixelRatio) * 2;
 }
 
-// Gets the best pixel format available through that connection. Falls back to an opaque format if
-// no satisfying ARGB pixel format can be found. Note that Qt defaults to GL_RGBA.
-static MirPixelFormat getPixelFormat(MirConnection *connection, bool hasAlpha)
+// mir_connection_get_egl_pixel_format() crashes with Qt plugins because libEGL
+// is loaded RTLD_LAZY in Mir (https://bugs.launchpad.net/mir/+bug/1510218). So
+// we provide our own implementation for now.
+static MirPixelFormat getPixelFormat(EGLDisplay display, EGLConfig config)
 {
-    const unsigned int formatsCount = 5;
-    const MirPixelFormat formats[formatsCount] = {
-        mir_pixel_format_argb_8888, mir_pixel_format_abgr_8888, mir_pixel_format_xrgb_8888,
-        mir_pixel_format_xbgr_8888, mir_pixel_format_bgr_888
-    };
-
-    unsigned int availableFormatsCount;
-    MirPixelFormat availableFormats[mir_pixel_formats];
-    mir_connection_get_available_surface_formats(
-        connection, availableFormats, mir_pixel_formats, &availableFormatsCount);
-
-    for (unsigned int i = hasAlpha ? 0 : 2; i < formatsCount; i++) {
-        for (unsigned int j = 0; j < availableFormatsCount; j++) {
-            if (formats[i] == availableFormats[j]) {
-#if !defined(QT_NO_DEBUG)
-                const char* formatsName[formatsCount] =
-                    { "ARGB_8888", "ABGR_8888", "XRGB_8888", "XBGR_8888", "BGR_888" };
-                LOG("best pixel format found for surface is %s", formatsName[i]);
-#endif
-                return formats[i];
-            }
+#ifdef PLATFORM_API_TOUCH
+    EGLint visual = 0;
+    if (eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &visual)) {
+        // Pixel format enumeration copied from Android system/graphics.h.
+        enum { RGBA_8888 = 1, RGBX_8888, RGB_888, RGB_565, BGRA_8888, RGBA_5551, RGBA_4444 };
+        switch (visual) {
+        case RGBA_8888:
+            return mir_pixel_format_abgr_8888;
+        case RGBX_8888:
+            return mir_pixel_format_xbgr_8888;
+        case BGRA_8888:
+            return mir_pixel_format_argb_8888;
+        case RGB_888:
+            return mir_pixel_format_rgb_888;
+        case RGB_565:
+            return mir_pixel_format_rgb_565;
+        default:
+            return mir_pixel_format_invalid;
         }
+    } else {
+        return mir_pixel_format_invalid;
     }
 
-    qWarning("[ubuntumirclient QPA] can't find a valid pixel format");
+#else
+    EGLint r = 0, g = 0, b = 0, a = 0;
+    eglGetConfigAttrib(display, config, EGL_RED_SIZE, &r);
+    eglGetConfigAttrib(display, config, EGL_GREEN_SIZE, &g);
+    eglGetConfigAttrib(display, config, EGL_BLUE_SIZE, &b);
+    eglGetConfigAttrib(display, config, EGL_ALPHA_SIZE, &a);
+    if (r == 8 && g == 8 && b == 8) {
+        if (a == 8) {
+            return mir_pixel_format_argb_8888;
+        } else if (a == 0) {
+            return mir_pixel_format_xrgb_8888;
+        }
+    }
     return mir_pixel_format_invalid;
+#endif
 }
 
 void UbuntuWindow::createWindow()
@@ -268,9 +281,17 @@ void UbuntuWindow::createWindow()
 
     EGLDisplay eglDisplay = d->screen->eglDisplay();
     EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format);
-    const bool needsAlpha = d->format.alphaBufferSize() > 0;
     d->format = q_glFormatFromConfig(eglDisplay, eglConfig, d->format);
-    MirPixelFormat pixelFormat = getPixelFormat(d->connection, needsAlpha);
+    MirPixelFormat pixelFormat = getPixelFormat(eglDisplay, eglConfig);
+
+#if !defined(QT_NO_DEBUG)
+    ASSERT(pixelFormat != mir_pixel_format_invalid);
+    const char *formatName[] = {
+        "invalid", "abgr_8888", "xbgr_8888", "argb_8888", "xrgb_8888", "bgr_888", "rgb_888",
+        "rgb_565", "rgba_5551", "rgba_4444"
+    };
+    LOG("[ubuntumirclient QPA] mir pixel format: %s", formatName[pixelFormat]);
+#endif
 
     MirSurfaceSpec *spec;
     if (role == SCREEN_KEYBOARD_ROLE)
