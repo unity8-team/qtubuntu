@@ -16,10 +16,13 @@
 
 #include "screenobserver.h"
 #include "screen.h"
+#include "window.h"
 #include "logging.h"
 
 // Qt
 #include <QMetaObject>
+#include <QPointer>
+#include <private/qwindow_p.h>
 
 // Mir
 #include <mirclient/mir_toolkit/mir_connection.h>
@@ -72,24 +75,63 @@ void UbuntuScreenObserver::update()
     }
 
     // Delete any old & unused Screens
-    for (auto screen: oldScreenList) {
+    foreach (const auto screen, oldScreenList) {
         qDebug() << "Removed Screen with id" << screen->outputId() << "and geometry" << screen->geometry();
         // The screen is automatically removed from Qt's internal list by the QPlatformScreen destructor.
         delete screen;
     }
 
-    for (auto screen : newScreenList) {
+    foreach (const auto screen, newScreenList) {
         Q_EMIT screenAdded(screen);
     }
 }
 
 UbuntuScreen *UbuntuScreenObserver::findScreenWithId(const QList<UbuntuScreen *> &list, const uint32_t id)
 {
-    for (UbuntuScreen *screen : list) {
+    foreach (const auto screen, list) {
         if (screen->outputId() == id) {
             return screen;
         }
     }
     return nullptr;
+}
+
+void UbuntuScreenObserver::windowScreenDataChanged(const QPointer<UbuntuWindow> &window, int dpi,
+                                                   MirFormFactor formFactor, float scale)
+{
+    // The Mir server has told us that a surface has been moved to a different Screen, or some properties of the
+    // Screen has changed. Qt really wants to know what Screen the Window is on, but Mir does not give us that
+    // information. The information it does give us has no intersection with Screen data either.
+    //
+    // So to satisfy Qt requirements, we need to select a Screen and set this information on it. And
+    // do so in such a way the other Windows are not impacted.
+    if (!window) {
+        return;
+    }
+
+    bool recreateWindow = false;
+    UbuntuScreen *screen = nullptr;
+    const int screenCount = mScreenList.length();
+
+    if (screenCount == 0) { // no screens?!
+        qDebug() << "No screens to update";
+        return;
+    } else if (screenCount == 1) { // just 1 screen on the system, no need to guess
+        screen = static_cast<UbuntuScreen*>(window->screen());
+        if (!qFuzzyCompare(screen->scale(), scale)) { // if scale changes, force window recreation
+            recreateWindow = true;
+        }
+        screen->setMirDisplayProperties(dpi, formFactor, scale);
+    } else {
+
+    }
+
+    // Need to poke the window to be recreated (must be done after Screen updated). Use QWindowPrivate
+    // methods to avoid deleting/recreating Screens when using QWindowSystemInterface::handleWindowScreenChanged.
+    if (recreateWindow) {
+        const auto w = static_cast<QWindowPrivate *>(QObjectPrivate::get(window->window()));
+        w->disconnectFromScreen(); // sets window has having no screen
+        w->setTopLevelScreen(screen->screen(), true); // re-sets window's screen, forcing re-creation
+    }
 }
 

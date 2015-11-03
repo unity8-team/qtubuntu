@@ -20,7 +20,7 @@
 // Qt
 #include <qpa/qwindowsysteminterface.h>
 
-#include <mir_toolkit/mir_client_library.h>
+#include <mir_toolkit/events/event.h>
 
 class UbuntuClientIntegration;
 class UbuntuWindow;
@@ -46,8 +46,8 @@ protected:
     void dispatchInputEvent(QWindow *window, const MirInputEvent *event);
     
     void dispatchOrientationEvent(QWindow* window, const MirOrientationEvent *event);
-    void handleSurfaceEvent(QPointer<UbuntuWindow> window, const MirSurfaceEvent *event);
-    void handleSurfaceOutputEvent(QPointer<UbuntuWindow> window, const MirSurfaceOutputEvent *event);
+    void handleSurfaceEvent(const QPointer<UbuntuWindow> &window, const MirSurfaceEvent *event);
+    void handleSurfaceOutputEvent(const QPointer<UbuntuWindow> &window, const MirSurfaceOutputEvent *event);
 
 private:
     UbuntuClientIntegration* mIntegration;

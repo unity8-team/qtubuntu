@@ -100,6 +100,9 @@ const QEvent::Type OrientationChangeEvent::mType =
 
 
 UbuntuScreen::UbuntuScreen(const MirDisplayOutput &output)
+    : mDpi{0}
+    , mFormFactor{mir_form_factor_unknown}
+    , mScale{1.0}
 {
     DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
     setMirDisplayOutput(output);
@@ -202,8 +205,10 @@ void UbuntuScreen::setMirDisplayOutput(const MirDisplayOutput &output)
     mGeometry.setY(output.position_y);
     mGeometry.setWidth(mode.horizontal_resolution);
     mGeometry.setHeight(mode.vertical_resolution);
+    mRefreshRate = mode.refresh_rate;
 
     // Misc
-    mRefreshRate = mode.refresh_rate;
+    mScale = mode.scale;
+    mFormFactor = mode.form_factor;
     mOutputId = output.output_id;
 }

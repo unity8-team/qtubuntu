@@ -18,10 +18,12 @@
 #define UBUNTU_SCREEN_OBSERVER_H
 
 #include <QObject>
-#include <QEvent>
+
+#include <mir_toolkit/mir_connection.h>
 
 struct MirConnection;
 class UbuntuScreen;
+class UbuntuWindow;
 
 class UbuntuScreenObserver : public QObject
 {
@@ -34,6 +36,10 @@ public:
 
 Q_SIGNALS:
     void screenAdded(UbuntuScreen *screen);
+
+public Q_SLOTS:
+    void windowScreenDataChanged(const QPointer<UbuntuWindow> &window, int dpi,
+                                 MirFormFactor formFactor, float scale);
 
 private Q_SLOTS:
     void update();

@@ -20,6 +20,8 @@
 #include <qpa/qplatformscreen.h>
 #include <QSurfaceFormat>
 
+#include <mircommon/mir_toolkit/common.h> // just for MirFormFactor enum
+
 struct MirDisplayOutput;
 
 class UbuntuScreen : public QObject, public QPlatformScreen
@@ -34,7 +36,9 @@ public:
     int depth() const override { return mDepth; }
     QRect geometry() const override { return mGeometry; }
     QRect availableGeometry() const override { return mGeometry; }
+
     QSizeF physicalSize() const override { return mPhysicalSize; }
+    qreal devicePixelRatio() const override { return mDevicePixelRatio; }
     qreal refreshRate() const override { return mRefreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
@@ -42,7 +46,13 @@ public:
     // New methods.
     void handleWindowSurfaceResize(int width, int height);
     void setMirDisplayOutput(const MirDisplayOutput &output);
+    void setMirDisplayProperties(int dpi, MirFormFactor formFactor, float scale);
+
+    // Additional Screen properties from Mir
     uint32_t outputId() const { return mOutputId; }
+    int dpi() const { return mDpi; }
+    MirFormFactor formFactor() const { return mFormFactor; }
+    float scale() const { return mScale; }
 
     // QObject methods.
     void customEvent(QEvent* event);
@@ -56,6 +66,10 @@ private:
     uint32_t mOutputId;
     QSizeF mPhysicalSize;
     qreal mRefreshRate;
+    qreal mDevicePixelRatio;
+    int mDpi;
+    MirFormFactor mFormFactor;
+    float mScale;
 };
 
 #endif // UBUNTU_SCREEN_H

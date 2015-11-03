@@ -492,7 +492,7 @@ void UbuntuInput::dispatchOrientationEvent(QWindow *window, const MirOrientation
                                 new OrientationChangeEvent(OrientationChangeEvent::mType, orientation));
 }
 
-void UbuntuInput::handleSurfaceEvent(QPointer<UbuntuWindow> window, const MirSurfaceEvent *event)
+void UbuntuInput::handleSurfaceEvent(const QPointer<UbuntuWindow> &window, const MirSurfaceEvent *event)
 {
     auto surfaceEventAttribute = mir_surface_event_get_attribute(event);
 
@@ -516,9 +516,16 @@ void UbuntuInput::handleSurfaceEvent(QPointer<UbuntuWindow> window, const MirSur
     }
 }
 
-void UbuntuInput::handleSurfaceOutputEvent(QPointer<UbuntuWindow> window, const MirSurfaceOutputEvent *event)
+void UbuntuInput::handleSurfaceOutputEvent(const QPointer<UbuntuWindow> &window, const MirSurfaceOutputEvent *event)
 {
-    Q_UNUSED(window)
-    Q_UNUSED(event)
+    const int dpi = mir_surface_output_event_get_dpi(event);
+    const MirFormFactor formFactor = mir_surface_output_event_get_form_factor(event);
+    const float scale = mir_surface_output_event_get_scale(event);
+
+    QMetaObject::invokeMethod(mIntegration->screenObserver(), "windowScreenDataChanged",
+                              Q_ARG(QPointer<UbuntuWindow>, window),
+                              Q_ARG(int, dpi),
+                              Q_ARG(MirFormFactor, formFactor),
+                              Q_ARG(float, scale));
 }
 

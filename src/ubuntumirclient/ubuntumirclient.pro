@@ -4,7 +4,7 @@ TEMPLATE = lib
 QT -= gui
 QT += core-private platformsupport-private dbus
 
-CONFIG += plugin no_keywords qpa/genericunixfontdatabase
+CONFIG += plugin qpa/genericunixfontdatabase
 
 DEFINES += MESA_EGL_NO_X11_HEADERS
 # CONFIG += c++11 # only enables C++0x

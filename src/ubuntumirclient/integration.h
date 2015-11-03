@@ -33,6 +33,7 @@ class UbuntuClipboard;
 class UbuntuInput;
 class UbuntuNativeInterface;
 class UbuntuScreen;
+class UbuntuScreenObserver;
 
 class UbuntuClientIntegration : public QPlatformIntegration {
 public:
@@ -62,6 +63,7 @@ public:
     // Additions
     EGLDisplay eglDisplay() const { return mEglDisplay; }
     EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
+    UbuntuScreenObserver *screenObserver() const { return mScreenObserver.data(); }
 
 private:
     void setupOptions();
