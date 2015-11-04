@@ -208,7 +208,16 @@ void UbuntuScreen::setMirDisplayOutput(const MirDisplayOutput &output)
     mRefreshRate = mode.refresh_rate;
 
     // Misc
-    mScale = mode.scale;
-    mFormFactor = mode.form_factor;
+    mScale = output.scale;
+    mFormFactor = output.form_factor;
     mOutputId = output.output_id;
+}
+
+QDpi UbuntuScreen::logicalDpi() const
+{
+    if (mDpi > 0) {
+        return QDpi(mDpi, mDpi);
+    } else {
+        return QPlatformScreen::logicalDpi();
+    }
 }

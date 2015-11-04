@@ -518,14 +518,26 @@ void UbuntuInput::handleSurfaceEvent(const QPointer<UbuntuWindow> &window, const
 
 void UbuntuInput::handleSurfaceOutputEvent(const QPointer<UbuntuWindow> &window, const MirSurfaceOutputEvent *event)
 {
+    const uint_32t outputId = mir_surface_output_event_get_output_id(event);
     const int dpi = mir_surface_output_event_get_dpi(event);
     const MirFormFactor formFactor = mir_surface_output_event_get_form_factor(event);
     const float scale = mir_surface_output_event_get_scale(event);
 
-    QMetaObject::invokeMethod(mIntegration->screenObserver(), "windowScreenDataChanged",
-                              Q_ARG(QPointer<UbuntuWindow>, window),
-                              Q_ARG(int, dpi),
-                              Q_ARG(MirFormFactor, formFactor),
-                              Q_ARG(float, scale));
+    UbuntuScreen *screen = mIntegration->screenObserver()->findScreenWithId(outputId);
+    if (!screen) {
+        qWarning() << "Mir notified window" << window->window() << "on an unknown screen with id" << outputId;
+        return;
+    }
+
+    QWindowSystemInterface::handleWindowScreenChanged(window->window(), screen->screen());
+    if (screen->scale() != scale) {
+        // do something
+    }
+    if (screen->formFactor() != formFactor) {
+        // do something
+    }
+    if (screen->logicalDpi() != dpi) {
+        // do something
+    }
 }
 

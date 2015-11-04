@@ -39,6 +39,8 @@ public:
 
     QSizeF physicalSize() const override { return mPhysicalSize; }
     qreal devicePixelRatio() const override { return mDevicePixelRatio; }
+    QDpi logicalDpi() const override;
+
     qreal refreshRate() const override { return mRefreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
@@ -46,11 +48,9 @@ public:
     // New methods.
     void handleWindowSurfaceResize(int width, int height);
     void setMirDisplayOutput(const MirDisplayOutput &output);
-    void setMirDisplayProperties(int dpi, MirFormFactor formFactor, float scale);
 
     // Additional Screen properties from Mir
     uint32_t outputId() const { return mOutputId; }
-    int dpi() const { return mDpi; }
     MirFormFactor formFactor() const { return mFormFactor; }
     float scale() const { return mScale; }
 
