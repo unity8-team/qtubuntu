@@ -14,15 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ORIENTATIONCHANGEEVENT_P_H
-#define ORIENTATIONCHANGEEVENT_P_H
+#ifndef QMIRCLIENTORIENTATIONCHANGEEVENT_P_H
+#define QMIRCLIENTORIENTATIONCHANGEEVENT_P_H
 
 #include <QEvent>
-#include "logging.h"
+#include "qmirclientlogging.h"
 
 class OrientationChangeEvent : public QEvent {
 public:
-    enum Orientation { TopUp, LeftUp, TopDown, RightUp };
+    enum Orientation {
+        Undefined = 0,
+        TopUp,
+        TopDown,
+        LeftUp,
+        RightUp,
+        FaceUp,
+        FaceDown
+    };
 
     OrientationChangeEvent(QEvent::Type type, Orientation orientation)
         : QEvent(type)
@@ -34,4 +42,4 @@ public:
     Orientation mOrientation;
 };
 
-#endif // ORIENTATIONCHANGEEVENT_P_H
+#endif // QMIRCLIENTORIENTATIONCHANGEEVENT_P_H

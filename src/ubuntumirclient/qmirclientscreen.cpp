@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -25,9 +25,9 @@
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
 
 // local
-#include "screen.h"
-#include "logging.h"
-#include "orientationchangeevent_p.h"
+#include "qmirclientscreen.h"
+#include "qmirclientlogging.h"
+#include "qmirclientorientationchangeevent_p.h"
 
 #include "memory"
 
@@ -125,7 +125,7 @@ static const MirDisplayOutput *find_active_output(
     return output;
 }
 
-UbuntuScreen::UbuntuScreen(MirConnection *connection)
+QMirClientScreen::QMirClientScreen(MirConnection *connection)
     : mFormat(QImage::Format_RGB32)
     , mDepth(32)
     , mSurfaceFormat()
@@ -194,7 +194,7 @@ UbuntuScreen::UbuntuScreen(MirConnection *connection)
 
     mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
 
-    DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
+    DLOG("QQMirClientScreen::QQMirClientScreen (this=%p)", this);
 
     // Set the default orientation based on the initial screen dimmensions.
     mNativeOrientation = (mGeometry.width() >= mGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
@@ -203,12 +203,12 @@ UbuntuScreen::UbuntuScreen(MirConnection *connection)
     mCurrentOrientation = (mNativeOrientation == Qt::LandscapeOrientation) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
 }
 
-UbuntuScreen::~UbuntuScreen()
+QMirClientScreen::~QMirClientScreen()
 {
     eglTerminate(mEglDisplay);
 }
 
-void UbuntuScreen::customEvent(QEvent* event) {
+void QMirClientScreen::customEvent(QEvent* event) {
     DASSERT(QThread::currentThread() == thread());
 
     OrientationChangeEvent* oReadingEvent = static_cast<OrientationChangeEvent*>(event);
@@ -234,17 +234,17 @@ void UbuntuScreen::customEvent(QEvent* event) {
             break;
         }
         default: {
-            DLOG("UbuntuScreen::customEvent - Unknown orientation.");
+            DLOG("QMirClientScreen::customEvent - Unknown orientation.");
             return;
         }
     }
 
     // Raise the event signal so that client apps know the orientation changed
-    DLOG("UbuntuScreen::customEvent - handling orientation change to %s", orientationToStr(mCurrentOrientation));
+    DLOG("QMirClientScreen::customEvent - handling orientation change to %s", orientationToStr(mCurrentOrientation));
     QWindowSystemInterface::handleScreenOrientationChange(screen(), mCurrentOrientation);
 }
 
-void UbuntuScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
+void QMirClientScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
 {
     if ((windowWidth > windowHeight && mGeometry.width() < mGeometry.height())
      || (windowWidth < windowHeight && mGeometry.width() > mGeometry.height())) {
@@ -261,7 +261,7 @@ void UbuntuScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
         mGeometry.setWidth(currGeometry.height());
         mGeometry.setHeight(currGeometry.width());
 
-        DLOG("UbuntuScreen::handleWindowSurfaceResize - new screen geometry (w=%d, h=%d)",
+        DLOG("QMirClientScreen::handleWindowSurfaceResize - new screen geometry (w=%d, h=%d)",
             mGeometry.width(), mGeometry.height());
         QWindowSystemInterface::handleScreenGeometryChange(screen(),
                                                            mGeometry /* newGeometry */,
@@ -272,7 +272,7 @@ void UbuntuScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
         } else {
             mCurrentOrientation = Qt::LandscapeOrientation;
         }
-        DLOG("UbuntuScreen::handleWindowSurfaceResize - new orientation %s",orientationToStr(mCurrentOrientation));
+        DLOG("QMirClientScreen::handleWindowSurfaceResize - new orientation %s",orientationToStr(mCurrentOrientation));
         QWindowSystemInterface::handleScreenOrientationChange(screen(), mCurrentOrientation);
     }
 }

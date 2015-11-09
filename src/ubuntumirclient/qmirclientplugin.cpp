@@ -14,20 +14,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UBUNTU_PLATFORM_SERVICES_H
-#define UBUNTU_PLATFORM_SERVICES_H
+#include "qmirclientplugin.h"
+#include "qmirclientintegration.h"
 
-#include <qpa/qplatformservices.h>
-#include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
-#include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
+QStringList QMirClientIntegrationPlugin::keys() const
+{
+    QStringList list;
+    list << "mirclient";
+    return list;
+}
 
-class UbuntuPlatformServices : public QPlatformServices {
-public:
-    bool openUrl(const QUrl &url) override;
-    bool openDocument(const QUrl &url) override;
-
-private:
-    bool callDispatcher(const QUrl &url);
-};
-
-#endif // UBUNTU_PLATFORM_SERVICES_H
+QPlatformIntegration* QMirClientIntegrationPlugin::create(const QString &system,
+                                                          const QStringList &)
+{
+    if (system.toLower() == "mirclient") {
+#ifdef PLATFORM_API_TOUCH
+        setenv("UBUNTU_PLATFORM_API_BACKEND", "touch_mirclient", 1);
+#else
+        setenv("UBUNTU_PLATFORM_API_BACKEND", "desktop_mirclient", 1);
+#endif
+        return new QMirClientClientIntegration;
+    } else {
+        return 0;
+    }
+}

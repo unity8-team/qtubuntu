@@ -14,17 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UBUNTU_NATIVE_INTERFACE_H
-#define UBUNTU_NATIVE_INTERFACE_H
+#ifndef QMIRCLIENTNATIVEINTERFACE_H
+#define QMIRCLIENTNATIVEINTERFACE_H
 
 #include <qpa/qplatformnativeinterface.h>
 
-class UbuntuNativeInterface : public QPlatformNativeInterface {
+class QMirClientNativeInterface : public QPlatformNativeInterface {
 public:
     enum ResourceType { EglDisplay, EglContext, NativeOrientation, Display, MirConnection };
 
-    UbuntuNativeInterface();
-    ~UbuntuNativeInterface();
+    QMirClientNativeInterface();
+    ~QMirClientNativeInterface();
 
     // QPlatformNativeInterface methods.
     void* nativeResourceForIntegration(const QByteArray &resource) override;
@@ -45,4 +45,4 @@ private:
     void *mMirConnection;
 };
 
-#endif // UBUNTU_NATIVE_INTERFACE_H
+#endif // QMIRCLIENTNATIVEINTERFACE_H

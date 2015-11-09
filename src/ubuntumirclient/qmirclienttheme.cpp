@@ -14,19 +14,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UBUNTU_CLIENT_PLUGIN_H
-#define UBUNTU_CLIENT_PLUGIN_H
+#include "qmirclienttheme.h"
 
-#include <qpa/qplatformintegrationplugin.h>
+#include <QtCore/QVariant>
 
-class UbuntuMirClientIntegrationPlugin : public QPlatformIntegrationPlugin
+const char *QMirClientTheme::name = "ubuntu";
+
+QMirClientTheme::QMirClientTheme()
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QPlatformIntegrationFactoryInterface_iid FILE "ubuntumirclient.json")
+}
 
-public:
-    QStringList keys() const;
-    QPlatformIntegration* create(const QString&, const QStringList&);
-};
+QMirClientTheme::~QMirClientTheme()
+{
+}
 
-#endif // UBUNTU_CLIENT_PLUGIN_H
+QVariant QMirClientTheme::themeHint(ThemeHint hint) const
+{
+    if (hint == QPlatformTheme::SystemIconThemeName) {
+        QByteArray iconTheme = qgetenv("QTUBUNTU_ICON_THEME");
+        if (iconTheme.isEmpty()) {
+            return QVariant(QStringLiteral("ubuntu-mobile"));
+        } else {
+            return QVariant(QString(iconTheme));
+        }
+    } else {
+        return QGenericUnixTheme::themeHint(hint);
+    }
+}

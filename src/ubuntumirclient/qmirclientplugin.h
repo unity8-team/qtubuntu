@@ -14,20 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UBUNTU_THEME_H
-#define UBUNTU_THEME_H
+#ifndef QMIRCLIENTPLUGIN_H
+#define QMIRCLIENTPLUGIN_H
 
-#include <QtPlatformSupport/private/qgenericunixthemes_p.h>
+#include <qpa/qplatformintegrationplugin.h>
 
-class UbuntuTheme : public QGenericUnixTheme
+class QMirClientIntegrationPlugin : public QPlatformIntegrationPlugin
 {
-public:
-    static const char* name;
-    UbuntuTheme();
-    virtual ~UbuntuTheme();
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QPlatformIntegrationFactoryInterface_iid FILE "ubuntumirclient.json")
 
-    // From QPlatformTheme
-    QVariant themeHint(ThemeHint hint) const override;
+public:
+    QStringList keys() const;
+    QPlatformIntegration* create(const QString&, const QStringList&);
 };
 
-#endif // UBUNTU_THEME_H
+#endif // QMIRCLIENTPLUGIN_H

@@ -21,39 +21,39 @@
 #include <QtCore/QMap>
 
 // Local
-#include "nativeinterface.h"
-#include "screen.h"
-#include "glcontext.h"
+#include "qmirclientnativeinterface.h"
+#include "qmirclientscreen.h"
+#include "qmirclientglcontext.h"
 
-class UbuntuResourceMap : public QMap<QByteArray, UbuntuNativeInterface::ResourceType>
+class QMirClientResourceMap : public QMap<QByteArray, QMirClientNativeInterface::ResourceType>
 {
 public:
-    UbuntuResourceMap()
-        : QMap<QByteArray, UbuntuNativeInterface::ResourceType>() {
-        insert("egldisplay", UbuntuNativeInterface::EglDisplay);
-        insert("eglcontext", UbuntuNativeInterface::EglContext);
-        insert("nativeorientation", UbuntuNativeInterface::NativeOrientation);
-        insert("display", UbuntuNativeInterface::Display);
-        insert("mirConnection", UbuntuNativeInterface::MirConnection);
+    QMirClientResourceMap()
+        : QMap<QByteArray, QMirClientNativeInterface::ResourceType>() {
+        insert("egldisplay", QMirClientNativeInterface::EglDisplay);
+        insert("eglcontext", QMirClientNativeInterface::EglContext);
+        insert("nativeorientation", QMirClientNativeInterface::NativeOrientation);
+        insert("display", QMirClientNativeInterface::Display);
+        insert("mirConnection", QMirClientNativeInterface::MirConnection);
     }
 };
 
-Q_GLOBAL_STATIC(UbuntuResourceMap, ubuntuResourceMap)
+Q_GLOBAL_STATIC(QMirClientResourceMap, ubuntuResourceMap)
 
-UbuntuNativeInterface::UbuntuNativeInterface()
+QMirClientNativeInterface::QMirClientNativeInterface()
     : mGenericEventFilterType(QByteArrayLiteral("Event"))
     , mNativeOrientation(nullptr)
     , mMirConnection(nullptr)
 {
 }
 
-UbuntuNativeInterface::~UbuntuNativeInterface()
+QMirClientNativeInterface::~QMirClientNativeInterface()
 {
     delete mNativeOrientation;
     mNativeOrientation = nullptr;
 }
 
-void* UbuntuNativeInterface::nativeResourceForIntegration(const QByteArray &resourceString)
+void* QMirClientNativeInterface::nativeResourceForIntegration(const QByteArray &resourceString)
 {
     const QByteArray lowerCaseResource = resourceString.toLower();
 
@@ -63,14 +63,14 @@ void* UbuntuNativeInterface::nativeResourceForIntegration(const QByteArray &reso
 
     const ResourceType resourceType = ubuntuResourceMap()->value(lowerCaseResource);
 
-    if (resourceType == UbuntuNativeInterface::MirConnection) {
+    if (resourceType == QMirClientNativeInterface::MirConnection) {
         return mMirConnection;
     } else {
         return nullptr;
     }
 }
 
-void* UbuntuNativeInterface::nativeResourceForContext(
+void* QMirClientNativeInterface::nativeResourceForContext(
     const QByteArray& resourceString, QOpenGLContext* context)
 {
     if (!context)
@@ -83,29 +83,29 @@ void* UbuntuNativeInterface::nativeResourceForContext(
 
     const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
 
-    if (kResourceType == UbuntuNativeInterface::EglContext)
-        return static_cast<UbuntuOpenGLContext*>(context->handle())->eglContext();
+    if (kResourceType == QMirClientNativeInterface::EglContext)
+        return static_cast<QMirClientOpenGLContext*>(context->handle())->eglContext();
     else
         return nullptr;
 }
 
-void* UbuntuNativeInterface::nativeResourceForWindow(const QByteArray& resourceString, QWindow* window)
+void* QMirClientNativeInterface::nativeResourceForWindow(const QByteArray& resourceString, QWindow* window)
 {
     const QByteArray kLowerCaseResource = resourceString.toLower();
     if (!ubuntuResourceMap()->contains(kLowerCaseResource))
         return NULL;
     const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
-    if (kResourceType == UbuntuNativeInterface::EglDisplay) {
+    if (kResourceType == QMirClientNativeInterface::EglDisplay) {
         if (window) {
-            return static_cast<UbuntuScreen*>(window->screen()->handle())->eglDisplay();
+            return static_cast<QMirClientScreen*>(window->screen()->handle())->eglDisplay();
         } else {
-            return static_cast<UbuntuScreen*>(
+            return static_cast<QMirClientScreen*>(
                     QGuiApplication::primaryScreen()->handle())->eglDisplay();
         }
-    } else if (kResourceType == UbuntuNativeInterface::NativeOrientation) {
+    } else if (kResourceType == QMirClientNativeInterface::NativeOrientation) {
         // Return the device's native screen orientation.
         if (window) {
-            UbuntuScreen *ubuntuScreen = static_cast<UbuntuScreen*>(window->screen()->handle());
+            QMirClientScreen *ubuntuScreen = static_cast<QMirClientScreen*>(window->screen()->handle());
             mNativeOrientation = new Qt::ScreenOrientation(ubuntuScreen->nativeOrientation());
         } else {
             QPlatformScreen *platformScreen = QGuiApplication::primaryScreen()->handle();
@@ -117,16 +117,16 @@ void* UbuntuNativeInterface::nativeResourceForWindow(const QByteArray& resourceS
     }
 }
 
-void* UbuntuNativeInterface::nativeResourceForScreen(const QByteArray& resourceString, QScreen* screen)
+void* QMirClientNativeInterface::nativeResourceForScreen(const QByteArray& resourceString, QScreen* screen)
 {
     const QByteArray kLowerCaseResource = resourceString.toLower();
     if (!ubuntuResourceMap()->contains(kLowerCaseResource))
         return NULL;
     const ResourceType kResourceType = ubuntuResourceMap()->value(kLowerCaseResource);
-    if (kResourceType == UbuntuNativeInterface::Display) {
+    if (kResourceType == QMirClientNativeInterface::Display) {
         if (!screen)
             screen = QGuiApplication::primaryScreen();
-        return static_cast<UbuntuScreen*>(screen->handle())->eglNativeDisplay();
+        return static_cast<QMirClientScreen*>(screen->handle())->eglNativeDisplay();
     } else
         return NULL;
 }

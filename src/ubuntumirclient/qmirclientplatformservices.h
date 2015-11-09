@@ -14,30 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "theme.h"
+#ifndef QMIRCLIENTPLATFORMSERVICES_H
+#define QMIRCLIENTPLATFORMSERVICES_H
 
-#include <QtCore/QVariant>
+#include <qpa/qplatformservices.h>
+#include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
+#include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
 
-const char *UbuntuTheme::name = "ubuntu";
+class QMirClientPlatformServices : public QPlatformServices {
+public:
+    bool openUrl(const QUrl &url) override;
+    bool openDocument(const QUrl &url) override;
 
-UbuntuTheme::UbuntuTheme()
-{
-}
+private:
+    bool callDispatcher(const QUrl &url);
+};
 
-UbuntuTheme::~UbuntuTheme()
-{
-}
-
-QVariant UbuntuTheme::themeHint(ThemeHint hint) const
-{
-    if (hint == QPlatformTheme::SystemIconThemeName) {
-        QByteArray iconTheme = qgetenv("QTUBUNTU_ICON_THEME");
-        if (iconTheme.isEmpty()) {
-            return QVariant(QStringLiteral("ubuntu-mobile"));
-        } else {
-            return QVariant(QString(iconTheme));
-        }
-    } else {
-        return QGenericUnixTheme::themeHint(hint);
-    }
-}
+#endif // QMIRCLIENTPLATFORMSERVICES_H

@@ -15,11 +15,11 @@
  */
 
 // Local
-#include "clipboard.h"
-#include "input.h"
-#include "window.h"
-#include "screen.h"
-#include "logging.h"
+#include "qmirclientclipboard.h"
+#include "qmirclientinput.h"
+#include "qmirclientwindow.h"
+#include "qmirclientscreen.h"
+#include "qmirclientlogging.h"
 
 // Qt
 #include <qpa/qwindowsysteminterface.h>
@@ -82,23 +82,23 @@ const char *qtWindowStateToStr(Qt::WindowState state)
 
 } // anonymous namespace
 
-class UbuntuWindowPrivate
+class QMirClientWindowPrivate
 {
 public:
     void createEGLSurface(EGLNativeWindowType nativeWindow);
     void destroyEGLSurface();
     int panelHeight();
 
-    UbuntuScreen* screen;
+    QMirClientScreen* screen;
     EGLSurface eglSurface;
     WId id;
-    UbuntuInput* input;
+    QMirClientInput* input;
     Qt::WindowState state;
     MirConnection *connection;
     MirSurface* surface;
     QSize bufferSize;
     QMutex mutex;
-    QSharedPointer<UbuntuClipboard> clipboard;
+    QSharedPointer<QMirClientClipboard> clipboard;
     bool exposed;
     int resizeCatchUpAttempts;
     bool exposeCatchUp;
@@ -111,26 +111,26 @@ static void eventCallback(MirSurface* surface, const MirEvent *event, void* cont
 {
     (void) surface;
     DASSERT(context != NULL);
-    UbuntuWindow* platformWindow = static_cast<UbuntuWindow*>(context);
+    QMirClientWindow* platformWindow = static_cast<QMirClientWindow*>(context);
     platformWindow->priv()->input->postEvent(platformWindow, event);
 }
 
 static void surfaceCreateCallback(MirSurface* surface, void* context)
 {
     DASSERT(context != NULL);
-    UbuntuWindow* platformWindow = static_cast<UbuntuWindow*>(context);
+    QMirClientWindow* platformWindow = static_cast<QMirClientWindow*>(context);
     platformWindow->priv()->surface = surface;
 
     mir_surface_set_event_handler(surface, eventCallback, context);
 }
 
-UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard, UbuntuScreen* screen,
-                           UbuntuInput* input, MirConnection* connection)
+QMirClientWindow::QMirClientWindow(QWindow* w, QSharedPointer<QMirClientClipboard> clipboard, QMirClientScreen* screen,
+                                   QMirClientInput* input, MirConnection* connection)
     : QObject(nullptr), QPlatformWindow(w)
 {
     DASSERT(screen != NULL);
 
-    d = new UbuntuWindowPrivate;
+    d = new QMirClientWindowPrivate;
     d->screen = screen;
     d->eglSurface = EGL_NO_SURFACE;
     d->input = input;
@@ -152,12 +152,12 @@ UbuntuWindow::UbuntuWindow(QWindow* w, QSharedPointer<UbuntuClipboard> clipboard
     QPlatformWindow::setGeometry(window()->geometry() != screen->geometry() ?
         window()->geometry() : screen->availableGeometry());
     createWindow();
-    DLOG("UbuntuWindow::UbuntuWindow (this=%p, w=%p, screen=%p, input=%p)", this, w, screen, input);
+    DLOG("QMirClientWindow::QMirClientWindow (this=%p, w=%p, screen=%p, input=%p)", this, w, screen, input);
 }
 
-UbuntuWindow::~UbuntuWindow()
+QMirClientWindow::~QMirClientWindow()
 {
-    DLOG("UbuntuWindow::~UbuntuWindow");
+    DLOG("QMirClientWindow::~QMirClientWindow");
     d->destroyEGLSurface();
 
     mir_surface_release_sync(d->surface);
@@ -165,9 +165,9 @@ UbuntuWindow::~UbuntuWindow()
     delete d;
 }
 
-void UbuntuWindowPrivate::createEGLSurface(EGLNativeWindowType nativeWindow)
+void QMirClientWindowPrivate::createEGLSurface(EGLNativeWindowType nativeWindow)
 {
-  DLOG("UbuntuWindowPrivate::createEGLSurface (this=%p, nativeWindow=%p)",
+  DLOG("QMirClientWindowPrivate::createEGLSurface (this=%p, nativeWindow=%p)",
           this, reinterpret_cast<void*>(nativeWindow));
 
   eglSurface = eglCreateWindowSurface(screen->eglDisplay(), screen->eglConfig(),
@@ -176,9 +176,9 @@ void UbuntuWindowPrivate::createEGLSurface(EGLNativeWindowType nativeWindow)
   DASSERT(eglSurface != EGL_NO_SURFACE);
 }
 
-void UbuntuWindowPrivate::destroyEGLSurface()
+void QMirClientWindowPrivate::destroyEGLSurface()
 {
-    DLOG("UbuntuWindowPrivate::destroyEGLSurface (this=%p)", this);
+    DLOG("QMirClientWindowPrivate::destroyEGLSurface (this=%p)", this);
     if (eglSurface != EGL_NO_SURFACE) {
         eglDestroySurface(screen->eglDisplay(), eglSurface);
         eglSurface = EGL_NO_SURFACE;
@@ -187,7 +187,7 @@ void UbuntuWindowPrivate::destroyEGLSurface()
 
 // FIXME - in order to work around https://bugs.launchpad.net/mir/+bug/1346633
 // we need to guess the panel height (3GU + 2DP)
-int UbuntuWindowPrivate::panelHeight()
+int QMirClientWindowPrivate::panelHeight()
 {
     const int defaultGridUnit = 8;
     int gridUnit = defaultGridUnit;
@@ -218,9 +218,9 @@ mir_choose_default_pixel_format(MirConnection *connection)
 }
 }
 
-void UbuntuWindow::createWindow()
+void QMirClientWindow::createWindow()
 {
-    DLOG("UbuntuWindow::createWindow (this=%p)", this);
+    DLOG("QMirClientWindow::createWindow (this=%p)", this);
 
     // FIXME: remove this remnant of an old platform-api enum - needs ubuntu-keyboard update
     const int SCREEN_KEYBOARD_ROLE = 7;
@@ -248,10 +248,10 @@ void UbuntuWindow::createWindow()
     // Get surface geometry.
     QRect geometry;
     if (d->state == Qt::WindowFullScreen) {
-        printf("UbuntuWindow - fullscreen geometry\n");
+        printf("QMirClientWindow - fullscreen geometry\n");
         geometry = screen()->geometry();
     } else if (d->state == Qt::WindowMaximized) {
-        printf("UbuntuWindow - maximized geometry\n");
+        printf("QMirClientWindow - maximized geometry\n");
         geometry = screen()->availableGeometry();
         /*
          * FIXME: Autopilot relies on being able to convert coordinates relative of the window
@@ -263,7 +263,7 @@ void UbuntuWindow::createWindow()
          */
         geometry.setY(panelHeight);
     } else {
-        printf("UbuntuWindow - regular geometry\n");
+        printf("QMirClientWindow - regular geometry\n");
         geometry = this->geometry();
         geometry.setY(panelHeight);
     }
@@ -318,16 +318,16 @@ void UbuntuWindow::createWindow()
     QPlatformWindow::setGeometry(geometry);
 }
 
-void UbuntuWindow::moveResize(const QRect& rect)
+void QMirClientWindow::moveResize(const QRect& rect)
 {
     (void) rect;
     // TODO: Not yet supported by mir.
 }
 
-void UbuntuWindow::handleSurfaceResize(int width, int height)
+void QMirClientWindow::handleSurfaceResize(int width, int height)
 {
     QMutexLocker(&d->mutex);
-    DLOG("UbuntuWindow::handleSurfaceResize(width=%d, height=%d) [%d]", width, height,
+    DLOG("QMirClientWindow::handleSurfaceResize(width=%d, height=%d) [%d]", width, height,
         d->frameNumber);
 
     // The current buffer size hasn't actually changed. so just render on it and swap
@@ -344,14 +344,14 @@ void UbuntuWindow::handleSurfaceResize(int width, int height)
         // swap more than once to get a buffer with the new size!
         d->resizeCatchUpAttempts = 2;
 
-        QWindowSystemInterface::handleExposeEvent(window(), d->exposed ? QRect(QPoint(), geometry().size()) : QRect());
+        QWindowSystemInterface::handleExposeEvent(window(), geometry());
         QWindowSystemInterface::flushWindowSystemEvents();
     }
 }
 
-void UbuntuWindow::handleSurfaceFocusChange(bool focused)
+void QMirClientWindow::handleSurfaceFocusChange(bool focused)
 {
-    LOG("UbuntuWindow::handleSurfaceFocusChange(focused=%s)", focused ? "true" : "false");
+    LOG("QMirClientWindow::handleSurfaceFocusChange(focused=%s)", focused ? "true" : "false");
     QWindow *activatedWindow = focused ? window() : nullptr;
 
     // System clipboard contents might have changed while this window was unfocused and wihtout
@@ -367,10 +367,10 @@ void UbuntuWindow::handleSurfaceFocusChange(bool focused)
     QWindowSystemInterface::handleWindowActivated(activatedWindow, Qt::ActiveWindowFocusReason);
 }
 
-void UbuntuWindow::handleSurfaceExposeChange(bool exposed)
+void QMirClientWindow::handleSurfaceExposeChange(bool exposed)
 {
     QMutexLocker(&d->mutex);
-    DLOG("UbuntuWindow::handleSurfaceExposeChange(exposed=%s)", exposed ? "true" : "false");
+    DLOG("QMirClientWindow::handleSurfaceExposeChange(exposed=%s)", exposed ? "true" : "false");
 
     if (d->exposed != exposed) {
         d->exposed = exposed;
@@ -380,10 +380,10 @@ void UbuntuWindow::handleSurfaceExposeChange(bool exposed)
     }
 }
 
-void UbuntuWindow::setWindowState(Qt::WindowState state)
+void QMirClientWindow::setWindowState(Qt::WindowState state)
 {
     QMutexLocker(&d->mutex);
-    DLOG("UbuntuWindow::setWindowState (this=%p, %s)", this,  qtWindowStateToStr(state));
+    DLOG("QMirClientWindow::setWindowState (this=%p, %s)", this,  qtWindowStateToStr(state));
 
     if (state == d->state)
         return;
@@ -393,9 +393,9 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     d->state = state;
 }
 
-void UbuntuWindow::setGeometry(const QRect& rect)
+void QMirClientWindow::setGeometry(const QRect& rect)
 {
-    DLOG("UbuntuWindow::setGeometry (this=%p)", this);
+    DLOG("QMirClientWindow::setGeometry (this=%p)", this);
 
     bool doMoveResize;
 
@@ -410,10 +410,10 @@ void UbuntuWindow::setGeometry(const QRect& rect)
     }
 }
 
-void UbuntuWindow::setVisible(bool visible)
+void QMirClientWindow::setVisible(bool visible)
 {
     QMutexLocker(&d->mutex);
-    DLOG("UbuntuWindow::setVisible (this=%p, visible=%s)", this, visible ? "true" : "false");
+    DLOG("QMirClientWindow::setVisible (this=%p, visible=%s)", this, visible ? "true" : "false");
 
     if (visible) {
         mir_wait_for(mir_surface_set_state(d->surface, qtWindowStateToMirSurfaceState(d->state)));
@@ -427,12 +427,12 @@ void UbuntuWindow::setVisible(bool visible)
     QWindowSystemInterface::flushWindowSystemEvents();
 }
 
-bool UbuntuWindow::isExposed() const
+bool QMirClientWindow::isExposed() const
 {
     return d->exposed && window()->isVisible();
 }
 
-void UbuntuWindow::setWindowTitle(const QString &title)
+void QMirClientWindow::setWindowTitle(const QString &title)
 {
     MirSurfaceSpec *spec = mir_connection_create_spec_for_changes(d->connection);
     mir_surface_spec_set_name(spec, title.toUtf8().constData());
@@ -440,17 +440,17 @@ void UbuntuWindow::setWindowTitle(const QString &title)
     mir_surface_spec_release(spec);
 }
 
-void* UbuntuWindow::eglSurface() const
+void* QMirClientWindow::eglSurface() const
 {
     return d->eglSurface;
 }
 
-WId UbuntuWindow::winId() const
+WId QMirClientWindow::winId() const
 {
     return d->id;
 }
 
-void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBufferHeight)
+void QMirClientWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBufferHeight)
 {
     QMutexLocker(&d->mutex);
 
@@ -471,7 +471,7 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBuffer
                 d->bufferSize.height() != newBufferHeight)) {
         d->resizeCatchUpAttempts = 0;
 
-        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size changed from (%d,%d) to (%d,%d)"
+        DLOG("QMirClientWindow::onBuffersSwapped_threadSafe [%d] - buffer size changed from (%d,%d) to (%d,%d)"
                " resizeCatchUpAttempts=%d",
                d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), newBufferWidth, newBufferHeight,
                d->resizeCatchUpAttempts);
@@ -489,12 +489,12 @@ void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBuffer
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
     } else if (d->resizeCatchUpAttempts > 0) {
         --d->resizeCatchUpAttempts;
-        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). Redrawing to catch up a resized buffer."
+        DLOG("QMirClientWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). Redrawing to catch up a resized buffer."
                " resizeCatchUpAttempts=%d",
                d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
         QWindowSystemInterface::handleExposeEvent(window(), d->exposed ? QRect(QPoint(), geometry().size()) : QRect());
     } else {
-        DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). resizeCatchUpAttempts=%d",
+        DLOG("QMirClientWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). resizeCatchUpAttempts=%d",
                d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
 
         if (exposureChanged) {
