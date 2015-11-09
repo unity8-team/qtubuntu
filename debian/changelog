@@ -1,8 +1,31 @@
-qtubuntu-gles (0.62+15.10.20150914-0ubuntu1) UNRELEASED; urgency=medium
+qtubuntu-gles (0.62+16.04.20151105-0ubuntu1) xenial; urgency=medium
 
+  * New upstream release
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 05 Nov 2015 16:57:00 +0000
+
+qtubuntu-gles (0.62+15.10.20151021-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Michał Sawicz ]
   * Sync with upstream
 
- -- Gerry Boland <gerry.boland@canonical.com>  Tue, 15 Sep 2015 11:13:10 +0100
+  [ Robert Bruce Park ]
+  * Sync with upstream
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 21 Oct 2015 11:48:04 +0000
+
+qtubuntu-gles (0.62+15.10.20150914-0ubuntu1) wily; urgency=medium
+
+  [ Gerry Boland ]
+  * Sync with upstream
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Tue, 15 Sep 2015 12:08:35 +0000
 
 qtubuntu-gles (0.62+15.04.20150828-0ubuntu2) vivid; urgency=medium
 
