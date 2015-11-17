@@ -1,3 +1,9 @@
+qtubuntu-gles (0.62+16.04.20151117-0ubuntu1) xenial; urgency=medium
+
+  * Sync with upstream
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Tue, 17 Nov 2015 14:49:42 +0000
+
 qtubuntu-gles (0.62+16.04.20151109-0ubuntu1) xenial; urgency=medium
 
   * Sync with trunk
