@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -27,6 +27,7 @@
 #include "screen.h"
 #include "logging.h"
 #include "orientationchangeevent_p.h"
+#include "utils.h"
 
 #include "memory"
 
@@ -50,54 +51,23 @@ static const char *orientationToStr(Qt::ScreenOrientation orientation) {
 }
 #endif
 
-static inline bool isLittleEndian() {
-    unsigned int i = 1;
-    char *c = (char*)&i;
-    return *c == 1;
-}
+namespace {
 
-static enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat) {
-    switch (mirPixelFormat) {
-    case mir_pixel_format_abgr_8888:
-        if (isLittleEndian()) {
-            // 0xRR,0xGG,0xBB,0xAA
-            return QImage::Format_RGBA8888;
-        } else {
-            // 0xAA,0xBB,0xGG,0xRR
-            qFatal("[ubuntumirclient QPA] "
-                   "Qt doesn't support mir_pixel_format_abgr_8888 in a big endian architecture");
-        }
-        break;
-    case mir_pixel_format_xbgr_8888:
-        if (isLittleEndian()) {
-            // 0xRR,0xGG,0xBB,0xXX
-            return QImage::Format_RGBX8888;
-        } else {
-            // 0xXX,0xBB,0xGG,0xRR
-            qFatal("[ubuntumirclient QPA] "
-                   "Qt doesn't support mir_pixel_format_xbgr_8888 in a big endian architecture");
-        }
-        break;
-    case mir_pixel_format_argb_8888:
-        // 0xAARRGGBB
-        return QImage::Format_ARGB32;
-        break;
-    case mir_pixel_format_xrgb_8888:
-        // 0xffRRGGBB
-        return QImage::Format_RGB32;
-        break;
-    case mir_pixel_format_bgr_888:
-        qFatal("[ubuntumirclient QPA] Qt doesn't support mir_pixel_format_bgr_888");
-        break;
-    default:
-        qFatal("[ubuntumirclient QPA] Unknown mir pixel format");
-        break;
+    static inline bool isLittleEndian() {
+        unsigned int i = 1;
+        char *c = (char*)&i;
+        return *c == 1;
     }
-}
+
+    int qGetEnvIntValue(const char *varName, bool *ok)
+    {
+        return qgetenv(varName).toInt(ok);
+    }
+} // anonymous namespace
+
 
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
-
 
 UbuntuScreen::UbuntuScreen(const MirDisplayOutput &output)
     : mDpi{0}
@@ -105,6 +75,11 @@ UbuntuScreen::UbuntuScreen(const MirDisplayOutput &output)
     , mScale{1.0}
 {
     DLOG("QUbuntuScreen::QUbuntuScreen (this=%p)", this);
+
+    // Get screen resolution and properties.
+    const int dpr = qGetEnvIntValue("QT_DEVICE_PIXEL_RATIO", &ok);
+    mDevicePixelRatio = (ok && dpr > 0) ? dpr : 1.0;
+
     setMirDisplayOutput(output);
 
     // Set the default orientation based on the initial screen dimmensions.
@@ -201,11 +176,17 @@ void UbuntuScreen::setMirDisplayOutput(const MirDisplayOutput &output)
 
     // Mode = Resolution & refresh rate
     MirDisplayMode mode = output.modes[output.current_mode];
-    mGeometry.setX(output.position_x);
-    mGeometry.setY(output.position_y);
-    mGeometry.setWidth(mode.horizontal_resolution);
-    mGeometry.setHeight(mode.vertical_resolution);
+    mNativeGeometry.setX(output.position_x);
+    mNativeGeometry.setY(output.position_y);
+    mNativeGeometry.setWidth(mode.horizontal_resolution);
+    mNativeGeometry.setHeight(mode.vertical_resolution);
     mRefreshRate = mode.refresh_rate;
+
+    // geometry in device pixels
+    mGeometry.setX(mNativeGeometry.x() / mDevicePixelRatio);
+    mGeometry.setY(mNativeGeometry.y() / mDevicePixelRatio);
+    mGeometry.setWidth(mNativeGeometry.width() / mDevicePixelRatio);
+    mGeometry.setHeight(mNativeGeometry.height() / mDevicePixelRatio);
 
     // Misc
     mScale = output.scale;

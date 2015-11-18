@@ -286,6 +286,7 @@ void UbuntuInput::dispatchTouchEvent(QWindow *window, const MirInputEvent *ev)
     const QRect kWindowGeometry = window->geometry();
     QList<QWindowSystemInterface::TouchPoint> touchPoints;
 
+    const int dpr = int(window->devicePixelRatio());
 
     // TODO: Is it worth setting the Qt::TouchPointStationary ones? Currently they are left
     //       as Qt::TouchPointMoved
@@ -293,10 +294,10 @@ void UbuntuInput::dispatchTouchEvent(QWindow *window, const MirInputEvent *ev)
     for (unsigned int i = 0; i < kPointerCount; ++i) {
         QWindowSystemInterface::TouchPoint touchPoint;
 
-        const float kX = mir_touch_event_axis_value(tev, i, mir_touch_axis_x) + kWindowGeometry.x();
-        const float kY = mir_touch_event_axis_value(tev, i, mir_touch_axis_y) + kWindowGeometry.y(); // see bug lp:1346633 workaround comments elsewhere
-        const float kW = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major);
-        const float kH = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor);
+        const float kX = mir_touch_event_axis_value(tev, i, mir_touch_axis_x) / dpr + kWindowGeometry.x();
+        const float kY = mir_touch_event_axis_value(tev, i, mir_touch_axis_y) / dpr + kWindowGeometry.y(); // see bug lp:1346633 workaround comments elsewhere
+        const float kW = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major) / dpr;
+        const float kH = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor) / dpr;
         const float kP = mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure);
         touchPoint.id = mir_touch_event_id(tev, i);
         touchPoint.normalPosition = QPointF(kX / kWindowGeometry.width(), kY / kWindowGeometry.height());
@@ -423,8 +424,10 @@ void UbuntuInput::dispatchPointerEvent(QWindow *window, const MirInputEvent *ev)
     auto modifiers = qt_modifiers_from_mir(mir_pointer_event_modifiers(pev));
     auto buttons = extract_buttons(pev);
 
-    auto local_point = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
-                               mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
+    const int dpr = int(window->devicePixelRatio());
+
+    auto local_point = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x) / dpr,
+                               mir_pointer_event_axis_value(pev, mir_pointer_axis_y) / dpr);
 
     QWindowSystemInterface::handleMouseEvent(window, timestamp, local_point, local_point /* Should we omit global point instead? */,
                                              buttons, modifiers);

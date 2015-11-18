@@ -42,7 +42,8 @@ HEADERS = \
     screen.h \
     screenobserver.h \
     theme.h \
-    window.h
+    window.h \
+    utils.h
 
 # Installation path
 target.path +=  $$[QT_INSTALL_PLUGINS]/platforms

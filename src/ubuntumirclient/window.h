@@ -43,13 +43,14 @@ public:
     void setWindowState(Qt::WindowState state) override;
     void setVisible(bool visible) override;
     bool isExposed() const override;
+    qreal devicePixelRatio() const override;
 
     // New methods.
     void* eglSurface() const;
-    void handleSurfaceResize(int width, int height);
+    void handleSurfaceResize(int widthPx, int heightPx);
     void handleSurfaceFocusChange(bool focused);
     void handleSurfaceExposeChange(bool visible);
-    void onBuffersSwapped_threadSafe(int newBufferWidth, int newBufferHeight);
+    void onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBufferHeightPx);
 
     UbuntuWindowPrivate* priv() { return d; }
 

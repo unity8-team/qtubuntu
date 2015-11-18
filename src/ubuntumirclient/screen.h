@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -34,14 +34,15 @@ public:
     // QPlatformScreen methods.
     QImage::Format format() const override { return mFormat; }
     int depth() const override { return mDepth; }
-    QRect geometry() const override { return mGeometry; }
+    QRect geometry() const override { return mGeometry; } // in device-independent pixels
+    QRect nativeGeometry() const { return mNativeGeometry; } // in physical pixels
     QRect availableGeometry() const override { return mGeometry; }
 
     QSizeF physicalSize() const override { return mPhysicalSize; }
     qreal devicePixelRatio() const override { return mDevicePixelRatio; }
     QDpi logicalDpi() const override;
-
     qreal refreshRate() const override { return mRefreshRate; }
+
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
 
@@ -58,7 +59,8 @@ public:
     void customEvent(QEvent* event);
 
 private:
-    QRect mGeometry;
+    QRect mGeometry, mNativeGeometry;
+    qreal mDevicePixelRatio;
     Qt::ScreenOrientation mNativeOrientation;
     Qt::ScreenOrientation mCurrentOrientation;
     QImage::Format mFormat;

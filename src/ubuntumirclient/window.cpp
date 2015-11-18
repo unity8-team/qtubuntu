@@ -20,6 +20,7 @@
 #include "integration.h"
 #include "window.h"
 #include "screen.h"
+#include "utils.h"
 #include "logging.h"
 
 // Qt
@@ -32,6 +33,11 @@
 
 // Platform API
 #include <ubuntu/application/instance.h>
+
+/*
+ * Note: all geometry is in device-independent pixels, except that contained in variables with the
+ * suffix "Px" - whose units are (physical) pixels
+ */
 
 namespace
 {
@@ -95,7 +101,7 @@ public:
     Qt::WindowState state;
     MirConnection *connection;
     MirSurface* surface;
-    QSize bufferSize;
+    QSize bufferSizePx;
     QMutex mutex;
     QSharedPointer<UbuntuClipboard> clipboard;
     bool exposed;
@@ -263,8 +269,12 @@ void UbuntuWindow::createWindow()
         geometry.setY(panelHeight);
     }
 
-    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) with size (%d, %d) with title '%s'\n",
-            geometry.x(), geometry.y(), geometry.width(), geometry.height(), title.data());
+    // Convert to physical pixels when talking with Mir
+    d->bufferSizePx.setWidth(geometry.width() * devicePixelRatio());
+    d->bufferSizePx.setHeight(geometry.height() * devicePixelRatio());
+
+    DLOG("[ubuntumirclient QPA] creating surface at (%d, %d) device-independent pixels with physicsl pixel size (%d, %d) and title '%s'\n",
+            geometry.x(), geometry.y(), d->bufferSizePx.width(), d->bufferSizePx.height(), title.data());
 
     EGLDisplay eglDisplay = d->integration->eglDisplay();
     EGLConfig eglConfig = q_configFromGLFormat(eglDisplay, d->format, true);
@@ -273,15 +283,12 @@ void UbuntuWindow::createWindow()
     MirPixelFormat pixelFormat = getPixelFormat(d->connection, needsAlpha);
 
     MirSurfaceSpec *spec;
-    if (role == SCREEN_KEYBOARD_ROLE)
-    {
+    if (role == SCREEN_KEYBOARD_ROLE) {
         spec = mir_connection_create_spec_for_input_method(d->connection, geometry.width(),
             geometry.height(), pixelFormat);
-    }
-    else
-    {
-        spec = mir_connection_create_spec_for_normal_surface(d->connection, geometry.width(),
-            geometry.height(), pixelFormat);
+    } else {
+        spec = mir_connection_create_spec_for_normal_surface(d->connection, d->bufferSizePx.width(),
+            d->bufferSizePx.height(), pixelFormat);
     }
     mir_surface_spec_set_name(spec, title.data());
 
@@ -305,15 +312,16 @@ void UbuntuWindow::createWindow()
         MirSurfaceParameters parameters;
         mir_surface_get_parameters(d->surface, &parameters);
 
-        geometry.setWidth(parameters.width);
-        geometry.setHeight(parameters.height);
+        geometry.setWidth(divideAndRoundUp(parameters.width, devicePixelRatio()));
+        geometry.setHeight(divideAndRoundUp(parameters.height, devicePixelRatio()));
+
+        // Assume that the buffer size matches the surface size at creation time
+        d->bufferSizePx.setWidth(parameters.width);
+        d->bufferSizePx.setHeight(parameters.height);
     }
 
-    DLOG("[ubuntumirclient QPA] created surface has size (%d, %d)",
-            geometry.width(), geometry.height());
-
-    // Assume that the buffer size matches the surface size at creation time
-    d->bufferSize = geometry.size();
+    DLOG("[ubuntumirclient QPA] created surface has physical pixel size (%d, %d) and device-independent pixel size (%d, %d)",
+            d->bufferSizePx.width(), d->bufferSizePx.height(), geometry.width(), geometry.height());
 
     // Tell Qt about the geometry.
     QWindowSystemInterface::handleGeometryChange(window(), geometry);
@@ -326,11 +334,11 @@ void UbuntuWindow::moveResize(const QRect& rect)
     // TODO: Not yet supported by mir.
 }
 
-void UbuntuWindow::handleSurfaceResize(int width, int height)
+void UbuntuWindow::handleSurfaceResize(int widthPx, int heightPx)
 {
-    QMutexLocker(&d->mutex);
-    DLOG("UbuntuWindow::handleSurfaceResize(width=%d, height=%d) [%d]", width, height,
+    DLOG("UbuntuWindow::handleSurfaceResize(widthPx=%d, heightPx=%d) [%d]", widthPx, heightPx,
         d->frameNumber);
+    QMutexLocker(&d->mutex);
 
     // The current buffer size hasn't actually changed. so just render on it and swap
     // buffers in the hope that the next buffer will match the surface size advertised
@@ -339,7 +347,7 @@ void UbuntuWindow::handleSurfaceResize(int width, int height)
     // buffers, you can never know if this information is already outdated as there's
     // no synchronicity whatsoever between the processing of resize events and the
     // consumption of buffers.
-    if (d->bufferSize.width() != width || d->bufferSize.height() != height) {
+    if (d->bufferSizePx.width() != widthPx || d->bufferSizePx.height() != heightPx) {
         // if the next buffer doesn't have a different size, try some
         // more
         // FIXME: This is working around a mir bug! We really shound't have to
@@ -434,6 +442,11 @@ bool UbuntuWindow::isExposed() const
     return d->exposed && window()->isVisible();
 }
 
+qreal UbuntuWindow::devicePixelRatio() const
+{
+    return screen() ? screen()->devicePixelRatio() : 1.0; // not impossible a Window has no attached Screen
+}
+
 void* UbuntuWindow::eglSurface() const
 {
     return d->eglSurface;
@@ -449,44 +462,42 @@ WId UbuntuWindow::winId() const
     return d->id;
 }
 
-void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidth, int newBufferHeight)
+void UbuntuWindow::onBuffersSwapped_threadSafe(int newBufferWidthPx, int newBufferHeightPx)
 {
     QMutexLocker(&d->mutex);
 
-    bool sizeKnown = newBufferWidth > 0 && newBufferHeight > 0;
+    bool sizeKnown = newBufferWidthPx > 0 && newBufferHeightPx > 0;
 
 #if !defined(QT_NO_DEBUG)
     ++d->frameNumber;
 #endif
 
-    if (sizeKnown && (d->bufferSize.width() != newBufferWidth ||
-                d->bufferSize.height() != newBufferHeight)) {
+    if (sizeKnown && (d->bufferSizePx.width() != newBufferWidthPx ||
+                d->bufferSizePx.height() != newBufferHeightPx)) {
         d->resizeCatchUpAttempts = 0;
 
         DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size changed from (%d,%d) to (%d,%d)"
                " resizeCatchUpAttempts=%d",
-               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), newBufferWidth, newBufferHeight,
+               d->frameNumber, d->bufferSizePx.width(), d->bufferSizePx.height(), newBufferWidthPx, newBufferHeightPx,
                d->resizeCatchUpAttempts);
 
-        d->bufferSize.rwidth() = newBufferWidth;
-        d->bufferSize.rheight() = newBufferHeight;
+        d->bufferSizePx.rwidth() = newBufferWidthPx;
+        d->bufferSizePx.rheight() = newBufferHeightPx;
 
-        QRect newGeometry;
-
-        newGeometry = geometry();
-        newGeometry.setWidth(d->bufferSize.width());
-        newGeometry.setHeight(d->bufferSize.height());
+        QRect newGeometry(geometry());
+        newGeometry.setWidth(divideAndRoundUp(d->bufferSizePx.width(), devicePixelRatio()));
+        newGeometry.setHeight(divideAndRoundUp(d->bufferSizePx.height(), devicePixelRatio()));
 
         QPlatformWindow::setGeometry(newGeometry);
-        QWindowSystemInterface::handleGeometryChange(window(), newGeometry, QRect());
+        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
     } else if (d->resizeCatchUpAttempts > 0) {
         --d->resizeCatchUpAttempts;
         DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). Redrawing to catch up a resized buffer."
                " resizeCatchUpAttempts=%d",
-               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
+             d->frameNumber, d->bufferSizePx.width(), d->bufferSizePx.height(), d->resizeCatchUpAttempts);
         QWindowSystemInterface::handleExposeEvent(window(), d->exposed ? QRect(QPoint(), geometry().size()) : QRect());
     } else {
         DLOG("UbuntuWindow::onBuffersSwapped_threadSafe [%d] - buffer size (%d,%d). resizeCatchUpAttempts=%d",
-               d->frameNumber, d->bufferSize.width(), d->bufferSize.height(), d->resizeCatchUpAttempts);
+               d->frameNumber, d->bufferSizePx.width(), d->bufferSizePx.height(), d->resizeCatchUpAttempts);
     }
 }
