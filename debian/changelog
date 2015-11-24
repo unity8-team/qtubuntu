@@ -1,3 +1,9 @@
+qtubuntu-gles (0.62+16.04.20151124-0ubuntu1) xenial; urgency=medium
+
+  * New release
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 24 Nov 2015 13:26:16 +0000
+
 qtubuntu-gles (0.62+16.04.20151117-0ubuntu1) xenial; urgency=medium
 
   * Sync with upstream
