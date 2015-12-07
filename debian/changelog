@@ -1,3 +1,10 @@
+qtubuntu-gles (0.62+16.04.20151207-0ubuntu1) xenial; urgency=medium
+
+  [ Michał Sawicz ]
+  * Bring debian/control in line with upstream
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Mon, 07 Dec 2015 16:21:10 +0000
+
 qtubuntu-gles (0.62+16.04.20151124-0ubuntu2) xenial; urgency=medium
 
   * Rebuild against Qt 5.5.1.
