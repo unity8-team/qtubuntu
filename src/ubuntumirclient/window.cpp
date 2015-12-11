@@ -327,7 +327,7 @@ private:
 
 void UbuntuSurface::resize(const QSize &sizePx)
 {
-    DLOG("[ubuntumirclient QPA] resize(window=%p) to (%d, %d)px", mWindow, sizePx.width(), sizePx.height());
+    DLOG("[ubuntumirclient QPA] resize(window=%p) to (%dx%d)px", mWindow, sizePx.width(), sizePx.height());
 
     if (mWindowState == Qt::WindowFullScreen || mWindowState == Qt::WindowMaximized) {
         DLOG("[ubuntumirclient QPA] resize(window=%p) - not resizing, window is maximized or fullscreen", mWindow);
@@ -458,8 +458,8 @@ void UbuntuSurface::postEvent(const MirEvent *event)
         // As a workaround, we use the width/height as an identifier of this latest event
         // so the event handler (handleSurfaceResized) can discard/ignore old ones.
         const auto resizeEvent = mir_event_get_resize_event(event);
-        const auto widthPx =  mir_resize_event_get_width(resizeEvent);
-        const auto heightPx =  mir_resize_event_get_height(resizeEvent);
+        const auto widthPx = mir_resize_event_get_width(resizeEvent);
+        const auto heightPx = mir_resize_event_get_height(resizeEvent);
         DLOG("[ubuntumirclient QPA] resizeEvent(window=%p, size=(%dx%d)px", mWindow, widthPx, heightPx);
 
         QMutexLocker lock(&mTargetSizeMutex);
@@ -524,7 +524,6 @@ void UbuntuWindow::updateGeometry(int widthPx, int heightPx) // for when Mir res
          geom.x(), geom.y(), geom.width(), geom.height());
 }
 
-
 void UbuntuWindow::handleSurfaceResized(int widthPx, int heightPx)
 {
     QMutexLocker lock(&mMutex);
@@ -579,7 +578,6 @@ void UbuntuWindow::setGeometry(const QRect& rect)
 
     mSurface->resize(newSize * devicePixelRatio());
     QPlatformWindow::setGeometry(newGeometry);
-    QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
 }
 
 void UbuntuWindow::setVisible(bool visible)
