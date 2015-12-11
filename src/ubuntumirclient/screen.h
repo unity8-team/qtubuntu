@@ -21,6 +21,8 @@
 #include <QSurfaceFormat>
 #include <EGL/egl.h>
 
+#include "cursor.h"
+
 struct MirConnection;
 
 class UbuntuScreen : public QObject, public QPlatformScreen
@@ -35,9 +37,11 @@ public:
     int depth() const override { return mDepth; }
     QRect geometry() const override { return mGeometry; }
     QRect availableGeometry() const override { return mGeometry; }
+    QSizeF physicalSize() const override { return mPhysicalSize; }
     qreal devicePixelRatio() const override { return mDevicePixelRatio; }
     Qt::ScreenOrientation nativeOrientation() const override { return mNativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return mNativeOrientation; }
+    QPlatformCursor *cursor() const override { return const_cast<UbuntuCursor*>(&mCursor); }
 
     // New methods.
     QSurfaceFormat surfaceFormat() const { return mSurfaceFormat; }
@@ -45,21 +49,25 @@ public:
     EGLConfig eglConfig() const { return mEglConfig; }
     EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
     void handleWindowSurfaceResize(int width, int height);
+    uint32_t mirOutputId() const { return mOutputId; }
 
     // QObject methods.
-    void customEvent(QEvent* event);
+    void customEvent(QEvent* event) override;
 
 private:
     QRect mGeometry;
+    QSizeF mPhysicalSize;
     qreal mDevicePixelRatio;
     Qt::ScreenOrientation mNativeOrientation;
     Qt::ScreenOrientation mCurrentOrientation;
     QImage::Format mFormat;
     int mDepth;
+    uint32_t mOutputId;
     QSurfaceFormat mSurfaceFormat;
     EGLDisplay mEglDisplay;
     EGLConfig mEglConfig;
     EGLNativeDisplayType mEglNativeDisplay;
+    UbuntuCursor mCursor;
 };
 
 #endif // UBUNTU_SCREEN_H
