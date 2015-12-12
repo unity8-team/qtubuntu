@@ -1,3 +1,28 @@
+qtubuntu-gles (0.62+16.04.20151207-0ubuntu1) xenial; urgency=medium
+
+  [ Michał Sawicz ]
+  * Bring debian/control in line with upstream
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Mon, 07 Dec 2015 16:21:10 +0000
+
+qtubuntu-gles (0.62+16.04.20151124-0ubuntu2) xenial; urgency=medium
+
+  * Rebuild against Qt 5.5.1.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Mon, 30 Nov 2015 16:16:38 +0200
+
+qtubuntu-gles (0.62+16.04.20151124-0ubuntu1) xenial; urgency=medium
+
+  * New release
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 24 Nov 2015 13:26:16 +0000
+
+qtubuntu-gles (0.62+16.04.20151117-0ubuntu1) xenial; urgency=medium
+
+  * Sync with upstream
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Tue, 17 Nov 2015 14:49:42 +0000
+
 qtubuntu-gles (0.62+16.04.20151109-0ubuntu1) xenial; urgency=medium
 
   * Sync with trunk
