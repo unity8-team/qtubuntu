@@ -223,7 +223,7 @@ MirSurface *createMirSurface(QWindow *window, UbuntuScreen *screen, UbuntuInput 
 }
 
 // FIXME - in order to work around https://bugs.launchpad.net/mir/+bug/1346633
-// we need to guess the panel height (3GU + 2DP)
+// we need to guess the panel height (3GU)
 int panelHeight()
 {
     const int defaultGridUnit = 8;
@@ -236,8 +236,7 @@ int panelHeight()
             gridUnit = defaultGridUnit;
         }
     }
-    qreal densityPixelRatio = static_cast<qreal>(gridUnit) / defaultGridUnit;
-    return gridUnit * 3 + qFloor(densityPixelRatio) * 2;
+    return gridUnit * 3;
 }
 
 } //namespace
@@ -555,7 +554,6 @@ void UbuntuWindow::handleSurfaceFocused()
     // Therefore let's ensure we are up to date with the system clipboard now that we are getting
     // focused again.
     mClipboard->requestDBusClipboardContents();
-    QWindowSystemInterface::handleWindowActivated(window(), Qt::ActiveWindowFocusReason);
 }
 
 void UbuntuWindow::setWindowState(Qt::WindowState state)
@@ -563,6 +561,27 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     QMutexLocker lock(&mMutex);
     DLOG("[ubuntumirclient QPA] setWindowState(window=%p, %s)", this, qtWindowStateToStr(state));
     mSurface->setState(state);
+
+    updatePanelHeightHack(state);
+}
+
+/*
+    FIXME: Mir does not let clients know the position of their windows in the virtual
+    desktop space. So we have this ugly hack that assumes a phone situation where the
+    window is always on the top-left corner, right below the indicators panel if not
+    in fullscreen.
+ */
+void UbuntuWindow::updatePanelHeightHack(Qt::WindowState state)
+{
+    if (state == Qt::WindowFullScreen && geometry().y() != 0) {
+        QRect newGeometry = geometry();
+        newGeometry.setY(0);
+        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
+    } else if (geometry().y() == 0) {
+        QRect newGeometry = geometry();
+        newGeometry.setY(panelHeight());
+        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
+    }
 }
 
 void UbuntuWindow::setGeometry(const QRect& rect)
