@@ -584,10 +584,10 @@ void UbuntuWindow::updatePanelHeightHack(Qt::WindowState state)
     }
 }
 
-void UbuntuWindow::setGeometry(const QRect& rect)
+void UbuntuWindow::setGeometry(const QRect &rect)
 {
     QMutexLocker lock(&mMutex);
-    DLOG("[ubuntumirclient QPA] setGeometry (window=%p, position=(%d, %d)dp, size=(%dx%d)dp",
+    DLOG("[ubuntumirclient QPA] setGeometry (window=%p, position=(%d, %d)dp, size=(%dx%d)dp)",
            window(), rect.x(), rect.y(), rect.width(), rect.height());
 
     //NOTE: mir surfaces cannot be moved by the client so ignore the topLeft coordinates
@@ -596,7 +596,7 @@ void UbuntuWindow::setGeometry(const QRect& rect)
     newGeometry.setSize(newSize);
 
     mSurface->resize(newSize * devicePixelRatio());
-    QPlatformWindow::setGeometry(newGeometry);
+    // Note: don't call handleGeometryChange here, wait to see what Mir replies with.
 }
 
 void UbuntuWindow::setVisible(bool visible)
