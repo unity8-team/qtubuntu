@@ -273,7 +273,7 @@ public:
         mBufferSizePx.rheight() = parameters.height;
 
         DLOG("[ubuntumirclient QPA] created surface with size=(%dx%d)px\n", parameters.width, parameters.width);
-        mPlatformWindow->updateGeometry(parameters.width, parameters.width);
+        mPlatformWindow->updateGeometry(parameters.width, parameters.height);
     }
 
     ~UbuntuSurface()
