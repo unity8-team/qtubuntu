@@ -273,7 +273,7 @@ public:
         mBufferSizePx.rheight() = parameters.height;
 
         DLOG("[ubuntumirclient QPA] created surface with size=(%dx%d)px\n", parameters.width, parameters.width);
-        mPlatformWindow->updateGeometry(parameters.width, parameters.height);
+        mPlatformWindow->updateWindowGeometry(parameters.width, parameters.height);
     }
 
     ~UbuntuSurface()
@@ -433,7 +433,7 @@ void UbuntuSurface::onSwapBuffersDone()
         mBufferSizePx.rwidth() = eglSurfaceWidthPx;
         mBufferSizePx.rheight() = eglSurfaceHeightPx;
 
-        mPlatformWindow->updateGeometry(eglSurfaceWidthPx, eglSurfaceHeightPx);
+        mPlatformWindow->updateWindowGeometry(eglSurfaceWidthPx, eglSurfaceHeightPx);
     } else {
         DLOG("[ubuntumirclient QPA] onSwapBuffersDone(window=%p) [%d] - buffer size=(%dx%d)px",
                mWindow, sFrameNumber, mBufferSizePx.width(), mBufferSizePx.height());
@@ -504,17 +504,12 @@ UbuntuWindow::~UbuntuWindow()
     DLOG("[ubuntumirclient QPA] ~UbuntuWindow(window=%p)", this);
 }
 
-void UbuntuWindow::updateGeometry(int widthPx, int heightPx) // for when Mir resizes the surface
+void UbuntuWindow::updateWindowGeometry(int widthPx, int heightPx) // after when Mir has resized the surface
 {
     const float dpr = devicePixelRatio();
     auto geom = geometry();
     geom.setWidth(divideAndRoundUp(widthPx, dpr));
     geom.setHeight(divideAndRoundUp(heightPx, dpr));
-    if (window()->windowState() == Qt::WindowFullScreen) {
-        geom.setY(0);
-    } else {
-        geom.setY(divideAndRoundUp(panelHeight(), dpr));
-    }
 
     QPlatformWindow::setGeometry(geom);
     QWindowSystemInterface::handleGeometryChange(window(), geom);
@@ -579,7 +574,7 @@ void UbuntuWindow::updatePanelHeightHack(Qt::WindowState state)
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
     } else if (geometry().y() == 0) {
         QRect newGeometry = geometry();
-        newGeometry.setY(panelHeight());
+        newGeometry.setY(divideAndRoundUp(panelHeight(), devicePixelRatio()));
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
     }
 }
