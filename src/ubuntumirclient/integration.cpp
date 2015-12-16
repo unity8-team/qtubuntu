@@ -45,24 +45,21 @@ static void resumedCallback(const UApplicationOptions *options, void* context)
 {
     Q_UNUSED(options)
     Q_UNUSED(context)
-    DASSERT(context != NULL);
-    if (qGuiApp->focusWindow()) {
-        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
-    } else {
-        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
-    }
+    Q_ASSERT(context != NULL);
+    QCoreApplication::postEvent(QCoreApplication::instance(),
+                                new QEvent(QEvent::ApplicationActivate));
 }
 
 static void aboutToStopCallback(UApplicationArchive *archive, void* context)
 {
     Q_UNUSED(archive)
-    DASSERT(context != NULL);
+    Q_ASSERT(context != NULL);
     UbuntuClientIntegration* integration = static_cast<UbuntuClientIntegration*>(context);
     QPlatformInputContext *inputContext = integration->inputContext();
     if (inputContext) {
         inputContext->hideInputPanel();
     } else {
-        qWarning("UbuntuClientIntegration aboutToStopCallback(): no input context");
+        qCWarning(ubuntumirclient) << "aboutToStopCallback(): no input context";
     }
     QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationSuspended);
 }
@@ -184,7 +181,7 @@ bool UbuntuClientIntegration::hasCapability(QPlatformIntegration::Capability cap
         if (qEnvironmentVariableIsEmpty("QTUBUNTU_NO_THREADED_OPENGL")) {
             return true;
         } else {
-            DLOG("ubuntumirclient: disabled threaded OpenGL");
+            qCDebug(ubuntumirclient, "disabled threaded OpenGL");
             return false;
         }
     case MultipleWindows:
