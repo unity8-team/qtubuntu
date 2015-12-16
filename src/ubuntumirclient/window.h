@@ -50,13 +50,13 @@ public:
     // New methods.
     void *eglSurface() const;
     MirSurface *mirSurface() const;
-    void updateGeometry(int widthPx, int heightPx);
+    void updateWindowSize(int widthPx, int heightPx);
     void handleSurfaceResized(int widthPx, int heightPx);
     void handleSurfaceFocused();
     void onSwapBuffersDone();
 
 private:
-    void updatePanelHeightHack(Qt::WindowState);
+    void enablePanelHeightHack(bool enable);
     mutable QMutex mMutex;
     const WId mId;
     const QSharedPointer<UbuntuClipboard> mClipboard;

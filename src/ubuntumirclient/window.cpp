@@ -272,8 +272,8 @@ public:
         mBufferSizePx.rwidth() = parameters.width;
         mBufferSizePx.rheight() = parameters.height;
 
-        DLOG("[ubuntumirclient QPA] created surface with size=(%dx%d)px\n", parameters.width, parameters.width);
-        mPlatformWindow->updateWindowGeometry(parameters.width, parameters.height);
+        DLOG("[ubuntumirclient QPA] created surface with size=(%dx%d)px\n", parameters.width, parameters.height);
+        mPlatformWindow->updateWindowSize(parameters.width, parameters.height);
     }
 
     ~UbuntuSurface()
@@ -433,7 +433,7 @@ void UbuntuSurface::onSwapBuffersDone()
         mBufferSizePx.rwidth() = eglSurfaceWidthPx;
         mBufferSizePx.rheight() = eglSurfaceHeightPx;
 
-        mPlatformWindow->updateWindowGeometry(eglSurfaceWidthPx, eglSurfaceHeightPx);
+        mPlatformWindow->updateWindowSize(eglSurfaceWidthPx, eglSurfaceHeightPx);
     } else {
         DLOG("[ubuntumirclient QPA] onSwapBuffersDone(window=%p) [%d] - buffer size=(%dx%d)px",
                mWindow, sFrameNumber, mBufferSizePx.width(), mBufferSizePx.height());
@@ -497,6 +497,8 @@ UbuntuWindow::UbuntuWindow(QWindow *w, const QSharedPointer<UbuntuClipboard> &cl
 {
     DLOG("[ubuntumirclient QPA] UbuntuWindow(window=%p, screen=%p, input=%p, surf=%p) with title '%s', role: '%d'",
         w, screen, input, mSurface.get(), qPrintable(window()->title()), roleFor(window()));
+
+    enablePanelHeightHack(w->windowState() != Qt::WindowFullScreen);
 }
 
 UbuntuWindow::~UbuntuWindow()
@@ -504,7 +506,7 @@ UbuntuWindow::~UbuntuWindow()
     DLOG("[ubuntumirclient QPA] ~UbuntuWindow(window=%p)", this);
 }
 
-void UbuntuWindow::updateWindowGeometry(int widthPx, int heightPx) // after when Mir has resized the surface
+void UbuntuWindow::updateWindowSize(int widthPx, int heightPx) // after when Mir has resized the surface
 {
     const float dpr = devicePixelRatio();
     auto geom = geometry();
@@ -557,7 +559,7 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     DLOG("[ubuntumirclient QPA] setWindowState(window=%p, %s)", this, qtWindowStateToStr(state));
     mSurface->setState(state);
 
-    updatePanelHeightHack(state);
+    enablePanelHeightHack(state != Qt::WindowFullScreen);
 }
 
 /*
@@ -566,15 +568,17 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     window is always on the top-left corner, right below the indicators panel if not
     in fullscreen.
  */
-void UbuntuWindow::updatePanelHeightHack(Qt::WindowState state)
+void UbuntuWindow::enablePanelHeightHack(bool enable)
 {
-    if (state == Qt::WindowFullScreen && geometry().y() != 0) {
-        QRect newGeometry = geometry();
+    QRect newGeometry = geometry();
+    if (enable) {
+        newGeometry.setY(panelHeight());
+    } else {
         newGeometry.setY(0);
-        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
-    } else if (geometry().y() == 0) {
-        QRect newGeometry = geometry();
-        newGeometry.setY(divideAndRoundUp(panelHeight(), devicePixelRatio()));
+    }
+
+    if (newGeometry != geometry()) {
+        QPlatformWindow::setGeometry(newGeometry);
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
     }
 }
