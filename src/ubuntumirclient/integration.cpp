@@ -46,8 +46,11 @@ static void resumedCallback(const UApplicationOptions *options, void* context)
     Q_UNUSED(options)
     Q_UNUSED(context)
     Q_ASSERT(context != NULL);
-    QCoreApplication::postEvent(QCoreApplication::instance(),
-                                new QEvent(QEvent::ApplicationActivate));
+    if (qGuiApp->focusWindow()) {
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
+    } else {
+        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
+    }
 }
 
 static void aboutToStopCallback(UApplicationArchive *archive, void* context)
