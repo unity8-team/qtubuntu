@@ -46,11 +46,8 @@ static void resumedCallback(const UApplicationOptions *options, void* context)
     Q_UNUSED(options)
     Q_UNUSED(context)
     DASSERT(context != NULL);
-    if (qGuiApp->focusWindow()) {
-        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
-    } else {
-        QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
-    }
+    QCoreApplication::postEvent(QCoreApplication::instance(),
+                                new QEvent(QEvent::ApplicationActivate));
 }
 
 static void aboutToStopCallback(UApplicationArchive *archive, void* context)
@@ -64,7 +61,8 @@ static void aboutToStopCallback(UApplicationArchive *archive, void* context)
     } else {
         qWarning("UbuntuClientIntegration aboutToStopCallback(): no input context");
     }
-    QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationSuspended);
+    QCoreApplication::postEvent(QCoreApplication::instance(),
+                                new QEvent(QEvent::ApplicationDeactivate));
 }
 
 UbuntuClientIntegration::UbuntuClientIntegration()
@@ -175,9 +173,6 @@ bool UbuntuClientIntegration::hasCapability(QPlatformIntegration::Capability cap
         return true;
 
     case OpenGL:
-        return true;
-
-    case ApplicationState:
         return true;
 
     case ThreadedOpenGL:
