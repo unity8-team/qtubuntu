@@ -1,8 +1,8 @@
 qtubuntu (0.63) UNRELEASED; urgency=medium
 
-  * Add support for Qt5.4's devicePixelRatio UI scaling mechanism
+  * Add support for Qt5's devicePixelRatio UI scaling mechanism
 
- -- Gerry Boland <gerry.boland@canonical.com>  Mon, 12 Oct 2015 12:44:27 +0100
+ -- Gerry Boland <gerry.boland@canonical.com>  Tue, 05 Jan 2016 16:31:27 +0100
 
 qtubuntu (0.62+16.04.20160104-0ubuntu1) xenial; urgency=medium
 
