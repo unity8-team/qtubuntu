@@ -565,11 +565,11 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     window is always on the top-left corner, right below the indicators panel if not
     in fullscreen.
  */
-void UbuntuWindow::updatePanelHeightHack(bool enable)
+void UbuntuWindow::enablePanelHeightHack(bool enable)
 {
     QRect newGeometry = geometry();
     if (enable) {
-        newGeometry.setY(panelHeight());
+        newGeometry.setY(::panelHeight());
     } else {
         newGeometry.setY(0);
     }
