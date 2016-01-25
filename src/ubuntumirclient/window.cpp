@@ -63,10 +63,11 @@ EGLNativeWindowType nativeWindowFor(MirSurface *surf)
     return reinterpret_cast<EGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(stream));
 }
 
-MirSurfaceState qtWindowStateToMirSurfaceState(Qt::WindowState state)
+MirSurfaceState qtWindowStateToMirSurfaceState(Qt::WindowState state, Qt::WindowFlags flags)
 {
     switch (state) {
     case Qt::WindowNoState:
+        if (flags & Qt::FramelessWindowHint) return mir_surface_state_horizmaximized;
         return mir_surface_state_restored;
     case Qt::WindowFullScreen:
         return mir_surface_state_fullscreen;
@@ -95,6 +96,27 @@ const char *qtWindowStateToStr(Qt::WindowState state)
     default:
         return "!?";
     }
+}
+const QString qtWindowFlagsToStr(Qt::WindowFlags flags)
+{
+    QString res;
+    // Types
+    if (flags & Qt::Window) res += "Window|";
+    if (flags & Qt::Dialog) res += "Dialog|";
+    if (flags & Qt::Sheet) res += "Sheet|";
+    if (flags & Qt::Drawer) res += "Drawer|";
+    if (flags & Qt::Popup) res += "Popup|";
+    if (flags & Qt::Tool) res += "Tool|";
+    if (flags & Qt::ToolTip) res += "ToolTip|";
+    if (flags & Qt::SplashScreen) res += "SplashScreen|";
+    if (flags & Qt::Desktop) res += "Desktop|";
+    if (flags & Qt::SubWindow) res += "SubWindow|";
+    if (flags & Qt::ForeignWindow) res += "ForeignWindow|";
+    if (flags & Qt::CoverWindow) res += "CoverWindow|";
+
+    // Flags
+    if (flags & Qt::FramelessWindowHint) res += "FramelessWindowHint|";
+    return res;
 }
 #endif
 
@@ -247,7 +269,6 @@ public:
         , mVisible(false)
         , mNeedsRepaint(false)
         , mParented(mWindow->transientParent() || mWindow->parent())
-        , mWindowState(mWindow->windowState())
 
     {
         mir_surface_set_event_handler(mMirSurface, surfaceEventCallback, this);
@@ -260,7 +281,8 @@ public:
         auto geom = mWindow->geometry();
         geom.setWidth(parameters.width);
         geom.setHeight(parameters.height);
-        if (mWindowState == Qt::WindowFullScreen) {
+        if (mWindow->windowState() == Qt::WindowFullScreen ||
+            (mWindow->windowState() == Qt::WindowNoState && mWindow->flags() & Qt::FramelessWindowHint)) {
             geom.setY(0);
         } else {
             geom.setY(panelHeight());
@@ -288,6 +310,7 @@ public:
 
     void resize(const QSize& newSize);
     void setState(Qt::WindowState newState);
+    void setFlags(Qt::WindowFlags newFlags);
     void setVisible(bool state);
     void updateTitle(const QString& title);
     void setSizingConstraints(const QSize& minSize, const QSize& maxSize, const QSize& increment);
@@ -316,7 +339,6 @@ private:
     bool mVisible;
     bool mNeedsRepaint;
     bool mParented;
-    Qt::WindowState mWindowState;
     QSize mBufferSize;
 
     QMutex mTargetSizeMutex;
@@ -327,7 +349,8 @@ void UbuntuSurface::resize(const QSize& size)
 {
     DLOG("[ubuntumirclient QPA] resize(window=%p, width=%d, height=%d)", mWindow, size.width(), size.height());
 
-    if (mWindowState == Qt::WindowFullScreen || mWindowState == Qt::WindowMaximized) {
+    if (mWindow->windowState() == Qt::WindowFullScreen || mWindow->windowState() == Qt::WindowMaximized ||
+        (mWindow->windowState() == Qt::WindowNoState && mWindow->flags() & Qt::FramelessWindowHint)) {
         DLOG("[ubuntumirclient QPA] resize(window=%p) - not resizing, window is maximized or fullscreen", mWindow);
         return;
     }
@@ -345,8 +368,12 @@ void UbuntuSurface::resize(const QSize& size)
 
 void UbuntuSurface::setState(Qt::WindowState newState)
 {
-    mir_wait_for(mir_surface_set_state(mMirSurface, qtWindowStateToMirSurfaceState(newState)));
-    mWindowState = newState;
+    mir_wait_for(mir_surface_set_state(mMirSurface, qtWindowStateToMirSurfaceState(newState, mWindow->flags())));
+}
+
+void UbuntuSurface::setFlags(Qt::WindowFlags newFlags)
+{
+    mir_wait_for(mir_surface_set_state(mMirSurface, qtWindowStateToMirSurfaceState(mWindow->windowState(), newFlags)));
 }
 
 void UbuntuSurface::setVisible(bool visible)
@@ -361,7 +388,7 @@ void UbuntuSurface::setVisible(bool visible)
 
     // TODO: Use the new mir_surface_state_hidden state instead of mir_surface_state_minimized.
     //       Will have to change qtmir and unity8 for that.
-    const auto newState = visible ? qtWindowStateToMirSurfaceState(mWindowState) : mir_surface_state_minimized;
+    const auto newState = visible ? qtWindowStateToMirSurfaceState(mWindow->windowState(), mWindow->flags()) : mir_surface_state_minimized;
     mir_wait_for(mir_surface_set_state(mMirSurface, newState));
 }
 
@@ -545,7 +572,16 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     DLOG("[ubuntumirclient QPA] setWindowState(window=%p, %s)", this, qtWindowStateToStr(state));
     mSurface->setState(state);
 
-    updatePanelHeightHack(state);
+    updatePanelHeightHack();
+}
+
+void UbuntuWindow::setWindowFlags(Qt::WindowFlags flags)
+{
+    QMutexLocker lock(&mMutex);
+    DLOG("[ubuntumirclient QPA] setWindowFlags(window=%p, %s)", this, qPrintable(qtWindowFlagsToStr(flags)));
+    mSurface->setFlags(flags);
+
+    updatePanelHeightHack();
 }
 
 /*
@@ -554,9 +590,11 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     window is always on the top-left corner, right below the indicators panel if not
     in fullscreen.
  */
-void UbuntuWindow::updatePanelHeightHack(Qt::WindowState state)
+void UbuntuWindow::updatePanelHeightHack()
 {
-    if (state == Qt::WindowFullScreen && geometry().y() != 0) {
+    if ((window()->windowState() == Qt::WindowFullScreen ||
+            (window()->windowState() == Qt::WindowNoState && window()->flags() & Qt::FramelessWindowHint)) &&
+        geometry().y() != 0) {
         QRect newGeometry = geometry();
         newGeometry.setY(0);
         QPlatformWindow::setGeometry(newGeometry);

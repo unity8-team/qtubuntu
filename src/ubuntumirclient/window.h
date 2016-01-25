@@ -42,6 +42,7 @@ public:
     WId winId() const override;
     void setGeometry(const QRect&) override;
     void setWindowState(Qt::WindowState state) override;
+    void setWindowFlags(Qt::WindowFlags flags) override;
     void setVisible(bool visible) override;
     void setWindowTitle(const QString &title) override;
     void propagateSizeHints() override;
@@ -54,7 +55,7 @@ public:
     void onSwapBuffersDone();
 
 private:
-    void updatePanelHeightHack(Qt::WindowState);
+    void updatePanelHeightHack();
     mutable QMutex mMutex;
     const WId mId;
     const QSharedPointer<UbuntuClipboard> mClipboard;
