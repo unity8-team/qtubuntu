@@ -572,7 +572,7 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
     DLOG("[ubuntumirclient QPA] setWindowState(window=%p, %s)", this, qtWindowStateToStr(state));
     mSurface->setState(state);
 
-    updatePanelHeightHack();
+    updatePanelHeightHack(state, window()->flags());
 }
 
 void UbuntuWindow::setWindowFlags(Qt::WindowFlags flags)
@@ -581,7 +581,7 @@ void UbuntuWindow::setWindowFlags(Qt::WindowFlags flags)
     DLOG("[ubuntumirclient QPA] setWindowFlags(window=%p, %s)", this, qPrintable(qtWindowFlagsToStr(flags)));
     mSurface->setFlags(flags);
 
-    updatePanelHeightHack();
+    updatePanelHeightHack(window()->windowState(), flags);
 }
 
 /*
@@ -590,18 +590,14 @@ void UbuntuWindow::setWindowFlags(Qt::WindowFlags flags)
     window is always on the top-left corner, right below the indicators panel if not
     in fullscreen.
  */
-void UbuntuWindow::updatePanelHeightHack()
+void UbuntuWindow::updatePanelHeightHack(Qt::WindowState state, Qt::WindowFlags flags)
 {
-    if ((window()->windowState() == Qt::WindowFullScreen ||
-            (window()->windowState() == Qt::WindowNoState && window()->flags() & Qt::FramelessWindowHint)) &&
-        geometry().y() != 0) {
+    int newY = state == Qt::WindowFullScreen ||
+            (state == Qt::WindowNoState && flags & Qt::FramelessWindowHint) ? 0 : panelHeight();
+
+    if (geometry().y() != newY) {
         QRect newGeometry = geometry();
-        newGeometry.setY(0);
-        QPlatformWindow::setGeometry(newGeometry);
-        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
-    } else if (geometry().y() == 0) {
-        QRect newGeometry = geometry();
-        newGeometry.setY(panelHeight());
+        newGeometry.setY(newY);
         QPlatformWindow::setGeometry(newGeometry);
         QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
     }

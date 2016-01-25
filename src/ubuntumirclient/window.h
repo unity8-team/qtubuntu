@@ -55,7 +55,7 @@ public:
     void onSwapBuffersDone();
 
 private:
-    void updatePanelHeightHack();
+    void updatePanelHeightHack(Qt::WindowState state, Qt::WindowFlags flags);
     mutable QMutex mMutex;
     const WId mId;
     const QSharedPointer<UbuntuClipboard> mClipboard;
