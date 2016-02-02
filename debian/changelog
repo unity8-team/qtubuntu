@@ -1,3 +1,10 @@
+qtubuntu-gles (0.62+16.04.20160202-0ubuntu1) xenial; urgency=medium
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 02 Feb 2016 11:15:45 +0000
+
 qtubuntu-gles (0.62+16.04.20160128.1-0ubuntu1) xenial; urgency=medium
 
   * New upstream release
