@@ -1,3 +1,10 @@
+qtubuntu (0.62+16.04.20160202-0ubuntu1) xenial; urgency=medium
+
+  [ Lukáš Tinkl ]
+  * Support for switching kbd layouts (LP: #1524400, #1491340)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 02 Feb 2016 11:15:37 +0000
+
 qtubuntu (0.62+16.04.20160128.1-0ubuntu1) xenial; urgency=medium
 
   [ Daniel d'Andrada ]
