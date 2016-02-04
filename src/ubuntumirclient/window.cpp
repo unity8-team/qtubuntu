@@ -133,19 +133,13 @@ MirSurfaceState surfaceStateFromWindowProperties(MirFormFactor formFactor, Qt::W
 {
     if (!visible) return mir_surface_state_minimized;
 
-    bool showDecorationsHint = flags & WindowHidesShellDecorations;
-    qDebug() << "showDecorationsHint" << showDecorationsHint << qtWindowStateToStr(state) << formFactor;
+    bool hideDecorationsHint = flags & WindowHidesShellDecorations;
 
     switch (formFactor) {
         case mir_form_factor_phone:
         case mir_form_factor_tablet:
         case mir_form_factor_tv:
-            if (state == Qt::WindowFullScreen) {
-                if (!showDecorationsHint) {
-                    return mir_surface_state_fullscreen;
-                }
-                return mir_surface_state_restored;
-            } else if (state == Qt::WindowNoState && showDecorationsHint) {
+            if (hideDecorationsHint) {
                 return mir_surface_state_fullscreen;
             }
             break;
@@ -257,7 +251,9 @@ void setSizingConstraints(MirSurfaceSpec *spec, const QSize& minSize, const QSiz
     }
 }
 
-MirSurface *createMirSurface(QWindow *window, UbuntuScreen *screen, UbuntuInput *input, MirConnection *connection)
+MirSurface *createMirSurface(QWindow *window, UbuntuScreen *screen, UbuntuInput *input,
+                             MirConnection *connection, mir_surface_event_callback inputCallback,
+                             void* inputContext)
 {
     auto spec = makeSurfaceSpec(window, input, connection);
     const auto title = window->title().toUtf8();
@@ -272,6 +268,8 @@ MirSurface *createMirSurface(QWindow *window, UbuntuScreen *screen, UbuntuInput 
     if (state == mir_surface_state_fullscreen) {
         mir_surface_spec_set_fullscreen_on_output(spec.get(), screen->mirOutputId());
     }
+
+    mir_surface_spec_set_event_handler(spec.get(), inputCallback, inputContext);
 
     auto surface = mir_surface_create_sync(spec.get());
     Q_ASSERT(mir_surface_is_valid(surface));
@@ -305,14 +303,12 @@ public:
         , mPlatformWindow(platformWindow)
         , mInput(input)
         , mConnection(connection)
-        , mMirSurface(createMirSurface(mWindow, screen, input, connection))
+        , mMirSurface(createMirSurface(mWindow, screen, input, connection, surfaceEventCallback, this))
         , mEglDisplay(screen->eglDisplay())
         , mEglSurface(eglCreateWindowSurface(mEglDisplay, screen->eglConfig(), nativeWindowFor(mMirSurface), nullptr))
         , mNeedsRepaint(false)
         , mParented(mWindow->transientParent() || mWindow->parent())
     {
-        mir_surface_set_event_handler(mMirSurface, surfaceEventCallback, this);
-
         // Window manager can give us a final size different from what we asked for
         // so let's check what we ended up getting
         MirSurfaceParameters parameters;
@@ -709,7 +705,7 @@ void UbuntuWindow::onSwapBuffersDone()
 
 void UbuntuWindow::handleScreenPropertiesChange(MirFormFactor formFactor)
 {
-    qCDebug(ubuntumirclient, "handleScreenPropertiesChange (window=%p, formFactor=%s)", window(), mirFormFactorToStr);
+    qCDebug(ubuntumirclient, "handleScreenPropertiesChange (window=%p, formFactor=%s)", window(), mirFormFactorToStr(formFactor));
 
     // Update the form factor native-interface properties for the windows affected
     // as there is no convenient way to emit signals for those custom properties on a QScreen
