@@ -18,6 +18,7 @@
 #include "nativeinterface.h"
 #include "screen.h"
 #include "glcontext.h"
+#include "window.h"
 
 // Qt
 #include <private/qguiapplication_p.h>
@@ -129,4 +130,40 @@ void* UbuntuNativeInterface::nativeResourceForScreen(const QByteArray& resourceS
         return static_cast<UbuntuScreen*>(screen->handle())->eglNativeDisplay();
     } else
         return NULL;
+}
+
+// Changes to these properties are emitted via the UbuntuNativeInterface::windowPropertyChanged
+// signal fired by UbuntuWindow. Connect to this signal for these properties updates.
+QVariantMap UbuntuNativeInterface::windowProperties(QPlatformWindow *window) const
+{
+    QVariantMap propertyMap;
+    auto w = static_cast<UbuntuWindow*>(window);
+    if (w) {
+        propertyMap.insert("formFactor", w->formFactor());
+    }
+    return propertyMap;
+}
+
+QVariant UbuntuNativeInterface::windowProperty(QPlatformWindow *window, const QString &name) const
+{
+    auto w = static_cast<UbuntuWindow*>(window);
+    if (!w) {
+        return QVariant();
+    }
+
+    if (name == QStringLiteral("formFactor")) {
+        return w->formFactor();
+    } else {
+        return QVariant();
+    }
+}
+
+QVariant UbuntuNativeInterface::windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const
+{
+    QVariant returnVal = windowProperty(window, name);
+    if (!returnVal.isValid()) {
+        return defaultValue;
+    } else {
+        return returnVal;
+    }
 }
