@@ -104,30 +104,10 @@ static void printEglConfig(EGLDisplay display, EGLConfig config) {
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
 
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
-{
-    const MirDisplayOutput *output = NULL;
-    for (uint32_t d = 0; d < conf->num_outputs; d++)
-    {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
-        {
-            output = out;
-            break;
-        }
-    }
-
-    return output;
-}
-
-UbuntuScreen::UbuntuScreen(MirConnection *connection)
+UbuntuScreen::UbuntuScreen(const MirDisplayOutput &output, MirConnection *connection)
     : mFormat(QImage::Format_RGB32)
     , mDepth(32)
+    , mFormFactor(mir_form_factor_unknown)
     , mOutputId(0)
     , mSurfaceFormat()
     , mEglDisplay(EGL_NO_DISPLAY)
@@ -175,34 +155,7 @@ UbuntuScreen::UbuntuScreen(MirConnection *connection)
     qCDebug(ubuntumirclient, "setting swap interval to %d", swapInterval);
     eglSwapInterval(mEglDisplay, swapInterval);
 
-    // Get screen resolution.
-    auto configDeleter = [](MirDisplayConfiguration *config) { mir_display_config_destroy(config); };
-    using configUp = std::unique_ptr<MirDisplayConfiguration, decltype(configDeleter)>;
-    configUp displayConfig(mir_connection_create_display_config(connection), configDeleter);
-    ASSERT(displayConfig != nullptr);
-
-    auto const displayOutput = find_active_output(displayConfig.get());
-    ASSERT(displayOutput != nullptr);
-
-    mOutputId = displayOutput->output_id;
-
-    mPhysicalSize = QSizeF(displayOutput->physical_width_mm, displayOutput->physical_height_mm);
-    qCDebug(ubuntumirclient, "screen physical size: %.2fx%.2f", mPhysicalSize.width(), mPhysicalSize.height());
-
-    const MirDisplayMode *mode = &displayOutput->modes[displayOutput->current_mode];
-    const int kScreenWidth = mode->horizontal_resolution;
-    const int kScreenHeight = mode->vertical_resolution;
-    Q_ASSERT(kScreenWidth > 0 && kScreenHeight > 0);
-
-    qCDebug(ubuntumirclient, "screen resolution: %dx%d", kScreenWidth, kScreenHeight);
-
-    mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
-
-    // Set the default orientation based on the initial screen dimmensions.
-    mNativeOrientation = (mGeometry.width() >= mGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
-
-    // If it's a landscape device (i.e. some tablets), start in landscape, otherwise portrait
-    mCurrentOrientation = (mNativeOrientation == Qt::LandscapeOrientation) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
+    setMirDisplayOutput(output);
 }
 
 UbuntuScreen::~UbuntuScreen()
@@ -277,4 +230,39 @@ void UbuntuScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
         qCDebug(ubuntumirclient, "UbuntuScreen::handleWindowSurfaceResize - new orientation %s",orientationToStr(mCurrentOrientation));
         QWindowSystemInterface::handleScreenOrientationChange(screen(), mCurrentOrientation);
     }
+}
+
+void UbuntuScreen::setMirDisplayOutput(const MirDisplayOutput &output)
+{
+    // Physical screen size
+    mPhysicalSize.setWidth(output.physical_width_mm);
+    mPhysicalSize.setHeight(output.physical_height_mm);
+
+    // Pixel Format
+//    mFormat = qImageFormatFromMirPixelFormat(output.current_format); // TODO
+
+    // Pixel depth
+    mDepth = 8 * MIR_BYTES_PER_PIXEL(output.current_format);
+
+    MirDisplayMode mode = output.modes[output.current_mode];
+    const int kScreenWidth = mode.horizontal_resolution;
+    const int kScreenHeight = mode.vertical_resolution;
+
+    mGeometry = QRect(0, 0, kScreenWidth, kScreenHeight);
+
+    // Misc
+    mOutputId = output.output_id;
+
+    // Set the default orientation based on the initial screen dimmensions.
+    mNativeOrientation = (mGeometry.width() >= mGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
+
+    // If it's a landscape device (i.e. some tablets), start in landscape, otherwise portrait
+    mCurrentOrientation = (mNativeOrientation == Qt::LandscapeOrientation) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
+
+    // Other properties come in setAdditionalMirDisplayProperties call
+}
+
+void UbuntuScreen::setAdditionalMirDisplayProperties(MirFormFactor formFactor)
+{
+    mFormFactor = formFactor;
 }

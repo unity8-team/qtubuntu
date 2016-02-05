@@ -19,17 +19,21 @@
 
 #include <qpa/qplatformscreen.h>
 #include <QSurfaceFormat>
+
+#include <mircommon/mir_toolkit/common.h> // just for MirFormFactor enum
+
 #include <EGL/egl.h>
 
 #include "cursor.h"
 
 struct MirConnection;
+struct MirDisplayOutput;
 
 class UbuntuScreen : public QObject, public QPlatformScreen
 {
     Q_OBJECT
 public:
-    UbuntuScreen(MirConnection *connection);
+    UbuntuScreen(const MirDisplayOutput &output, MirConnection *connection);
     virtual ~UbuntuScreen();
 
     // QPlatformScreen methods.
@@ -47,6 +51,14 @@ public:
     EGLDisplay eglDisplay() const { return mEglDisplay; }
     EGLConfig eglConfig() const { return mEglConfig; }
     EGLNativeDisplayType eglNativeDisplay() const { return mEglNativeDisplay; }
+
+    // Additional Screen properties from Mir
+    uint32_t outputId() const { return mOutputId; }
+    MirFormFactor formFactor() const { return mFormFactor; }
+
+    // Internally used methods
+    void setMirDisplayOutput(const MirDisplayOutput &output);
+    void setAdditionalMirDisplayProperties(MirFormFactor formFactor);
     void handleWindowSurfaceResize(int width, int height);
     uint32_t mirOutputId() const { return mOutputId; }
 
@@ -60,6 +72,7 @@ private:
     Qt::ScreenOrientation mCurrentOrientation;
     QImage::Format mFormat;
     int mDepth;
+    MirFormFactor mFormFactor;
     uint32_t mOutputId;
     QSurfaceFormat mSurfaceFormat;
     EGLDisplay mEglDisplay;

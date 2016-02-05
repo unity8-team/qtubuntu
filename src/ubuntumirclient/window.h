@@ -18,13 +18,14 @@
 #define UBUNTU_WINDOW_H
 
 #include <qpa/qplatformwindow.h>
-#include <QLoggingCategory>
 #include <QSharedPointer>
 #include <QMutex>
 
+#include <mircommon/mir_toolkit/common.h> // just for MirFormFactor enum
 #include <memory>
 
 class UbuntuClipboard;
+class UbuntuNativeInterface;
 class UbuntuInput;
 class UbuntuScreen;
 class UbuntuSurface;
@@ -35,17 +36,22 @@ class UbuntuWindow : public QObject, public QPlatformWindow
 {
     Q_OBJECT
 public:
-    UbuntuWindow(QWindow *w, const QSharedPointer<UbuntuClipboard> &clipboard, UbuntuScreen *screen,
-                 UbuntuInput *input, MirConnection *mirConnection);
+    UbuntuWindow(QWindow *w, const QSharedPointer<UbuntuClipboard> &clipboard,
+                 UbuntuInput *input, UbuntuNativeInterface* native, MirConnection *mirConnection);
     virtual ~UbuntuWindow();
 
     // QPlatformWindow methods.
     WId winId() const override;
     void setGeometry(const QRect&) override;
     void setWindowState(Qt::WindowState state) override;
+    void setWindowFlags(Qt::WindowFlags flags) override;
     void setVisible(bool visible) override;
     void setWindowTitle(const QString &title) override;
     void propagateSizeHints() override;
+    bool isExposed() const override;
+
+    // Additional Window properties exposed by NativeInterface
+    MirFormFactor formFactor() const { return mFormFactor; }
 
     // New methods.
     void *eglSurface() const;
@@ -53,12 +59,21 @@ public:
     void handleSurfaceResized(int width, int height);
     void handleSurfaceFocused();
     void onSwapBuffersDone();
+    void handleScreenPropertiesChange(MirFormFactor formFactor);
 
 private:
-    void updatePanelHeightHack(Qt::WindowState);
+    void enablePanelHeightHack(bool enable);
+    void updateSurfaceState();
+
     mutable QMutex mMutex;
     const WId mId;
     const QSharedPointer<UbuntuClipboard> mClipboard;
+    UbuntuNativeInterface *mNativeInterface;
+    Qt::WindowState mWindowState;
+    Qt::WindowFlags mWindowFlags;
+    bool mWindowVisible;
+    MirFormFactor mFormFactor;
+
     std::unique_ptr<UbuntuSurface> mSurface;
 };
 
