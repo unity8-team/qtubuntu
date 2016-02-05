@@ -1,3 +1,17 @@
+qtubuntu (0.62+16.04.20160205-0ubuntu1) xenial; urgency=medium
+
+  [ Gerry Boland ]
+  * React to formFactor and window flag changes. added:
+    src/ubuntumirclient/screenobserver.cpp
+    src/ubuntumirclient/screenobserver.h
+
+  [ Nick Dedekind ]
+  * React to formFactor and window flag changes. added:
+    src/ubuntumirclient/screenobserver.cpp
+    src/ubuntumirclient/screenobserver.h
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 05 Feb 2016 11:55:39 +0000
+
 qtubuntu (0.62+16.04.20160128.1-0ubuntu1) xenial; urgency=medium
 
   [ Daniel d'Andrada ]
