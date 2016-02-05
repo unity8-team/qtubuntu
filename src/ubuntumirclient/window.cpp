@@ -350,6 +350,8 @@ public:
     MirSurfaceState state() const { return mir_surface_get_state(mMirSurface); }
     void setState(MirSurfaceState state);
 
+    MirSurfaceType type() const { return mir_surface_get_type(mMirSurface); }
+
     EGLSurface eglSurface() const { return mEglSurface; }
     MirSurface *mirSurface() const { return mMirSurface; }
 
@@ -729,6 +731,7 @@ void UbuntuWindow::updateSurfaceState()
         mSurface->setState(newState);
 
         lock.unlock();
-        enablePanelHeightHack(newState != mir_surface_state_fullscreen);
+        enablePanelHeightHack(newState != mir_surface_state_fullscreen &&
+                              mSurface->type() != mir_surface_type_inputmethod);
     }
 }
