@@ -68,7 +68,6 @@ public:
     void handleScreenPropertiesChange(MirFormFactor formFactor, float scale);
 
 private:
-    void enablePanelHeightHack(bool enable);
     void updateSurfaceState();
     mutable QMutex mMutex;
     const WId mId;

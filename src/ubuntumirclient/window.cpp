@@ -249,23 +249,6 @@ MirSurface *createMirSurface(QWindow *window, UbuntuScreen *screen, UbuntuInput 
     return surface;
 }
 
-// FIXME - in order to work around https://bugs.launchpad.net/mir/+bug/1346633
-// we need to guess the panel height (3GU)
-int panelHeight()
-{
-    const int defaultGridUnit = 8;
-    int gridUnit = defaultGridUnit;
-    QByteArray gridUnitString = qgetenv("GRID_UNIT_PX");
-    if (!gridUnitString.isEmpty()) {
-        bool ok;
-        gridUnit = gridUnitString.toInt(&ok);
-        if (!ok) {
-            gridUnit = defaultGridUnit;
-        }
-    }
-    return gridUnit * 3;
-}
-
 } //namespace
 
 /*
@@ -526,8 +509,6 @@ UbuntuWindow::UbuntuWindow(QWindow *w, const QSharedPointer<UbuntuClipboard> &cl
 {
     qCDebug(ubuntumirclient, "UbuntuWindow(window=%p, screen=%p, input=%p, surf=%p) with title '%s', role: '%d'",
             w, w->screen()->handle(), input, mSurface.get(), qPrintable(window()->title()), roleFor(window()));
-
-    enablePanelHeightHack(w->windowState() != Qt::WindowFullScreen);
 }
 
 UbuntuWindow::~UbuntuWindow()
@@ -628,30 +609,6 @@ void UbuntuWindow::setWindowFlags(Qt::WindowFlags flags)
     mWindowFlags = flags;
 
     mSurface->setShellChrome(mWindowFlags & WindowHidesShellDecorations ? mir_shell_chrome_low : mir_shell_chrome_normal);
-}
-
-/*
-    FIXME: Mir does not let clients know the position of their windows in the virtual
-    desktop space. So we have this ugly hack that assumes a phone situation where the
-    window is always on the top-left corner, right below the indicators panel if not
-    in fullscreen.
- */
-void UbuntuWindow::enablePanelHeightHack(bool enable)
-{
-    QMutexLocker lock(&mMutex);
-
-    QRect newGeometry = geometry();
-    if (enable) {
-        newGeometry.setY(panelHeight());
-    } else {
-        newGeometry.setY(0);
-    }
-
-    if (newGeometry != geometry()) {
-        lock.unlock();
-        QPlatformWindow::setGeometry(newGeometry);
-        QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
-    }
 }
 
 void UbuntuWindow::setGeometry(const QRect &rect)
@@ -756,9 +713,5 @@ void UbuntuWindow::updateSurfaceState()
     qCDebug(ubuntumirclient, "updateSurfaceState (window=%p, surfaceState=%s)", window(), mirSurfaceStateToStr(newState));
     if (newState != mSurface->state()) {
         mSurface->setState(newState);
-
-        lock.unlock();
-        enablePanelHeightHack(newState != mir_surface_state_fullscreen &&
-                              mSurface->type() != mir_surface_type_inputmethod);
     }
 }
