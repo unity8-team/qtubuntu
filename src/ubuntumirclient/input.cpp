@@ -124,17 +124,21 @@ static const uint32_t KeyTable[] = {
 Qt::WindowState mirSurfaceStateToWindowState(MirSurfaceState state)
 {
     switch (state) {
+    default:
+    case mir_surface_state_unknown:
+    case mir_surface_state_restored:
+        return Qt::WindowNoState;
     case mir_surface_state_fullscreen:
         return Qt::WindowFullScreen;
     case mir_surface_state_maximized:
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
         return Qt::WindowMaximized;
-    case mir_surface_state_hidden:
     case mir_surface_state_minimized:
         return Qt::WindowMinimized;
-    default:
-    case mir_surface_state_restored:
+    case mir_surface_state_hidden:
+        // We should be handling this state separately.
+        Q_ASSERT(false);
         return Qt::WindowNoState;
     }
 }
@@ -272,7 +276,14 @@ void UbuntuInput::customEvent(QEvent* event)
             }
         } else if (surfaceEventAttribute == mir_surface_attrib_state) {
             MirSurfaceState state = static_cast<MirSurfaceState>(mir_surface_event_get_attribute_value(surfaceEvent));
-            ubuntuEvent->window->handleSurfaceStateChanged(mirSurfaceStateToWindowState(state));
+
+            if (state == mir_surface_state_hidden) {
+                ubuntuEvent->window->handleSurfaceVisibilityChanged(false);
+            } else {
+                // it's visible!
+                ubuntuEvent->window->handleSurfaceVisibilityChanged(true);
+                ubuntuEvent->window->handleSurfaceStateChanged(mirSurfaceStateToWindowState(state));
+            }
         }
         break;
     }
