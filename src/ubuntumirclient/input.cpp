@@ -124,10 +124,6 @@ static const uint32_t KeyTable[] = {
 Qt::WindowState mirSurfaceStateToWindowState(MirSurfaceState state)
 {
     switch (state) {
-    default:
-    case mir_surface_state_unknown:
-    case mir_surface_state_restored:
-        return Qt::WindowNoState;
     case mir_surface_state_fullscreen:
         return Qt::WindowFullScreen;
     case mir_surface_state_maximized:
@@ -139,6 +135,9 @@ Qt::WindowState mirSurfaceStateToWindowState(MirSurfaceState state)
     case mir_surface_state_hidden:
         // We should be handling this state separately.
         Q_ASSERT(false);
+    case mir_surface_state_restored:
+    case mir_surface_state_unknown:
+    default:
         return Qt::WindowNoState;
     }
 }
