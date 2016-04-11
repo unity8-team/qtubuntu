@@ -30,6 +30,7 @@
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qwindowsysteminterface.h>
+#include <QTextCodec>
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -37,6 +38,9 @@
 #include <mir_toolkit/mir_client_library.h>
 
 Q_LOGGING_CATEGORY(ubuntumirclientInput, "ubuntumirclient.input", QtWarningMsg)
+
+namespace
+{
 
 // XKB Keysyms which do not map directly to Qt types (i.e. Unicode points)
 static const uint32_t KeyTable[] = {
@@ -108,6 +112,27 @@ static const uint32_t KeyTable[] = {
     XKB_KEY_MultipleCandidate,       Qt::Key_MultipleCandidate,
     XKB_KEY_PreviousCandidate,       Qt::Key_PreviousCandidate,
 
+    // dead keys
+    XKB_KEY_dead_grave,              Qt::Key_Dead_Grave,
+    XKB_KEY_dead_acute,              Qt::Key_Dead_Acute,
+    XKB_KEY_dead_circumflex,         Qt::Key_Dead_Circumflex,
+    XKB_KEY_dead_tilde,              Qt::Key_Dead_Tilde,
+    XKB_KEY_dead_macron,             Qt::Key_Dead_Macron,
+    XKB_KEY_dead_breve,              Qt::Key_Dead_Breve,
+    XKB_KEY_dead_abovedot,           Qt::Key_Dead_Abovedot,
+    XKB_KEY_dead_diaeresis,          Qt::Key_Dead_Diaeresis,
+    XKB_KEY_dead_abovering,          Qt::Key_Dead_Abovering,
+    XKB_KEY_dead_doubleacute,        Qt::Key_Dead_Doubleacute,
+    XKB_KEY_dead_caron,              Qt::Key_Dead_Caron,
+    XKB_KEY_dead_cedilla,            Qt::Key_Dead_Cedilla,
+    XKB_KEY_dead_ogonek,             Qt::Key_Dead_Ogonek,
+    XKB_KEY_dead_iota,               Qt::Key_Dead_Iota,
+    XKB_KEY_dead_voiced_sound,       Qt::Key_Dead_Voiced_Sound,
+    XKB_KEY_dead_semivoiced_sound,   Qt::Key_Dead_Semivoiced_Sound,
+    XKB_KEY_dead_belowdot,           Qt::Key_Dead_Belowdot,
+    XKB_KEY_dead_hook,               Qt::Key_Dead_Hook,
+    XKB_KEY_dead_horn,               Qt::Key_Dead_Horn,
+
     XKB_KEY_Mode_switch,             Qt::Key_Mode_switch,
     XKB_KEY_script_switch,           Qt::Key_Mode_switch,
     XKB_KEY_XF86AudioRaiseVolume,    Qt::Key_VolumeUp,
@@ -117,6 +142,29 @@ static const uint32_t KeyTable[] = {
 
     0,                          0
 };
+
+Qt::WindowState mirSurfaceStateToWindowState(MirSurfaceState state)
+{
+    switch (state) {
+    case mir_surface_state_fullscreen:
+        return Qt::WindowFullScreen;
+    case mir_surface_state_maximized:
+    case mir_surface_state_vertmaximized:
+    case mir_surface_state_horizmaximized:
+        return Qt::WindowMaximized;
+    case mir_surface_state_minimized:
+        return Qt::WindowMinimized;
+    case mir_surface_state_hidden:
+        // We should be handling this state separately.
+        Q_ASSERT(false);
+    case mir_surface_state_restored:
+    case mir_surface_state_unknown:
+    default:
+        return Qt::WindowNoState;
+    }
+}
+
+} // namespace
 
 class UbuntuEvent : public QEvent
 {
@@ -226,7 +274,9 @@ void UbuntuInput::customEvent(QEvent* event)
     case mir_event_type_surface:
     {
         auto surfaceEvent = mir_event_get_surface_event(nativeEvent);
-        if (mir_surface_event_get_attribute(surfaceEvent) == mir_surface_attrib_focus) {
+        auto surfaceEventAttribute = mir_surface_event_get_attribute(surfaceEvent);
+        
+        if (surfaceEventAttribute == mir_surface_attrib_focus) {
             const bool focused = mir_surface_event_get_attribute_value(surfaceEvent) == mir_surface_focused;
             // Mir may have sent a pair of focus lost/gained events, so we need to "peek" into the queue
             // so that we don't deactivate windows prematurely.
@@ -244,6 +294,16 @@ void UbuntuInput::customEvent(QEvent* event)
                 qCDebug(ubuntumirclient, "No windows have focus");
                 QWindowSystemInterface::handleWindowActivated(nullptr, Qt::ActiveWindowFocusReason);
                 QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
+            }
+        } else if (surfaceEventAttribute == mir_surface_attrib_state) {
+            MirSurfaceState state = static_cast<MirSurfaceState>(mir_surface_event_get_attribute_value(surfaceEvent));
+
+            if (state == mir_surface_state_hidden) {
+                ubuntuEvent->window->handleSurfaceVisibilityChanged(false);
+            } else {
+                // it's visible!
+                ubuntuEvent->window->handleSurfaceVisibilityChanged(true);
+                ubuntuEvent->window->handleSurfaceStateChanged(mirSurfaceStateToWindowState(state));
             }
         }
         break;
@@ -353,22 +413,26 @@ void UbuntuInput::dispatchTouchEvent(UbuntuWindow *window, const MirInputEvent *
             mTouchDevice, touchPoints);
 }
 
-static uint32_t translateKeysym(uint32_t sym, char *string, size_t size)
-{
-    Q_UNUSED(size);
-    string[0] = '\0';
+static uint32_t translateKeysym(uint32_t sym, const QString &text) {
+    int code = 0;
 
-    if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35)
+    QTextCodec *systemCodec = QTextCodec::codecForLocale();
+    if (sym < 128 || (sym < 256 && systemCodec->mibEnum() == 4)) {
+        // upper-case key, if known
+        code = isprint((int)sym) ? toupper((int)sym) : 0;
+    } else if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35) {
         return Qt::Key_F1 + (int(sym) - XKB_KEY_F1);
-
-    for (int i = 0; KeyTable[i]; i += 2) {
-        if (sym == KeyTable[i])
-            return KeyTable[i + 1];
+    } else if (text.length() == 1 && text.unicode()->unicode() > 0x1f
+               && text.unicode()->unicode() != 0x7f
+               && !(sym >= XKB_KEY_dead_grave && sym <= XKB_KEY_dead_currency)) {
+        code = text.unicode()->toUpper().unicode();
+    } else {
+        for (int i = 0; KeyTable[i]; i += 2)
+            if (sym == KeyTable[i])
+                code = KeyTable[i + 1];
     }
 
-    string[0] = sym;
-    string[1] = '\0';
-    return toupper(sym);
+    return code;
 }
 
 namespace
@@ -388,6 +452,9 @@ Qt::KeyboardModifiers qt_modifiers_from_mir(MirInputEventModifiers modifiers)
     if (modifiers & mir_input_event_modifier_meta) {
         q_modifiers |= Qt::MetaModifier;
     }
+    if (modifiers & mir_input_event_modifier_alt_right) {
+        q_modifiers |= Qt::GroupSwitchModifier;
+    }
     return q_modifiers;
 }
 }
@@ -398,6 +465,8 @@ void UbuntuInput::dispatchKeyEvent(UbuntuWindow *window, const MirInputEvent *ev
 
     ulong timestamp = mir_input_event_get_event_time(event) / 1000000;
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(key_event);
+    quint32 scan_code = mir_keyboard_event_scan_code(key_event);
+    quint32 native_modifiers = mir_keyboard_event_modifiers(key_event);
 
     // Key modifier and unicode index mapping.
     auto modifiers = qt_modifiers_from_mir(mir_keyboard_event_modifiers(key_event));
@@ -409,15 +478,22 @@ void UbuntuInput::dispatchKeyEvent(UbuntuWindow *window, const MirInputEvent *ev
     if (action == mir_keyboard_action_down)
         mLastFocusedWindow = window;
 
-    char s[2];
-    int sym = translateKeysym(xk_sym, s, sizeof(s));
-    QString text = QString::fromLatin1(s);
+    QString text;
+    QVarLengthArray<char, 32> chars(32);
+    {
+        int result = xkb_keysym_to_utf8(xk_sym, chars.data(), chars.size());
+
+        if (result > 0) {
+            text = QString::fromUtf8(chars.constData());
+        }
+    }
+    int sym = translateKeysym(xk_sym, text);
 
     bool is_auto_rep = action == mir_keyboard_action_repeat;
 
     QPlatformInputContext *context = QGuiApplicationPrivate::platformIntegration()->inputContext();
     if (context) {
-        QKeyEvent qKeyEvent(keyType, sym, modifiers, text, is_auto_rep);
+        QKeyEvent qKeyEvent(keyType, sym, modifiers, scan_code, xk_sym, native_modifiers, text, is_auto_rep);
         qKeyEvent.setTimestamp(timestamp);
         if (context->filterEvent(&qKeyEvent)) {
             qCDebug(ubuntumirclient, "key event filtered out by input context");
@@ -425,7 +501,7 @@ void UbuntuInput::dispatchKeyEvent(UbuntuWindow *window, const MirInputEvent *ev
         }
     }
 
-    QWindowSystemInterface::handleKeyEvent(window->window(), timestamp, keyType, sym, modifiers, text, is_auto_rep);
+    QWindowSystemInterface::handleExtendedKeyEvent(window->window(), timestamp, keyType, sym, modifiers, scan_code, xk_sym, native_modifiers, text, is_auto_rep);
 }
 
 namespace

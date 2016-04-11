@@ -12,7 +12,7 @@ QMAKE_CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -std=c++11 -We
 QMAKE_LFLAGS += -std=c++11 -Wl,-no-undefined
 
 CONFIG += link_pkgconfig
-PKGCONFIG += egl mirclient ubuntu-platform-api
+PKGCONFIG += egl mirclient ubuntu-platform-api xkbcommon
 
 SOURCES = \
     backingstore.cpp \
@@ -22,6 +22,7 @@ SOURCES = \
     input.cpp \
     integration.cpp \
     nativeinterface.cpp \
+    offscreensurface.cpp \
     platformservices.cpp \
     plugin.cpp \
     screen.cpp \
@@ -37,6 +38,7 @@ HEADERS = \
     integration.h \
     logging.h \
     nativeinterface.h \
+    offscreensurface.h \
     orientationchangeevent_p.h \
     platformservices.h \
     plugin.h \
