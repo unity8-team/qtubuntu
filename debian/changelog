@@ -1,3 +1,9 @@
+qtubuntu (0.62+16.04.20160414-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Inline GLES packaging using a quilt patch
+
+ -- Robert Bruce Park <robert.park@canonical.com>  Thu, 14 Apr 2016 22:53:12 +0000
+
 qtubuntu (0.62+16.04.20160322-0ubuntu1) xenial; urgency=medium
 
   [ Lukáš Tinkl ]
