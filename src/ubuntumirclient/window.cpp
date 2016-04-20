@@ -43,7 +43,7 @@
  */
 Q_LOGGING_CATEGORY(ubuntumirclientBufferSwap, "ubuntumirclient.bufferSwap", QtWarningMsg)
 
-const Qt::WindowType WindowHidesShellDecorations = (Qt::WindowType)0x00800000;
+const Qt::WindowType LowChromeWindowHint = (Qt::WindowType)0x00800000;
 
 namespace
 {
@@ -240,7 +240,7 @@ MirSurface *createMirSurface(QWindow *window, UbuntuScreen *screen, UbuntuInput 
 
     mir_surface_spec_set_event_handler(spec.get(), inputCallback, inputContext);
 
-    if (window->flags() & WindowHidesShellDecorations) {
+    if (window->flags() & LowChromeWindowHint) {
         mir_surface_spec_set_shell_chrome(spec.get(), mir_shell_chrome_low);
     }
 
@@ -283,7 +283,7 @@ public:
         , mEglDisplay(screen->eglDisplay())
         , mNeedsRepaint(false)
         , mParented(mWindow->transientParent() || mWindow->parent())
-        , mShellChrome(mWindow->flags() & WindowHidesShellDecorations ? mir_shell_chrome_low : mir_shell_chrome_normal)
+        , mShellChrome(mWindow->flags() & LowChromeWindowHint ? mir_shell_chrome_low : mir_shell_chrome_normal)
     {
         mMirSurface = createMirSurface(mWindow, screen, input, connection, surfaceEventCallback, this);
         mEglSurface = eglCreateWindowSurface(mEglDisplay, screen->eglConfig(), nativeWindowFor(mMirSurface), nullptr);
@@ -331,7 +331,8 @@ public:
     EGLSurface eglSurface() const { return mEglSurface; }
     MirSurface *mirSurface() const { return mMirSurface; }
 
-    void updateSurface();
+    void setSurfaceParent(MirSurface*);
+    bool hasParent() const { return mParented; }
 
 private:
     static void surfaceEventCallback(MirSurface *surface, const MirEvent *event, void *context);
@@ -492,22 +493,14 @@ void UbuntuSurface::postEvent(const MirEvent *event)
     mInput->postEvent(mPlatformWindow, event);
 }
 
-void UbuntuSurface::updateSurface()
+void UbuntuSurface::setSurfaceParent(MirSurface* parent)
 {
-    qCDebug(ubuntumirclient, "updateSurface(window=%p)", mWindow);
+    qCDebug(ubuntumirclient, "setSurfaceParent(window=%p)", mWindow);
 
-    if (!mParented && mWindow->type() == Qt::Dialog) {
-        // The dialog may have been parented after creation time
-        // so morph it into a modal dialog
-        auto parent = transientParentFor(mWindow);
-        if (parent) {
-            qCDebug(ubuntumirclient, "updateSurface(window=%p) dialog now parented", mWindow);
-            mParented = true;
-            Spec spec{mir_connection_create_spec_for_changes(mConnection)};
-            mir_surface_spec_set_parent(spec.get(), parent->mirSurface());
-            mir_surface_apply_spec(mMirSurface, spec.get());
-        }
-    }
+    mParented = true;
+    Spec spec{mir_connection_create_spec_for_changes(mConnection)};
+    mir_surface_spec_set_parent(spec.get(), parent);
+    mir_surface_apply_spec(mMirSurface, spec.get());
 }
 
 UbuntuWindow::UbuntuWindow(QWindow *w, const QSharedPointer<UbuntuClipboard> &clipboard,
@@ -630,12 +623,12 @@ void UbuntuWindow::setWindowState(Qt::WindowState state)
 void UbuntuWindow::setWindowFlags(Qt::WindowFlags flags)
 {
     QMutexLocker lock(&mMutex);
-    qCDebug(ubuntumirclient, "setWindowFlags(window=%p, %d)", this, (int)flags);
+    qCDebug(ubuntumirclient, "setWindowFlags(window=%p, 0x%x)", this, (int)flags);
 
     if (mWindowFlags == flags) return;
     mWindowFlags = flags;
 
-    mSurface->setShellChrome(mWindowFlags & WindowHidesShellDecorations ? mir_shell_chrome_low : mir_shell_chrome_normal);
+    mSurface->setShellChrome(mWindowFlags & LowChromeWindowHint ? mir_shell_chrome_low : mir_shell_chrome_normal);
 }
 
 /*
@@ -684,7 +677,17 @@ void UbuntuWindow::setVisible(bool visible)
 
     if (mWindowVisible == visible) return;
     mWindowVisible = visible;
-    if (mWindowVisible) mSurface->updateSurface();
+
+    if (visible) {
+        if (!mSurface->hasParent() && window()->type() == Qt::Dialog) {
+            // The dialog may have been parented after creation time
+            // so morph it into a modal dialog
+            auto parent = transientParentFor(window());
+            if (parent) {
+                mSurface->setSurfaceParent(parent->mirSurface());
+            }
+        }
+    }
 
     lock.unlock();
     updateSurfaceState();
@@ -766,7 +769,6 @@ void UbuntuWindow::updateSurfaceState()
         mSurface->setState(newState);
 
         lock.unlock();
-        enablePanelHeightHack(newState != mir_surface_state_fullscreen &&
-                              mSurface->type() != mir_surface_type_inputmethod);
+        enablePanelHeightHack(newState != mir_surface_state_fullscreen);
     }
 }
