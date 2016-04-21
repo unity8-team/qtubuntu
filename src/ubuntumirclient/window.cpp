@@ -572,6 +572,7 @@ void UbuntuWindow::handleSurfaceStateChanged(Qt::WindowState state)
     mWindowState = state;
 
     QWindowSystemInterface::handleWindowStateChanged(window(), state);
+    enablePanelHeightHack(state != Qt::WindowFullScreen);
 }
 
 void UbuntuWindow::setWindowState(Qt::WindowState state)
@@ -612,6 +613,7 @@ void UbuntuWindow::enablePanelHeightHack(bool enable)
         newGeometry.setY(panelHeight());
     } else {
         newGeometry.setY(0);
+        newGeometry.setHeight(newGeometry.height() - panelHeight());
     }
 
     if (newGeometry != geometry()) {
