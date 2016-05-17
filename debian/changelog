@@ -1,3 +1,12 @@
+qtubuntu (0.62+16.04.20160517-0ubuntu1) xenial; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Enable workaround_brokenFBOReadBack on the Mali 400
+  * Enable workaround_brokenFBOReadBack on the Mali-T760
+  * Enable workaround_brokenFBOReadBack on the PowerVR Rogue G6200
+
+ -- Michael Terry <michael.terry@canonical.com>  Tue, 17 May 2016 19:42:44 +0000
+
 qtubuntu (0.62+16.04.20160428-0ubuntu1) xenial; urgency=medium
 
   [ Daniel d'Andrada, Gerry Boland, Michał Sawicz, Nick Dedekind ]
