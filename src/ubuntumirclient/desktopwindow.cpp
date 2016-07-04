@@ -14,34 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "offscreensurface.h"
+#include "desktopwindow.h"
 
-#include <QOffscreenSurface>
-#include <QOpenGLFramebufferObject>
+// local
+#include "logging.h"
 
-UbuntuOffscreenSurface::UbuntuOffscreenSurface(QOffscreenSurface *offscreenSurface)
-    : QPlatformOffscreenSurface(offscreenSurface)
-    , m_buffer(nullptr)
-    , m_format(offscreenSurface->requestedFormat())
+UbuntuDesktopWindow::UbuntuDesktopWindow(QWindow *window)
+    : QPlatformWindow(window)
 {
-}
-
-QSurfaceFormat UbuntuOffscreenSurface::format() const
-{
-    return m_format;
-}
-
-bool UbuntuOffscreenSurface::isValid() const
-{
-    return m_buffer != nullptr && m_buffer->isValid();
-}
-
-QOpenGLFramebufferObject* UbuntuOffscreenSurface::buffer() const
-{
-    return m_buffer;
-}
-
-void UbuntuOffscreenSurface::setBuffer(QOpenGLFramebufferObject *buffer)
-{
-    m_buffer = buffer;
+    qCDebug(ubuntumirclient, "UbuntuDesktopWindow(window=%p)", window);
 }

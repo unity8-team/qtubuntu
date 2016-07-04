@@ -16,7 +16,6 @@
 
 #include "glcontext.h"
 #include "logging.h"
-#include "offscreensurface.h"
 #include "window.h"
 
 #include <QOpenGLFramebufferObject>
@@ -74,25 +73,16 @@ bool UbuntuOpenGLContext::makeCurrent(QPlatformSurface* surface)
 {
     Q_ASSERT(surface->surface()->surfaceType() == QSurface::OpenGLSurface);
 
-    if (surface->surface()->surfaceClass() == QSurface::Offscreen) {
-        auto offscreen = static_cast<UbuntuOffscreenSurface *>(surface);
-        if (!offscreen->buffer()) {
-            auto buffer = new QOpenGLFramebufferObject(surface->surface()->size());
-            offscreen->setBuffer(buffer);
-        }
-        return offscreen->buffer()->bind();
-    } else {
-        const bool ret = QEGLPlatformContext::makeCurrent(surface);
+    const bool ret = QEGLPlatformContext::makeCurrent(surface);
 
-        if (Q_LIKELY(ret)) {
-            QOpenGLContextPrivate *ctx_d = QOpenGLContextPrivate::get(context());
-            if (!ctx_d->workaround_brokenFBOReadBack && needsFBOReadBackWorkaround()) {
-                ctx_d->workaround_brokenFBOReadBack = true;
-            }
+    if (Q_LIKELY(ret)) {
+        QOpenGLContextPrivate *ctx_d = QOpenGLContextPrivate::get(context());
+        if (!ctx_d->workaround_brokenFBOReadBack && needsFBOReadBackWorkaround()) {
+            ctx_d->workaround_brokenFBOReadBack = true;
         }
-
-        return ret;
     }
+
+    return ret;
 }
 
 // WORKAROUND for bug 1594198 - avoid having Qt use GLESv3

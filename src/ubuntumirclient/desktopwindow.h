@@ -14,28 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UBUNTU_OFFSCREEN_SURFACE_H
-#define UBUNTU_OFFSCREEN_SURFACE_H
+#ifndef UBUNTU_DESKTOP_WINDOW_H
+#define UBUNTU_DESKTOP_WINDOW_H
 
-#include <qpa/qplatformoffscreensurface.h>
-#include <QSurfaceFormat>
+#include <qpa/qplatformwindow.h>
 
-class QOpenGLFramebufferObject;
-
-class UbuntuOffscreenSurface : public QPlatformOffscreenSurface
+// TODO Implement it. For now it's just an empty, dummy class.
+class UbuntuDesktopWindow : public QPlatformWindow
 {
 public:
-    UbuntuOffscreenSurface(QOffscreenSurface *offscreenSurface);
-
-    QSurfaceFormat format() const override;
-    bool isValid() const override;
-
-    QOpenGLFramebufferObject* buffer() const;
-    void setBuffer(QOpenGLFramebufferObject *buffer);
-
-private:
-    QOpenGLFramebufferObject *m_buffer;
-    QSurfaceFormat m_format;
+    UbuntuDesktopWindow(QWindow*);
 };
 
-#endif // UBUNTU_OFFSCREEN_SURFACE_H
+#endif // UBUNTU_DESKTOP_WINDOW_H

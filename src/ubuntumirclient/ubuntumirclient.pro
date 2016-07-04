@@ -18,11 +18,11 @@ SOURCES = \
     backingstore.cpp \
     clipboard.cpp \
     cursor.cpp \
+    desktopwindow.cpp \
     glcontext.cpp \
     input.cpp \
     integration.cpp \
     nativeinterface.cpp \
-    offscreensurface.cpp \
     platformservices.cpp \
     plugin.cpp \
     screen.cpp \
@@ -34,12 +34,12 @@ HEADERS = \
     backingstore.h \
     clipboard.h \
     cursor.h \
+    desktopwindow.h \
     glcontext.h \
     input.h \
     integration.h \
     logging.h \
     nativeinterface.h \
-    offscreensurface.h \
     orientationchangeevent_p.h \
     platformservices.h \
     plugin.h \

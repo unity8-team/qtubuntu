@@ -18,11 +18,11 @@
 #include "integration.h"
 #include "backingstore.h"
 #include "clipboard.h"
+#include "desktopwindow.h"
 #include "glcontext.h"
 #include "input.h"
 #include "logging.h"
 #include "nativeinterface.h"
-#include "offscreensurface.h"
 #include "screen.h"
 #include "theme.h"
 #include "window.h"
@@ -30,6 +30,7 @@
 // Qt
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <private/qeglpbuffer_p.h>
 #include <qpa/qplatformnativeinterface.h>
 #include <qpa/qplatforminputcontextfactory_p.h>
 #include <qpa/qplatforminputcontext.h>
@@ -211,7 +212,12 @@ QByteArray UbuntuClientIntegration::generateSessionNameFromQmlFile(QStringList &
 
 QPlatformWindow* UbuntuClientIntegration::createPlatformWindow(QWindow* window) const
 {
-    return new UbuntuWindow(window, mClipboard, mInput, mNativeInterface, mEglDisplay, mMirConnection);
+    if (window->type() == Qt::Desktop) {
+        // Desktop windows should not be backed up by a mir surface as they don't draw anything (nor should).
+        return new UbuntuDesktopWindow(window);
+    } else {
+        return new UbuntuWindow(window, mClipboard, mInput, mNativeInterface, mEglDisplay, mMirConnection);
+    }
 }
 
 bool UbuntuClientIntegration::hasCapability(QPlatformIntegration::Capability cap) const
@@ -235,6 +241,7 @@ bool UbuntuClientIntegration::hasCapability(QPlatformIntegration::Capability cap
         }
     case MultipleWindows:
     case NonFullScreenWindows:
+    case RasterGLSurface:
         return true;
     default:
         return QPlatformIntegration::hasCapability(cap);
@@ -316,7 +323,7 @@ QPlatformNativeInterface* UbuntuClientIntegration::nativeInterface() const
 QPlatformOffscreenSurface *UbuntuClientIntegration::createPlatformOffscreenSurface(
         QOffscreenSurface *surface) const
 {
-    return new UbuntuOffscreenSurface(surface);
+    return new QEGLPbuffer(mEglDisplay, QSurfaceFormat::defaultFormat(), surface);
 }
 
 void UbuntuClientIntegration::destroyScreen(UbuntuScreen *screen)
