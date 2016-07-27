@@ -579,7 +579,7 @@ void UbuntuWindow::handleSurfaceFocused()
     // D-Bus.
     // Therefore let's ensure we are up to date with the system clipboard now that we are getting
     // focused again.
-    mClipboard->requestDBusClipboardContents();
+    //mClipboard->requestDBusClipboardContents();
 }
 
 void UbuntuWindow::handleSurfaceVisibilityChanged(bool visible)
