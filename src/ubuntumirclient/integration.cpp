@@ -75,7 +75,6 @@ UbuntuClientIntegration::UbuntuClientIntegration()
     , mNativeInterface(new UbuntuNativeInterface(this))
     , mFontDb(new QGenericUnixFontDatabase)
     , mServices(new UbuntuPlatformServices)
-    , mClipboard(new UbuntuClipboard)
     , mScaleFactor(1.0)
 {
     {
@@ -303,7 +302,11 @@ QVariant UbuntuClientIntegration::styleHint(StyleHint hint) const
 
 QPlatformClipboard* UbuntuClientIntegration::clipboard() const
 {
-    return mClipboard.data();
+    static QPlatformClipboard *clipboard = nullptr;
+    if (!clipboard) {
+        clipboard = new UbuntuClipboard;
+    }
+    return clipboard;
 }
 
 QPlatformNativeInterface* UbuntuClientIntegration::nativeInterface() const
