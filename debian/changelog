@@ -1,3 +1,14 @@
+qtubuntu (0.63+16.10.20160728-0ubuntu1) yakkety; urgency=medium
+
+  [ Lukáš Tinkl ]
+  * Differentiate between left/right Alt when extracting the modifiers
+    for Qt (LP: #1590515)
+
+  [ Nick Dedekind ]
+  * Re-added window exposure for occlusion detection (LP: #1475678)
+
+ -- Robert Bruce Park <robert.park@canonical.com>  Thu, 28 Jul 2016 16:24:24 +0000
+
 qtubuntu (0.63+16.10.20160630.1-0ubuntu2~2) yakkety; urgency=medium
 
   * Rebuild against Qt 5.6.
