@@ -135,6 +135,8 @@ void UbuntuClipboard::requestMimeData()
         delete mMimeData;
         mMimeData = mContentHub->paste(*mPasteReply);
         mClipboardState = SyncedClipboard;
+        mPasteReply->deleteLater();
+        mPasteReply = nullptr;
         emitChanged(QClipboard::Clipboard);
     });
 }
