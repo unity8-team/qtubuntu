@@ -512,6 +512,11 @@ void UbuntuInput::dispatchPointerEvent(UbuntuWindow *platformWindow, const MirIn
     const auto localPoint = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
                                     mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
+    const auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
+                                  mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
+
+    qWarning() << "***** movement" << movement;
+
     switch (action) {
     case mir_pointer_action_button_up:
     case mir_pointer_action_button_down:
