@@ -32,6 +32,7 @@
 
 #include <memory>
 
+namespace {
 static const int overrideDevicePixelRatio = qgetenv("QT_DEVICE_PIXEL_RATIO").toInt();
 
 static const char *orientationToStr(Qt::ScreenOrientation orientation) {
@@ -50,6 +51,24 @@ static const char *orientationToStr(Qt::ScreenOrientation orientation) {
             return "INVALID!";
     }
 }
+
+QSizeF setPhysicalSize(QSize size_mm, QSize resolution)
+{
+    float width_mm = size_mm.width();
+    float height_mm = size_mm.height();
+
+    if (width_mm <= 0 || height_mm <= 0) {
+        // Mir cannot determine the physical dimentions of the display, either because it has
+        // no such measurement (i.e. projector) or is a virtual machine. In that case, guess
+        // something reasonable
+        const int dpi = 100;
+        width_mm = qRound(resolution.width() * 25.4 / dpi);
+        height_mm = qRound(resolution.height() * 25.4 / dpi);
+    }
+
+    return QSizeF(width_mm, height_mm);
+}
+} // namespace {
 
 const QEvent::Type OrientationChangeEvent::mType =
         static_cast<QEvent::Type>(QEvent::registerEventType());
@@ -143,10 +162,6 @@ void UbuntuScreen::handleWindowSurfaceResize(int windowWidth, int windowHeight)
 
 void UbuntuScreen::setMirOutput(const MirOutput *output)
 {
-    // Physical screen size (in mm)
-    mPhysicalSize.setWidth(mir_output_get_physical_width_mm(output));
-    mPhysicalSize.setHeight(mir_output_get_physical_height_mm(output));
-
     // Pixel Format
 //    mFormat = qImageFormatFromMirPixelFormat(mir_output_get_current_pixel_format(output)); // GERRY: TODO
 
@@ -155,12 +170,16 @@ void UbuntuScreen::setMirOutput(const MirOutput *output)
 
     // Mode = Resolution & refresh rate
     const MirOutputMode *mode = mir_output_get_current_mode(output);
-    mNativeGeometry.setX(mir_output_get_position_x(output));
-    mNativeGeometry.setY(mir_output_get_position_y(output));
-    mNativeGeometry.setWidth(mir_output_mode_get_width(mode));
-    mNativeGeometry.setHeight(mir_output_mode_get_height(mode));
+    mGeometry.setX(mir_output_get_position_x(output));
+    mGeometry.setY(mir_output_get_position_y(output));
+    mGeometry.setWidth(mir_output_mode_get_width(mode));
+    mGeometry.setHeight(mir_output_mode_get_height(mode));
 
     mRefreshRate = mir_output_mode_get_refresh_rate(mode);
+
+    // Physical screen size (in mm)
+    QSize mirPhysicalSize(mir_output_get_physical_width_mm(output), mir_output_get_physical_height_mm(output));
+    mPhysicalSize = setPhysicalSize(mirPhysicalSize, mGeometry.size());
 
     // UI scale & DPR
     mScale = mir_output_get_scale_factor(output);
@@ -173,11 +192,6 @@ void UbuntuScreen::setMirOutput(const MirOutput *output)
     mFormFactor = mir_output_get_form_factor(output);
 
     mOutputId = mir_output_get_id(output);
-
-    mGeometry.setX(mNativeGeometry.x());
-    mGeometry.setY(mNativeGeometry.y());
-    mGeometry.setWidth(mNativeGeometry.width());
-    mGeometry.setHeight(mNativeGeometry.height());
 
     // Set the default orientation based on the initial screen dimensions.
     mNativeOrientation = (mGeometry.width() >= mGeometry.height()) ? Qt::LandscapeOrientation : Qt::PortraitOrientation;

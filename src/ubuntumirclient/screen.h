@@ -62,7 +62,7 @@ public:
 private:
     void setMirOutput(const MirOutput *output);
 
-    QRect mGeometry, mNativeGeometry;
+    QRect mGeometry;
     QSizeF mPhysicalSize;
     qreal mDevicePixelRatio;
     Qt::ScreenOrientation mNativeOrientation;
