@@ -16,7 +16,6 @@
 
 // Local
 #include "window.h"
-#include "clipboard.h"
 #include "nativeinterface.h"
 #include "input.h"
 #include "screen.h"
@@ -512,13 +511,11 @@ void UbuntuSurface::setSurfaceParent(MirSurface* parent)
     mir_surface_apply_spec(mMirSurface, spec.get());
 }
 
-UbuntuWindow::UbuntuWindow(QWindow *w, const QSharedPointer<UbuntuClipboard> &clipboard,
-                           UbuntuInput *input, UbuntuNativeInterface *native, EGLDisplay eglDisplay,
-                           EGLConfig eglConfig, MirConnection *mirConnection)
+UbuntuWindow::UbuntuWindow(QWindow *w, UbuntuInput *input, UbuntuNativeInterface *native,
+                           EGLDisplay eglDisplay, EGLConfig eglConfig, MirConnection *mirConnection)
     : QObject(nullptr)
     , QPlatformWindow(w)
     , mId(makeId())
-    , mClipboard(clipboard)
     , mWindowState(w->windowState())
     , mWindowFlags(w->flags())
     , mWindowVisible(false)
@@ -578,13 +575,6 @@ void UbuntuWindow::handleSurfaceFocused()
 {
     qCDebug(ubuntumirclient, "handleSurfaceFocused(window=%p)", window());
 
-    // System clipboard contents might have changed while this window was unfocused and without
-    // this process getting notified about it because it might have been suspended (due to
-    // application lifecycle policies), thus unable to listen to any changes notified through
-    // D-Bus.
-    // Therefore let's ensure we are up to date with the system clipboard now that we are getting
-    // focused again.
-    mClipboard->requestDBusClipboardContents();
 }
 
 void UbuntuWindow::handleSurfaceVisibilityChanged(bool visible)

@@ -29,7 +29,6 @@
 
 #include <EGL/egl.h>
 
-class UbuntuClipboard;
 class UbuntuInput;
 class UbuntuNativeInterface;
 class UbuntuScreen;
@@ -84,7 +83,6 @@ private:
 
     UbuntuInput* mInput;
     QPlatformInputContext* mInputContext;
-    QSharedPointer<UbuntuClipboard> mClipboard;
     QScopedPointer<UbuntuScreenObserver> mScreenObserver;
     qreal mScaleFactor;
 
