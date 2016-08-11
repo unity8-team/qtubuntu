@@ -1,3 +1,10 @@
+qtubuntu (0.63+16.10.20160811-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Use content-hub for clipboard services (LP: #1471998)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Thu, 11 Aug 2016 15:17:33 +0000
+
 qtubuntu (0.63+16.10.20160730-0ubuntu1) yakkety; urgency=medium
 
   [ Lukáš Tinkl ]
