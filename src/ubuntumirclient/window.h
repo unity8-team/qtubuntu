@@ -51,6 +51,7 @@ public:
     void setWindowTitle(const QString &title) override;
     void propagateSizeHints() override;
     bool isExposed() const override;
+    void raise() override;
 
     QSurfaceFormat format() const override;
 

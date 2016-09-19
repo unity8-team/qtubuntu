@@ -202,6 +202,7 @@ UbuntuInput::UbuntuInput(UbuntuClientIntegration* integration)
 UbuntuInput::~UbuntuInput()
 {
   // Qt will take care of deleting mTouchDevice.
+    mir_cookie_release(mLastCookie);
 }
 
 static const char* nativeEventTypeToStr(MirEventType t)
@@ -326,6 +327,12 @@ void UbuntuInput::postEvent(UbuntuWindow *platformWindow, const MirEvent *event)
     }
 }
 
+const MirCookie *UbuntuInput::eventCookie()
+{
+    QReadLocker lock(&mCookieLock);
+    return mLastCookie;
+}
+
 void UbuntuInput::dispatchInputEvent(UbuntuWindow *window, const MirInputEvent *ev)
 {
     switch (mir_input_event_get_type(ev))
@@ -339,6 +346,14 @@ void UbuntuInput::dispatchInputEvent(UbuntuWindow *window, const MirInputEvent *
     case mir_input_event_type_pointer:
         dispatchPointerEvent(window, ev);
         break;
+    }
+
+    if (mir_input_event_has_cookie(ev)) {
+        QWriteLocker lock(&mCookieLock);
+        if (Q_LIKELY(mLastCookie)) {
+            mir_cookie_release(mLastCookie);
+        }
+        mLastCookie = mir_input_event_get_cookie(ev);
     }
 }
 

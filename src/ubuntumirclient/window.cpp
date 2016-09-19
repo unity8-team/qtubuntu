@@ -396,6 +396,7 @@ public:
     bool hasParent() const { return mParented; }
 
     QSurfaceFormat format() const { return mFormat; }
+    void raise();
 
     bool mNeedsExposeCatchup;
 
@@ -574,6 +575,14 @@ void UbuntuSurface::setSurfaceParent(MirSurface* parent)
     Spec spec{mir_connection_create_spec_for_changes(mConnection)};
     mir_surface_spec_set_parent(spec.get(), parent);
     mir_surface_apply_spec(mMirSurface, spec.get());
+}
+
+void UbuntuSurface::raise()
+{
+    const auto cookie = mInput->eventCookie();
+    if (Q_LIKELY(cookie)) {
+        mir_surface_raise(mMirSurface, cookie);
+    }
 }
 
 QString UbuntuSurface::persistentSurfaceId()
@@ -778,6 +787,11 @@ bool UbuntuWindow::isExposed() const
 {
     // mNeedsExposeCatchup because we need to render a frame to get the expose surface event from mir.
     return mWindowVisible && (mWindowExposed || (mSurface && mSurface->mNeedsExposeCatchup));
+}
+
+void UbuntuWindow::raise()
+{
+    mSurface->raise();
 }
 
 QSurfaceFormat UbuntuWindow::format() const

@@ -20,6 +20,7 @@
 // Qt
 #include <qpa/qwindowsysteminterface.h>
 #include <QAtomicInt>
+#include <QReadWriteLock>
 #include <QLoggingCategory>
 
 #include <mir_toolkit/mir_client_library.h>
@@ -41,6 +42,7 @@ public:
     void postEvent(UbuntuWindow* window, const MirEvent *event);
     UbuntuClientIntegration* integration() const { return mIntegration; }
     UbuntuWindow *lastFocusedWindow() const {return mLastFocusedWindow; }
+    const MirCookie *eventCookie();
 
 protected:
     void dispatchKeyEvent(UbuntuWindow *window, const MirInputEvent *event);
@@ -59,6 +61,8 @@ private:
     const QEvent::Type mEventType;
 
     UbuntuWindow *mLastFocusedWindow;
+    const MirCookie *mLastCookie{nullptr};
+    QReadWriteLock mCookieLock;
     QAtomicInt mPendingFocusGainedEvents;
 };
 
