@@ -44,7 +44,7 @@
 
 #include <mir_toolkit/mir_client_library.h>
 
-Q_LOGGING_CATEGORY(ubuntumirclientCursor, "ubuntumirclient.cursor", QtWarningMsg)
+Q_LOGGING_CATEGORY(mirclientCursor, "qt.qpa.mirclient.cursor", QtWarningMsg)
 
 QMirClientCursor::QMirClientCursor(MirConnection *connection)
     : mConnection(connection)
@@ -143,7 +143,7 @@ void QMirClientCursor::changeCursor(QCursor *windowCursor, QWindow *window)
 
 
     if (windowCursor) {
-        qCDebug(ubuntumirclientCursor, "changeCursor shape=%s, window=%p", qtCursorShapeToStr(windowCursor->shape()), window);
+        qCDebug(mirclientCursor, "changeCursor shape=%s, window=%p", qtCursorShapeToStr(windowCursor->shape()), window);
         if (!windowCursor->pixmap().isNull()) {
             configureMirCursorWithPixmapQCursor(surface, *windowCursor);
         } else if (windowCursor->shape() == Qt::BitmapCursor) {

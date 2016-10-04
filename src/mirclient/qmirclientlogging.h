@@ -44,10 +44,10 @@
 
 #define ASSERT(cond) ((!(cond)) ? qt_assert(#cond,__FILE__,__LINE__) : qt_noop())
 
-Q_DECLARE_LOGGING_CATEGORY(ubuntumirclient)
-Q_DECLARE_LOGGING_CATEGORY(ubuntumirclientBufferSwap)
-Q_DECLARE_LOGGING_CATEGORY(ubuntumirclientInput)
-Q_DECLARE_LOGGING_CATEGORY(ubuntumirclientGraphics)
-Q_DECLARE_LOGGING_CATEGORY(ubuntumirclientCursor)
+Q_DECLARE_LOGGING_CATEGORY(mirclient)
+Q_DECLARE_LOGGING_CATEGORY(mirclientBufferSwap)
+Q_DECLARE_LOGGING_CATEGORY(mirclientInput)
+Q_DECLARE_LOGGING_CATEGORY(mirclientGraphics)
+Q_DECLARE_LOGGING_CATEGORY(mirclientCursor)
 
 #endif  // QMIRCLIENTLOGGING_H

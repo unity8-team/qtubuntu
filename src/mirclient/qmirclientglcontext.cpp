@@ -46,7 +46,7 @@
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
 #include <QtGui/private/qopenglcontext_p.h>
 
-Q_LOGGING_CATEGORY(ubuntumirclientGraphics, "ubuntumirclient.graphics", QtWarningMsg)
+Q_LOGGING_CATEGORY(mirclientGraphics, "qt.qpa.mirclient.graphics", QtWarningMsg)
 
 namespace {
 
@@ -56,15 +56,15 @@ void printEglConfig(EGLDisplay display, EGLConfig config)
     Q_ASSERT(config != nullptr);
 
     const char *string = eglQueryString(display, EGL_VENDOR);
-    qCDebug(ubuntumirclientGraphics, "EGL vendor: %s", string);
+    qCDebug(mirclientGraphics, "EGL vendor: %s", string);
 
     string = eglQueryString(display, EGL_VERSION);
-    qCDebug(ubuntumirclientGraphics, "EGL version: %s", string);
+    qCDebug(mirclientGraphics, "EGL version: %s", string);
 
     string = eglQueryString(display, EGL_EXTENSIONS);
-    qCDebug(ubuntumirclientGraphics, "EGL extensions: %s", string);
+    qCDebug(mirclientGraphics, "EGL extensions: %s", string);
 
-    qCDebug(ubuntumirclientGraphics, "EGL configuration attributes:");
+    qCDebug(mirclientGraphics, "EGL configuration attributes:");
     q_printEglConfig(display, config);
 }
 
@@ -74,7 +74,7 @@ QMirClientOpenGLContext::QMirClientOpenGLContext(const QSurfaceFormat &format, Q
                                          EGLDisplay display)
     : QEGLPlatformContext(format, share, display, 0)
 {
-    if (ubuntumirclientGraphics().isDebugEnabled()) {
+    if (mirclientGraphics().isDebugEnabled()) {
         printEglConfig(display, eglConfig());
     }
 }

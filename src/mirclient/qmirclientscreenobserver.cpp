@@ -104,7 +104,7 @@ void QMirClientScreenObserver::update()
                 // new display, so create QMirClientScreen for it
                 screen = new QMirClientScreen(output, mMirConnection);
                 newScreenList.append(screen);
-                qCDebug(ubuntumirclient) << "Added Screen with id" << mir_output_get_id(output)
+                qCDebug(mirclient) << "Added Screen with id" << mir_output_get_id(output)
                                          << "and geometry" << screen->geometry();
             }
             mScreenList.append(screen);
@@ -127,14 +127,14 @@ void QMirClientScreenObserver::update()
         Q_EMIT screenAdded(screen);
     }
 
-    qCDebug(ubuntumirclient) << "=======================================";
+    qCDebug(mirclient) << "=======================================";
     for (auto screen: mScreenList) {
-        qCDebug(ubuntumirclient) << screen << "- id:" << screen->mirOutputId()
+        qCDebug(mirclient) << screen << "- id:" << screen->mirOutputId()
                                  << "geometry:" << screen->geometry()
                                  << "form factor:" << mirFormFactorToStr(screen->formFactor())
                                  << "scale:" << screen->scale();
     }
-    qCDebug(ubuntumirclient) << "=======================================";
+    qCDebug(mirclient) << "=======================================";
 }
 
 QMirClientScreen *QMirClientScreenObserver::findScreenWithId(int id)

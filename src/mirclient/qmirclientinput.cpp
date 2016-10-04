@@ -60,7 +60,7 @@
 
 #include <mir_toolkit/mir_client_library.h>
 
-Q_LOGGING_CATEGORY(ubuntumirclientInput, "ubuntumirclient.input", QtWarningMsg)
+Q_LOGGING_CATEGORY(mirclientInput, "qt.qpa.mirclient.input", QtWarningMsg)
 
 namespace
 {
@@ -261,7 +261,7 @@ void QMirClientInput::customEvent(QEvent* event)
     const MirEvent *nativeEvent = ubuntuEvent->nativeEvent;
 
     if ((ubuntuEvent->window == nullptr) || (ubuntuEvent->window->window() == nullptr)) {
-        qCWarning(ubuntumirclient) << "Attempted to deliver an event to a non-existent window, ignoring.";
+        qCWarning(mirclient) << "Attempted to deliver an event to a non-existent window, ignoring.";
         return;
     }
 
@@ -270,11 +270,11 @@ void QMirClientInput::customEvent(QEvent* event)
     if (QWindowSystemInterface::handleNativeEvent(
             ubuntuEvent->window->window(), mEventFilterType,
             const_cast<void *>(static_cast<const void *>(nativeEvent)), &result) == true) {
-        qCDebug(ubuntumirclient, "event filtered out by native interface");
+        qCDebug(mirclient, "event filtered out by native interface");
         return;
     }
 
-    qCDebug(ubuntumirclientInput, "customEvent(type=%s)", nativeEventTypeToStr(mir_event_get_type(nativeEvent)));
+    qCDebug(mirclientInput, "customEvent(type=%s)", nativeEventTypeToStr(mir_event_get_type(nativeEvent)));
 
     // Event dispatching.
     switch (mir_event_get_type(nativeEvent))
@@ -315,7 +315,7 @@ void QMirClientInput::customEvent(QEvent* event)
         QWindowSystemInterface::handleCloseEvent(ubuntuEvent->window->window());
         break;
     default:
-        qCDebug(ubuntumirclient, "unhandled event type: %d", static_cast<int>(mir_event_get_type(nativeEvent)));
+        qCDebug(mirclient, "unhandled event type: %d", static_cast<int>(mir_event_get_type(nativeEvent)));
     }
 }
 
@@ -495,7 +495,7 @@ void QMirClientInput::dispatchKeyEvent(QMirClientWindow *window, const MirInputE
         QKeyEvent qKeyEvent(keyType, sym, modifiers, scan_code, xk_sym, native_modifiers, text, is_auto_rep);
         qKeyEvent.setTimestamp(timestamp);
         if (context->filterEvent(&qKeyEvent)) {
-            qCDebug(ubuntumirclient, "key event filtered out by input context");
+            qCDebug(mirclient, "key event filtered out by input context");
             return;
         }
     }
@@ -561,7 +561,7 @@ void QMirClientInput::dispatchPointerEvent(QMirClientWindow *platformWindow, con
         QWindowSystemInterface::handleLeaveEvent(window);
         break;
     default:
-        qCDebug(ubuntumirclient, "Unrecognized pointer event");
+        qCDebug(mirclient, "Unrecognized pointer event");
     }
 }
 
@@ -588,10 +588,10 @@ static const char* nativeOrientationDirectionToStr(MirOrientation orientation)
 void QMirClientInput::dispatchOrientationEvent(QWindow *window, const MirOrientationEvent *event)
 {
     MirOrientation mir_orientation = mir_orientation_event_get_direction(event);
-    qCDebug(ubuntumirclientInput, "orientation direction: %s", nativeOrientationDirectionToStr(mir_orientation));
+    qCDebug(mirclientInput, "orientation direction: %s", nativeOrientationDirectionToStr(mir_orientation));
 
     if (!window->screen()) {
-        qCDebug(ubuntumirclient, "Window has no associated screen, dropping orientation event");
+        qCDebug(mirclient, "Window has no associated screen, dropping orientation event");
         return;
     }
 
@@ -610,7 +610,7 @@ void QMirClientInput::dispatchOrientationEvent(QWindow *window, const MirOrienta
         orientation = OrientationChangeEvent::RightUp;
         break;
     default:
-        qCDebug(ubuntumirclient, "No such orientation %d", mir_orientation);
+        qCDebug(mirclient, "No such orientation %d", mir_orientation);
         return;
     }
 
@@ -641,7 +641,7 @@ void QMirClientInput::handleSurfaceEvent(const QPointer<QMirClientWindow> &windo
             QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationActive);
 
         } else if(!mPendingFocusGainedEvents) {
-            qCDebug(ubuntumirclient, "No windows have focus");
+            qCDebug(mirclient, "No windows have focus");
             QWindowSystemInterface::handleWindowActivated(nullptr, Qt::ActiveWindowFocusReason);
             QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
         }
@@ -683,7 +683,7 @@ void QMirClientInput::handleSurfaceOutputEvent(const QPointer<QMirClientWindow> 
     const auto screenObserver = mIntegration->screenObserver();
     QMirClientScreen *screen = screenObserver->findScreenWithId(outputId);
     if (!screen) {
-        qCWarning(ubuntumirclient) << "Mir notified window" << window->window() << "on an unknown screen with id" << outputId;
+        qCWarning(mirclient) << "Mir notified window" << window->window() << "on an unknown screen with id" << outputId;
         return;
     }
 

@@ -44,11 +44,11 @@
   logged and debug messages are disabled. QtUbuntu provides the following
   logging categories:
 
-  * ubuntumirclient.cursor      - Messages about the cursor.
-  * ubuntumirclient.input       - Messages related to input and other Mir events.
-  * ubuntumirclient.graphics    - Messages related to graphics, GL and EGL.
-  * ubuntumirclient.swapBuffers - Messages related to surface buffer swapping.
-  * ubuntumirclient             - For all other messages.
+  * qt.qpa.mirclient.cursor      - Messages about the cursor.
+  * qt.qpa.mirclient.input       - Messages related to input and other Mir events.
+  * qt.qpa.mirclient.graphics    - Messages related to graphics, GL and EGL.
+  * qt.qpa.mirclient.swapBuffers - Messages related to surface buffer swapping.
+  * qt.qpa.mirclient             - For all other messages.
 
   The QT_QPA_EGLFS_DEBUG environment variable prints a little more information
   from Qt's internals.

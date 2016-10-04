@@ -87,7 +87,7 @@ static void aboutToStopCallback(UApplicationArchive *archive, void* context)
     if (inputContext) {
         inputContext->hideInputPanel();
     } else {
-        qCWarning(ubuntumirclient) << "aboutToStopCallback(): no input context";
+        qCWarning(mirclient) << "aboutToStopCallback(): no input context";
     }
     QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationSuspended);
 }
@@ -252,7 +252,7 @@ bool QMirClientClientIntegration::hasCapability(QPlatformIntegration::Capability
         if (qEnvironmentVariableIsEmpty("QTUBUNTU_NO_THREADED_OPENGL")) {
             return true;
         } else {
-            qCDebug(ubuntumirclient, "disabled threaded OpenGL");
+            qCDebug(mirclient, "disabled threaded OpenGL");
             return false;
         }
     case MultipleWindows:
@@ -287,7 +287,7 @@ QPlatformOpenGLContext* QMirClientClientIntegration::createPlatformOpenGLContext
         // requested OpenGL version to 1.0 to ensure EGL will give us a working context (lp:1549455).
         static const bool isMesa = QString(eglQueryString(mEglDisplay, EGL_VENDOR)).contains(QStringLiteral("Mesa"));
         if (isMesa) {
-            qCDebug(ubuntumirclientGraphics, "Attempting to choose OpenGL 1.4 context which may suit Mesa");
+            qCDebug(mirclientGraphics, "Attempting to choose OpenGL 1.4 context which may suit Mesa");
             format.setMajorVersion(1);
             format.setMinorVersion(4);
             delete platformContext;
@@ -368,7 +368,7 @@ void QMirClientClientIntegration::destroyScreen(QMirClientScreen *screen)
         }
     }
 
-    qCDebug(ubuntumirclient) << "Removing Screen with id" << screen->mirOutputId() << "and geometry" << screen->geometry();
+    qCDebug(mirclient) << "Removing Screen with id" << screen->mirOutputId() << "and geometry" << screen->geometry();
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
     delete screen;
 #else

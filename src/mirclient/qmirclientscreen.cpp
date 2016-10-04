@@ -121,13 +121,13 @@ void QMirClientScreen::customEvent(QEvent* event) {
             break;
         }
         default: {
-            qCDebug(ubuntumirclient, "QMirClientScreen::customEvent - Unknown orientation.");
+            qCDebug(mirclient, "QMirClientScreen::customEvent - Unknown orientation.");
             return;
         }
     }
 
     // Raise the event signal so that client apps know the orientation changed
-    qCDebug(ubuntumirclient, "QMirClientScreen::customEvent - handling orientation change to %s", orientationToStr(mCurrentOrientation));
+    qCDebug(mirclient, "QMirClientScreen::customEvent - handling orientation change to %s", orientationToStr(mCurrentOrientation));
     QWindowSystemInterface::handleScreenOrientationChange(screen(), mCurrentOrientation);
 }
 
@@ -148,7 +148,7 @@ void QMirClientScreen::handleWindowSurfaceResize(int windowWidth, int windowHeig
         mGeometry.setWidth(currGeometry.height());
         mGeometry.setHeight(currGeometry.width());
 
-        qCDebug(ubuntumirclient, "QMirClientScreen::handleWindowSurfaceResize - new screen geometry (w=%d, h=%d)",
+        qCDebug(mirclient, "QMirClientScreen::handleWindowSurfaceResize - new screen geometry (w=%d, h=%d)",
             mGeometry.width(), mGeometry.height());
         QWindowSystemInterface::handleScreenGeometryChange(screen(),
                                                            mGeometry /* newGeometry */,
@@ -159,7 +159,7 @@ void QMirClientScreen::handleWindowSurfaceResize(int windowWidth, int windowHeig
         } else {
             mCurrentOrientation = Qt::LandscapeOrientation;
         }
-        qCDebug(ubuntumirclient, "QMirClientScreen::handleWindowSurfaceResize - new orientation %s",orientationToStr(mCurrentOrientation));
+        qCDebug(mirclient, "QMirClientScreen::handleWindowSurfaceResize - new orientation %s",orientationToStr(mCurrentOrientation));
         QWindowSystemInterface::handleScreenOrientationChange(screen(), mCurrentOrientation);
     }
 }

@@ -41,7 +41,7 @@
 #include "qmirclientintegration.h"
 #include "qmirclientlogging.h"
 
-Q_LOGGING_CATEGORY(ubuntumirclient, "ubuntumirclient", QtWarningMsg)
+Q_LOGGING_CATEGORY(mirclient, "qt.qpa.mirclient", QtWarningMsg)
 
 QStringList QMirClientMirClientIntegrationPlugin::keys() const
 {
