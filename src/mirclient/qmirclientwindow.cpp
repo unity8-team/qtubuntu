@@ -60,10 +60,9 @@
 
 Q_LOGGING_CATEGORY(mirclientBufferSwap, "qt.qpa.mirclient.bufferSwap", QtWarningMsg)
 
-const Qt::WindowType LowChromeWindowHint = (Qt::WindowType)0x00800000;
-
 namespace
 {
+const Qt::WindowType LowChromeWindowHint = (Qt::WindowType)0x00800000;
 
 // FIXME: this used to be defined by platform-api, but it's been removed in v3. Change ubuntu-keyboard to use
 // a different enum for window roles.
