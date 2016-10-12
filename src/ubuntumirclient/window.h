@@ -85,4 +85,6 @@ private:
     MirFormFactor mFormFactor;
 };
 
+Q_DECLARE_METATYPE(QPlatformWindow*);
+
 #endif // UBUNTU_WINDOW_H
