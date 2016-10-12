@@ -1,3 +1,10 @@
+qtubuntu (0.63+16.10.20161012-0ubuntu1) yakkety; urgency=medium
+
+  [ Nick Dedekind ]
+  * Added a QPlatformTheme for exporting gmenumodel for qt menus.
+
+ -- Nicholas Dedekind <nick.dedekind@canonical.com>  Wed, 12 Oct 2016 09:32:00 +0000
+
 qtubuntu (0.63+16.10.20160928.1-0ubuntu1) yakkety; urgency=medium
 
   [ Nick Dedekind ]
