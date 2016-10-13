@@ -269,7 +269,7 @@ Spec makeSurfaceSpec(QWindow *window, MirPixelFormat pixelFormat, UbuntuWindow *
         spec = Spec{mir_connection_create_spec_for_dialog(connection, width, height, pixelFormat)};
         break;
     case mir_surface_type_tip:
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(0, 25, 0)
+#if MIR_CLIENT_VERSION < MIR_VERSION_NUMBER(3, 4, 0)
         spec = Spec{mir_connection_create_spec_for_tooltip(connection, width, height, pixelFormat, parent,
                     &location)};
 #else
@@ -279,6 +279,7 @@ Spec makeSurfaceSpec(QWindow *window, MirPixelFormat pixelFormat, UbuntuWindow *
         break;
     case mir_surface_type_inputmethod:
         spec = Spec{mir_connection_create_spec_for_input_method(connection, width, height, pixelFormat)};
+        break;
     default:
         spec = Spec{mir_connection_create_spec_for_normal_surface(connection, width, height, pixelFormat)};
         break;
