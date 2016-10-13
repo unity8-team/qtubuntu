@@ -28,6 +28,7 @@
 #include <EGL/egl.h>
 
 class UbuntuAppStateController;
+class UbuntuDebugExtension;
 class UbuntuNativeInterface;
 class UbuntuInput;
 class UbuntuScreen;
@@ -39,9 +40,8 @@ class UbuntuWindow : public QObject, public QPlatformWindow
 {
     Q_OBJECT
 public:
-    UbuntuWindow(QWindow *w, UbuntuInput *input, UbuntuNativeInterface *native,
-                 UbuntuAppStateController *appState, EGLDisplay eglDisplay,
-                 MirConnection *mirConnection);
+    UbuntuWindow(QWindow *w, UbuntuInput *input, UbuntuNativeInterface* native, UbuntuAppStateController *appState,
+                 EGLDisplay eglDisplay, MirConnection *mirConnection, UbuntuDebugExtension *debugExt);
     virtual ~UbuntuWindow();
 
     // QPlatformWindow methods.
@@ -54,6 +54,7 @@ public:
     void propagateSizeHints() override;
     bool isExposed() const override;
 
+    QPoint mapToGlobal(const QPoint &pos) const override;
     QSurfaceFormat format() const override;
 
     // Additional Window properties exposed by NativeInterface
@@ -81,6 +82,7 @@ private:
     Qt::WindowFlags mWindowFlags;
     bool mWindowVisible;
     bool mWindowExposed;
+    UbuntuDebugExtension *mDebugExtention;
     UbuntuNativeInterface *mNativeInterface;
     UbuntuAppStateController *mAppStateController;
     std::unique_ptr<UbuntuSurface> mSurface;
