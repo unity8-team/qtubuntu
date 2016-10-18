@@ -1,3 +1,9 @@
+qtubuntu (0.63+17.04.20161018-0ubuntu1) zesty; urgency=medium
+
+  * No change rebuild
+
+ -- Timo Jyrinki <timo.jyrinki@canonical.com>  Tue, 18 Oct 2016 12:26:38 +0000
+
 qtubuntu (0.63+16.10.20160928.1-0ubuntu1) yakkety; urgency=medium
 
   [ Nick Dedekind ]
