@@ -1,3 +1,15 @@
+qtubuntu (0.63+17.04.20161130-0ubuntu1) zesty; urgency=medium
+
+  [ Gerry Boland ]
+  * Create Mir surface with hidden state, as Qt expects.
+  * Small BackingStore fixes: call makeCurrent on texture changes, and
+    choose correct QImage format to avoid bit swizzling
+  * Move all App State management logic to dedicated controller, use
+    Timer to compress active-inactive-active invocations
+  * Enable Accessibility
+
+ -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Wed, 30 Nov 2016 10:17:24 +0000
+
 qtubuntu (0.63+17.04.20161024-0ubuntu1) zesty; urgency=medium
 
   [ Daniel d'Andrada ]
