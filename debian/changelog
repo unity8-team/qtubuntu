@@ -1,3 +1,10 @@
+qtubuntu (0.63+17.04.20170207-0ubuntu1) zesty; urgency=medium
+
+  [ Arthur Mello, Gerry Boland ]
+  * Update code to use new Mir Api's.
+
+ -- Lukáš Tinkl <lukas.tinkl@canonical.com>  Tue, 07 Feb 2017 19:52:03 +0000
+
 qtubuntu (0.63+17.04.20170119.2-0ubuntu1) zesty; urgency=medium
 
   [ Daniel d'Andrada ]
