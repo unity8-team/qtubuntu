@@ -1,3 +1,11 @@
+qtubuntu (0.64+17.04.20170317-0ubuntu1) zesty; urgency=medium
+
+  * Set qtubuntu-tag and handle aboutToShow calls (LP: #1664578)
+  * Set enabled state for menus in the submenu-enabled property since
+    GMenuModel doesn't support that concept (LP: #1670694)
+
+ -- Albert Astals Cid <albert.astals@canonical.com>  Fri, 17 Mar 2017 12:06:53 +0000
+
 qtubuntu (0.64+17.04.20170308-0ubuntu1) zesty; urgency=medium
 
   [ Gerry Boland ]
