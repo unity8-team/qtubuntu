@@ -127,8 +127,8 @@ bool supportsThreadedRendering()
     return mGLSupportsThreadedRendering;
 }
 
-
 } // namespace
+
 
 class UbuntuIconTheme : public QGenericUnixTheme
 {
@@ -349,6 +349,7 @@ bool QMirClientClientIntegration::hasCapability(QPlatformIntegration::Capability
     }
     case ThreadedPixmaps:
     case OpenGL:
+    case BufferQueueingOpenGL:
     case ApplicationState:
     case MultipleWindows:
     case NonFullScreenWindows:
