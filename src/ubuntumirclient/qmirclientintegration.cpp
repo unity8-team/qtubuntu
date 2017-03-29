@@ -80,45 +80,45 @@ void queryGLContext()
 {
     // Based on similar logic in the XCB plugin. Am supporting the same debug env vars too.
     if (mGLContextQueried)
-         return;
-     mGLContextQueried = true;
+        return;
+    mGLContextQueried = true;
 
-     static bool skip = qEnvironmentVariableIsSet("QT_OPENGL_NO_SANITY_CHECK");
-     if (skip)
-         return;
+    static bool skip = qEnvironmentVariableIsSet("QT_OPENGL_NO_SANITY_CHECK");
+    if (skip)
+        return;
 
-     QOpenGLContext *oldContext = QOpenGLContext::currentContext();
-     QSurface *oldSurface = nullptr;
-     if (oldContext)
-         oldSurface = oldContext->surface();
+    QOpenGLContext *oldContext = QOpenGLContext::currentContext();
+    QSurface *oldSurface = nullptr;
+    if (oldContext)
+        oldSurface = oldContext->surface();
 
-     QOffscreenSurface *surface = new QOffscreenSurface;
-     surface->create();
+    QOffscreenSurface *surface = new QOffscreenSurface;
+    surface->create();
 
-     QOpenGLContext context;
-     if (!context.create() || !context.makeCurrent(surface)) {
-         qWarning("QMirClientClientIntegration: Failed to create dummy context to query");
-         mGLSupportsThreadedRendering = false;
-         return;
-     }
+    QOpenGLContext context;
+    if (!context.create() || !context.makeCurrent(surface)) {
+        qWarning("QMirClientClientIntegration: Failed to create dummy context to query");
+        mGLSupportsThreadedRendering = false;
+        return;
+    }
 
-     mGLSupportsThreadedRendering = true;
+    mGLSupportsThreadedRendering = true;
 
-     if (const char *vendor = (const char *) glGetString(GL_VENDOR)) {
-         if (strstr(vendor, "nouveau") != 0) {
-             qCInfo(mirclientGraphics) << "Multithreaded OpenGL disabled: nouveau is blacklisted";
-             mGLSupportsThreadedRendering = false;
-         }
-     }
+    if (const char *vendor = (const char *) glGetString(GL_VENDOR)) {
+        if (strstr(vendor, "nouveau") != 0) {
+            qCInfo(mirclientGraphics) << "Multithreaded OpenGL disabled: nouveau is blacklisted";
+            mGLSupportsThreadedRendering = false;
+        }
+    }
 
-     context.doneCurrent();
-     if (oldContext && oldSurface)
-         oldContext->makeCurrent(oldSurface);
+    context.doneCurrent();
+    if (oldContext && oldSurface)
+        oldContext->makeCurrent(oldSurface);
 
-     if (!mGLSupportsThreadedRendering) {
-         qCInfo(mirclientGraphics) << "Force-enable multithreaded OpenGL by setting "
-                                      "environment variable QT_OPENGL_NO_SANITY_CHECK";
-     }
+    if (!mGLSupportsThreadedRendering) {
+        qCInfo(mirclientGraphics) << "Force-enable multithreaded OpenGL by setting "
+                                     "environment variable QT_OPENGL_NO_SANITY_CHECK";
+    }
 }
 
 bool supportsThreadedRendering()
