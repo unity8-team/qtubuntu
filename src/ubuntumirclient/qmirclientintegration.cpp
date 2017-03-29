@@ -71,6 +71,64 @@
 #include <ubuntu/application/id.h>
 #include <ubuntu/application/options.h>
 
+namespace {
+
+static bool mGLContextQueried{false};
+static bool mGLSupportsThreadedRendering{false};
+
+void queryGLContext()
+{
+    // Based on similar logic in the XCB plugin. Am supporting the same debug env vars too.
+    if (mGLContextQueried)
+         return;
+     mGLContextQueried = true;
+
+     static bool skip = qEnvironmentVariableIsSet("QT_OPENGL_NO_SANITY_CHECK");
+     if (skip)
+         return;
+
+     QOpenGLContext *oldContext = QOpenGLContext::currentContext();
+     QSurface *oldSurface = nullptr;
+     if (oldContext)
+         oldSurface = oldContext->surface();
+
+     QOffscreenSurface *surface = new QOffscreenSurface;
+     surface->create();
+
+     QOpenGLContext context;
+     if (!context.create() || !context.makeCurrent(surface)) {
+         qWarning("QMirClientClientIntegration: Failed to create dummy context to query");
+         mGLSupportsThreadedRendering = false;
+         return;
+     }
+
+     mGLSupportsThreadedRendering = true;
+
+     if (const char *vendor = (const char *) glGetString(GL_VENDOR)) {
+         if (strstr(vendor, "nouveau") != 0) {
+             qCInfo(mirclientGraphics) << "Multithreaded OpenGL disabled: nouveau is blacklisted";
+             mGLSupportsThreadedRendering = false;
+         }
+     }
+
+     context.doneCurrent();
+     if (oldContext && oldSurface)
+         oldContext->makeCurrent(oldSurface);
+
+     if (!mGLSupportsThreadedRendering) {
+         qCInfo(mirclientGraphics) << "Force-enable multithreaded OpenGL by setting "
+                                      "environment variable QT_OPENGL_NO_SANITY_CHECK";
+     }
+}
+
+bool supportsThreadedRendering()
+{
+    queryGLContext();
+    return mGLSupportsThreadedRendering;
+}
+
+
+} // namespace
 
 class UbuntuIconTheme : public QGenericUnixTheme
 {
@@ -286,14 +344,9 @@ QPlatformWindow* QMirClientClientIntegration::createPlatformWindow(QWindow* wind
 bool QMirClientClientIntegration::hasCapability(QPlatformIntegration::Capability cap) const
 {
     switch (cap) {
-    case ThreadedOpenGL:
-        if (qEnvironmentVariableIsEmpty("QTUBUNTU_NO_THREADED_OPENGL")) {
-            return true;
-        } else {
-            qCDebug(mirclient, "disabled threaded OpenGL");
-            return false;
-        }
-
+    case ThreadedOpenGL: {
+        return supportsThreadedRendering();
+    }
     case ThreadedPixmaps:
     case OpenGL:
     case ApplicationState:
