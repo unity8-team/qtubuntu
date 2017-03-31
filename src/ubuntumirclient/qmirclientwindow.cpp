@@ -75,12 +75,6 @@ struct MirSpecDeleter
 
 using Spec = std::unique_ptr<MirWindowSpec, MirSpecDeleter>;
 
-EGLNativeWindowType nativeWindowFor(MirWindow *surf)
-{
-    auto stream = mir_window_get_buffer_stream(surf);
-    return reinterpret_cast<EGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(stream));
-}
-
 const char *qtWindowStateToStr(Qt::WindowState state)
 {
     switch (state) {
@@ -110,24 +104,6 @@ const char *mirWindowStateToStr(MirWindowState windowState)
     case mir_window_state_horizmaximized: return "horizmaximized";
     case mir_window_state_hidden: return "hidden";
     case mir_window_states: Q_UNREACHABLE();
-    }
-    Q_UNREACHABLE();
-}
-
-const char *mirPixelFormatToStr(MirPixelFormat pixelFormat)
-{
-    switch (pixelFormat) {
-    case mir_pixel_format_invalid:   return "invalid";
-    case mir_pixel_format_abgr_8888: return "ABGR8888";
-    case mir_pixel_format_xbgr_8888: return "XBGR8888";
-    case mir_pixel_format_argb_8888: return "ARGB8888";
-    case mir_pixel_format_xrgb_8888: return "XRGB8888";
-    case mir_pixel_format_bgr_888:   return "BGR888";
-    case mir_pixel_format_rgb_888:   return "RGB888";
-    case mir_pixel_format_rgb_565:   return "RGB565";
-    case mir_pixel_format_rgba_5551: return "RGBA5551";
-    case mir_pixel_format_rgba_4444: return "RGBA4444";
-    case mir_pixel_formats:          Q_UNREACHABLE();
     }
     Q_UNREACHABLE();
 }
@@ -221,12 +197,26 @@ bool requiresParent(const Qt::WindowType type)
     return requiresParent(qtWindowTypeToMirWindowType(type));
 }
 
-Spec makeSurfaceSpec(QWindow *window, MirPixelFormat pixelFormat, QMirClientWindow *parentWindowHandle,
-                     MirConnection *connection)
+QRect geometryFor(QWindow *window)
 {
-    const auto geometry = window->geometry();
-    const int width = geometry.width() > 0 ? geometry.width() : 1;
-    const int height = geometry.height() > 0 ? geometry.height() : 1;
+    auto geometry = window->geometry();
+    if (geometry.width() < 1)
+        geometry.setWidth(1);
+    if (geometry.height() < 1)
+        geometry.setHeight(1);
+
+    return geometry;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+Spec makeWindowSpec(QWindow *window, QMirClientWindow *parentWindowHandle,
+                    MirRenderSurface *surface, MirConnection *connection)
+{
+#pragma GCC diagnostic pop
+    const auto geometry = geometryFor(window);
+    const int width = geometry.width();
+    const int height = geometry.height();
     auto type = qtWindowTypeToMirWindowType(window->type());
 
     MirRectangle location{geometry.x(), geometry.y(), 0, 0};
@@ -272,7 +262,6 @@ Spec makeSurfaceSpec(QWindow *window, MirPixelFormat pixelFormat, QMirClientWind
         // There's no helper function for satellite windows. Guess they're not very popular
         spec = Spec{mir_create_window_spec(connection)};
         mir_window_spec_set_type(spec.get(), mir_window_type_satellite);
-        mir_window_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
         mir_window_spec_set_parent(spec.get(), parent);
         mir_window_spec_set_width(spec.get(), width);
         mir_window_spec_set_height(spec.get(), height);
@@ -282,9 +271,12 @@ Spec makeSurfaceSpec(QWindow *window, MirPixelFormat pixelFormat, QMirClientWind
         break;
     }
 
-    mir_window_spec_set_pixel_format(spec.get(), pixelFormat);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_window_spec_add_render_surface(spec.get(), surface, width, height, 0, 0);
+#pragma GCC diagnostic pop
 
-    qCDebug(mirclient, "makeSurfaceSpec(window=%p): %s spec (type=0x%x, position=(%d, %d)px, size=(%dx%d)px)",
+    qCDebug(mirclient, "makeWindowSpec(window=%p): %s spec (type=0x%x, position=(%d, %d)px, size=(%dx%d)px)",
             window, mirWindowTypeToStr(type), window->type(), location.left, location.top, width, height);
 
     return spec;
@@ -331,11 +323,28 @@ void setMask(MirWindowSpec *spec, const QRegion& mask)
     mir_window_spec_set_input_shape(spec, rects, count);
 }
 
-MirWindow *createMirWindow(QWindow *window, int mirOutputId, QMirClientWindow *parentWindowHandle,
-                             MirPixelFormat pixelFormat, MirConnection *connection,
-                             MirWindowEventCallback inputCallback, void *inputContext)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirRenderSurface *createMirSurface(QWindow *window, MirConnection *connection)
 {
-    auto spec = makeSurfaceSpec(window, pixelFormat, parentWindowHandle, connection);
+    const auto geometry = geometryFor(window);
+    const int width = geometry.width();
+    const int height = geometry.height();
+
+    auto surface = mir_connection_create_render_surface_sync(connection, width, height);
+    if (!mir_render_surface_is_valid(surface))
+    {
+        auto errorMsg = mir_render_surface_get_error_message(surface);
+        qFatal("Failed to create mir surface: %s", errorMsg);
+    }
+    return surface;
+}
+
+MirWindow *createMirWindow(QWindow *window, int mirOutputId, QMirClientWindow *parentWindowHandle,
+                           MirRenderSurface *surface, MirConnection *connection,
+                           MirWindowEventCallback inputCallback, void *inputContext)
+{
+    auto spec = makeWindowSpec(window, parentWindowHandle, surface, connection);
 
     // Install event handler as early as possible
     mir_window_spec_set_event_handler(spec.get(), inputCallback, inputContext);
@@ -358,10 +367,16 @@ MirWindow *createMirWindow(QWindow *window, int mirOutputId, QMirClientWindow *p
         mir_window_spec_set_state(spec.get(), mir_window_state_hidden);
     }
 
-    auto surface = mir_create_window_sync(spec.get());
-    Q_ASSERT(mir_window_is_valid(surface));
-    return surface;
+    auto mirWindow = mir_create_window_sync(spec.get());
+    if (!mir_window_is_valid(mirWindow))
+    {
+        auto errorMsg = mir_window_get_error_message(mirWindow);
+        qFatal("Failed to create mir window: %s", errorMsg);
+    }
+
+    return mirWindow;
 }
+#pragma GCC diagnostic pop
 
 QMirClientWindow *getParentIfNecessary(QWindow *window, QMirClientInput *input)
 {
@@ -375,18 +390,6 @@ QMirClientWindow *getParentIfNecessary(QWindow *window, QMirClientInput *input)
         }
     }
     return parentWindowHandle;
-}
-
-MirPixelFormat disableAlphaBufferIfPossible(MirPixelFormat pixelFormat)
-{
-    switch (pixelFormat) {
-    case mir_pixel_format_abgr_8888:
-        return mir_pixel_format_xbgr_8888;
-    case mir_pixel_format_argb_8888:
-        return mir_pixel_format_xrgb_8888;
-    default: // can do nothing, leave it alone
-        return pixelFormat;
-    }
 }
 
 // FIXME - in order to work around https://bugs.launchpad.net/mir/+bug/1346633
@@ -458,6 +461,10 @@ private:
     QMirClientWindow * mParentWindowHandle{nullptr};
 
     MirWindow* mMirWindow;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    MirRenderSurface* mMirSurface;
+#pragma GCC diagnostic pop
     const EGLDisplay mEglDisplay;
     EGLSurface mEglSurface;
 
@@ -465,7 +472,6 @@ private:
     bool mParented;
     QSize mBufferSize;
     QSurfaceFormat mFormat;
-    MirPixelFormat mPixelFormat;
 
     QMutex mTargetSizeMutex;
     QSize mTargetSize;
@@ -506,22 +512,13 @@ UbuntuSurface::UbuntuSurface(QMirClientWindow *platformWindow, EGLDisplay displa
 
     mFormat = q_glFormatFromConfig(display, config, mFormat);
 
-    // Have Mir decide the pixel format most suited to the chosen EGLConfig. This is the only way
-    // Mir will know what EGLConfig has been chosen - it cannot deduce it from the buffers.
-    mPixelFormat = mir_connection_get_egl_pixel_format(connection, display, config);
-    // But the chosen EGLConfig might have an alpha buffer enabled, even if not requested by the client.
-    // If that's the case, try to edit the chosen pixel format in order to disable the alpha buffer.
-    // This is an optimization for the compositor, as it can avoid blending this surface.
-    if (mWindow->requestedFormat().alphaBufferSize() < 0) {
-        mPixelFormat = disableAlphaBufferIfPossible(mPixelFormat);
-    }
-
     const auto outputId = static_cast<QMirClientScreen *>(mWindow->screen()->handle())->mirOutputId();
 
     mParentWindowHandle = getParentIfNecessary(mWindow, input);
 
-    mMirWindow = createMirWindow(mWindow, outputId, mParentWindowHandle, mPixelFormat, connection, surfaceEventCallback, this);
-    mEglSurface = eglCreateWindowSurface(mEglDisplay, config, nativeWindowFor(mMirWindow), nullptr);
+    mMirSurface = createMirSurface(mWindow, connection);
+    mMirWindow = createMirWindow(mWindow, outputId, mParentWindowHandle, mMirSurface, connection, surfaceEventCallback, this);
+    mEglSurface = eglCreateWindowSurface(mEglDisplay, config, reinterpret_cast<EGLNativeWindowType>(mMirSurface), nullptr);
 
     mNeedsExposeCatchup = mir_window_get_visibility(mMirWindow) == mir_window_visibility_occluded;
 
@@ -542,14 +539,20 @@ UbuntuSurface::UbuntuSurface(QMirClientWindow *platformWindow, EGLDisplay displa
     qCDebug(mirclient) << "Created surface with geometry:" << geom << "title:" << mWindow->title();
     qCDebug(mirclientGraphics)
                        << "Requested format:" << mWindow->requestedFormat()
-                       << "\nActual format:" << mFormat
-                       << "with associated Mir pixel format:" << mirPixelFormatToStr(mPixelFormat);
+                       << "\nActual format:" << mFormat;
 }
 
 UbuntuSurface::~UbuntuSurface()
 {
-    if (mEglSurface != EGL_NO_SURFACE)
+    if (mEglSurface != EGL_NO_SURFACE) {
         eglDestroySurface(mEglDisplay, mEglSurface);
+    }
+    if (mMirSurface) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_render_surface_release(mMirSurface);
+#pragma GCC diagnostic pop
+    }
     if (mMirWindow) {
         mir_window_release_sync(mMirWindow);
     }
