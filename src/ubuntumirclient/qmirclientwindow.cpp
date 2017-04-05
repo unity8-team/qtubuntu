@@ -342,12 +342,12 @@ MirRenderSurface *createMirSurface(QWindow *window, MirConnection *connection)
 
 MirWindow *createMirWindow(QWindow *window, int mirOutputId, QMirClientWindow *parentWindowHandle,
                            MirRenderSurface *surface, MirConnection *connection,
-                           MirWindowEventCallback inputCallback, void *inputContext)
+                           MirWindowEventCallback eventCallback, void *context)
 {
     auto spec = makeWindowSpec(window, parentWindowHandle, surface, connection);
 
     // Install event handler as early as possible
-    mir_window_spec_set_event_handler(spec.get(), inputCallback, inputContext);
+    mir_window_spec_set_event_handler(spec.get(), eventCallback, context);
 
     const auto title = window->title().toUtf8();
     mir_window_spec_set_name(spec.get(), title.constData());
@@ -429,7 +429,7 @@ public:
 
     void onSwapBuffersDone();
     void handleSurfaceResized(int width, int height);
-    int needsRepaint() const;
+    bool needsRepaint() const;
 
     MirWindowState state() const { return mir_window_get_state(mMirWindow); }
     void setState(MirWindowState state);
@@ -451,7 +451,7 @@ public:
     QString persistentSurfaceId();
 
 private:
-    static void surfaceEventCallback(MirWindow* surface, const MirEvent *event, void* context);
+    static void windowEventCallback(MirWindow* surface, const MirEvent *event, void* context);
     void postEvent(const MirEvent *event);
 
     QWindow * const mWindow;
@@ -517,7 +517,7 @@ UbuntuSurface::UbuntuSurface(QMirClientWindow *platformWindow, EGLDisplay displa
     mParentWindowHandle = getParentIfNecessary(mWindow, input);
 
     mMirSurface = createMirSurface(mWindow, connection);
-    mMirWindow = createMirWindow(mWindow, outputId, mParentWindowHandle, mMirSurface, connection, surfaceEventCallback, this);
+    mMirWindow = createMirWindow(mWindow, outputId, mParentWindowHandle, mMirSurface, connection, windowEventCallback, this);
     mEglSurface = eglCreateWindowSurface(mEglDisplay, config, reinterpret_cast<EGLNativeWindowType>(mMirSurface), nullptr);
 
     mNeedsExposeCatchup = mir_window_get_visibility(mMirWindow) == mir_window_visibility_occluded;
@@ -613,26 +613,36 @@ void UbuntuSurface::handleSurfaceResized(int width, int height)
     // width/height as identifiers to figure out if this is the latest surface resize event
     // that has posted, discarding any old ones. This avoids issuing too many redraw events.
     // see TODO in postEvent as the ideal way we should handle this.
-    // The actual buffer size may or may have not changed at this point, so let the rendering
-    // thread drive the window geometry updates.
     mNeedsRepaint = mTargetSize.width() == width && mTargetSize.height() == height;
-}
-
-int UbuntuSurface::needsRepaint() const
-{
     if (mNeedsRepaint) {
-        if (mTargetSize != mBufferSize) {
-            //If the buffer hasn't changed yet, we need at least two redraws,
-            //once to get the new buffer size and propagate the geometry changes
-            //and the second to redraw the content at the new size
-            return 2;
-        } else {
-            // The buffer size has already been updated so we only need one redraw
-            // to render at the new size
-            return 1;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        // Resize the buffers
+        mir_render_surface_set_size(mMirSurface, width, height);
+
+        //Resize the window
+        Spec spec{mir_create_window_spec(mConnection)};
+        mir_window_spec_add_render_surface(spec.get(), mMirSurface, width, height, 0, 0);
+        mir_window_apply_spec(mMirWindow, spec.get());
+#pragma GCC diagnostic pop
+
+        if (mBufferSize != mTargetSize) {
+            mBufferSize.rwidth() = width;
+            mBufferSize.rheight() = height;
+
+            QRect newGeometry = mPlatformWindow->geometry();
+            newGeometry.setSize(mBufferSize);
+
+            mPlatformWindow->QPlatformWindow::setGeometry(newGeometry);
+            QWindowSystemInterface::handleGeometryChange(mWindow, newGeometry);
         }
     }
-    return 0;
+
+}
+
+bool UbuntuSurface::needsRepaint() const
+{
+    return mNeedsRepaint;
 }
 
 void UbuntuSurface::setState(MirWindowState state)
@@ -656,35 +666,13 @@ void UbuntuSurface::onSwapBuffersDone()
     static int sFrameNumber = 0;
     ++sFrameNumber;
 
-    EGLint eglSurfaceWidth = -1;
-    EGLint eglSurfaceHeight = -1;
-    eglQuerySurface(mEglDisplay, mEglSurface, EGL_WIDTH, &eglSurfaceWidth);
-    eglQuerySurface(mEglDisplay, mEglSurface, EGL_HEIGHT, &eglSurfaceHeight);
-
-    const bool validSize = eglSurfaceWidth > 0 && eglSurfaceHeight > 0;
-
-    if (validSize && (mBufferSize.width() != eglSurfaceWidth || mBufferSize.height() != eglSurfaceHeight)) {
-
-        qCDebug(mirclientBufferSwap, "onSwapBuffersDone(window=%p) [%d] - size changed (%d, %d) => (%d, %d)",
-               mWindow, sFrameNumber, mBufferSize.width(), mBufferSize.height(), eglSurfaceWidth, eglSurfaceHeight);
-
-        mBufferSize.rwidth() = eglSurfaceWidth;
-        mBufferSize.rheight() = eglSurfaceHeight;
-
-        QRect newGeometry = mPlatformWindow->geometry();
-        newGeometry.setSize(mBufferSize);
-
-        mPlatformWindow->QPlatformWindow::setGeometry(newGeometry);
-        QWindowSystemInterface::handleGeometryChange(mWindow, newGeometry);
-    } else {
-        qCDebug(mirclientBufferSwap, "onSwapBuffersDone(window=%p) [%d] - buffer size (%d,%d)",
-               mWindow, sFrameNumber, mBufferSize.width(), mBufferSize.height());
-    }
+    qCDebug(mirclientBufferSwap, "onSwapBuffersDone(window=%p) [%d] - buffer size (%d,%d)",
+            mWindow, sFrameNumber, mBufferSize.width(), mBufferSize.height());
 }
 
-void UbuntuSurface::surfaceEventCallback(MirWindow *surface, const MirEvent *event, void* context)
+void UbuntuSurface::windowEventCallback(MirWindow *window, const MirEvent *event, void* context)
 {
-    Q_UNUSED(surface);
+    Q_UNUSED(window);
     Q_ASSERT(context != nullptr);
 
     auto s = static_cast<UbuntuSurface *>(context);
@@ -789,16 +777,10 @@ void QMirClientWindow::handleSurfaceResized(int width, int height)
     qCDebug(mirclient, "handleSurfaceResize(window=%p, size=(%dx%d)px", window(), width, height);
 
     mSurface->handleSurfaceResized(width, height);
-
-    // This resize event could have occurred just after the last buffer swap for this window.
-    // This means the client may still be holding a buffer with the older size. The first redraw call
-    // will then render at the old size. After swapping the client now will get a new buffer with the
-    // updated size but it still needs re-rendering so another redraw may be needed.
-    // A mir API to drop the currently held buffer would help here, so that we wouldn't have to redraw twice
-    auto const numRepaints = mSurface->needsRepaint();
+    auto const needsRepaint = mSurface->needsRepaint();
     lock.unlock();
-    qCDebug(mirclient, "handleSurfaceResize(window=%p) redraw %d times", window(), numRepaints);
-    for (int i = 0; i < numRepaints; i++) {
+
+    if (needsRepaint) {
         qCDebug(mirclient, "handleSurfaceResize(window=%p) repainting size=(%dx%d)dp", window(), geometry().size().width(), geometry().size().height());
         QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), geometry().size()));
     }
