@@ -522,19 +522,9 @@ UbuntuSurface::UbuntuSurface(QMirClientWindow *platformWindow, EGLDisplay displa
 
     mNeedsExposeCatchup = mir_window_get_visibility(mMirWindow) == mir_window_visibility_occluded;
 
-    // Window manager can give us a final size different from what we asked for
-    // so let's check what we ended up getting
-    MirWindowParameters parameters;
-    mir_window_get_parameters(mMirWindow, &parameters);
-
-    auto geom = mWindow->geometry();
-    geom.setWidth(parameters.width);
-    geom.setHeight(parameters.height);
-
     // Assume that the buffer size matches the surface size at creation time
+    auto geom = mWindow->geometry();
     mBufferSize = geom.size();
-    platformWindow->QPlatformWindow::setGeometry(geom);
-    QWindowSystemInterface::handleGeometryChange(mWindow, geom);
 
     qCDebug(mirclient) << "Created surface with geometry:" << geom << "title:" << mWindow->title();
     qCDebug(mirclientGraphics)
